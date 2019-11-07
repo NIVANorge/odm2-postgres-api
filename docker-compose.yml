@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  odm2_postgres_api:
+    build: "."
+    ports:
+      - "127.0.0.1:8701:5000"
+    depends_on:
+      - timescale_odm2
+      - odm2_init
+    restart: always
+
+  timescale_odm2:
+    # this version is the current timescaledb version running in production at the time of writing
+    # Remember to change the image version in both tsb/docker-compose.yml and the nivacloud timescale deployment
+    image: timescale/timescaledb-postgis:1.4.2-pg11
+    ports:
+      - "8700:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+#    volumes:
+#      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
+
+  odm2_init:
+    build: "."
+    command: python src/odm2_postgres_api/utils/db_initiate.py
+    restart: on-failure
+    depends_on:
+      - timescale_odm2

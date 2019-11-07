@@ -1,0 +1,15 @@
+--index-url https://1sCwoK-C27FxzUE9JskQFZ8sAgi7vN0qKk:@pypi.fury.io/niva/
+--extra-index-url https://pypi.org/simple/
+
+asyncpg==0.19.0
+typeguard==2.5.1
+fastapi==0.42.0
+uvicorn==0.9.1
+gino==0.8.3
+mypy==0.740
+pycodestyle==2.5.0
+starlette-prometheus==0.3.0
+nivacloud-logging==0.8.6
+pytest==5.2.1
+requests==2.22.0
+python-dotenv==0.10.3
