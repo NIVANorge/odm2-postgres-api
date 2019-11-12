@@ -10,10 +10,10 @@ COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
 COPY . /app/
-#RUN pycodestyle --config .pycodestyle src
-#RUN mypy --namespace-packages --ignore-missing-imports src
+RUN pycodestyle --config .pycodestyle src
+RUN mypy --namespace-packages --ignore-missing-imports src
 RUN pip install .
-#RUN pytest
+RUN pytest
 
 ARG GIT_COMMIT_ID=unknown
 LABEL git_commit_id=$GIT_COMMIT_ID

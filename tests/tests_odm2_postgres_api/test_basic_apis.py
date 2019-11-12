@@ -9,3 +9,6 @@ from odm2_postgres_api import app
 #     # response = client.get("/hello")
 #     # assert response.status_code == 200
 #     # assert response.json() == {"message": "Hello World"}
+
+def test_add():
+    assert 1 + 1 == 2
