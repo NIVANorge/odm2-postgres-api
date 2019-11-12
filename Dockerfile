@@ -5,7 +5,6 @@ MAINTAINER Roald Storm <roald.storm@niva.no>
 
 # Set the working directory to /app
 WORKDIR /app
-RUN 'git' 'clone' '--single-branch' '--branch' 'feature/make-cv-load-importable' 'https://github.com/NIVANorge/ODM2.git' '/app/src/odm2_postgres_api/utils/ODM2'
 RUN pip install psycopg2
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
@@ -14,7 +13,7 @@ COPY . /app/
 #RUN pycodestyle --config .pycodestyle src
 #RUN mypy --namespace-packages --ignore-missing-imports src
 RUN pip install .
-RUN pytest
+#RUN pytest
 
 ARG GIT_COMMIT_ID=unknown
 LABEL git_commit_id=$GIT_COMMIT_ID

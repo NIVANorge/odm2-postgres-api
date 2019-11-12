@@ -1,0 +1,1 @@
+In this folder is the entire ODM2 data model specified in sql alchemy classes.

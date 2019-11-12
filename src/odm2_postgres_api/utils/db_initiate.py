@@ -6,7 +6,7 @@ from pathlib import Path
 from gino import Gino
 from dotenv import load_dotenv
 from ODM2.src.load_cvs import cvload
-from asyncpg.exceptions import DuplicateTableError, DuplicateObjectError
+# from asyncpg.exceptions import DuplicateTableError, DuplicateObjectError
 
 from nivacloud_logging.log_utils import setup_logging
 
@@ -67,22 +67,21 @@ async def postgres_user_on_odm_db(connection_string, odm2_location, odm2_schema_
         for extension in extensions:
             logging.info(await db.status(db.text(f'CREATE EXTENSION IF NOT EXISTS {extension} CASCADE')))
 
-        with open(odm2_location / 'src' / 'blank_schema_scripts' / 'postgresql' / 'ODM2_for_PostgreSQL.sql') as my_file:
-            postgres_odm2_code = my_file.read()
-        for command in postgres_odm2_code.split(';'):
-            if command and '--' not in command:
-                try:
-                    logging.info(await db.status(db.text(command)))
-                except (DuplicateTableError, DuplicateObjectError):
-                    pass
+        # with open(odm2_location / 'src' / 'blank_schema_scripts' / 'postgresql' / 'ODM2_for_PostgreSQL.sql') as my_file:
+        #     postgres_odm2_code = my_file.read()
+        # for command in postgres_odm2_code.split(';'):
+        #     if command and '--' not in command:
+        #         try:
+        #             logging.info(await db.status(db.text(command)))
+        #         except (DuplicateTableError, DuplicateObjectError):
+        #             pass
         await grant_all_on_db_to_role(quoted_schema, quoted_mighty_user)
 
 
 async def odm_user_on_odm_db(connection_string):
     async with db.with_bind(connection_string) as engine:
         logging.info("Database tables for odm2 created")
-        hypertable_sql = ["CREATE ",
-                          "SELECT create_hypertable('ts', 'time', 'uuid', 1, if_not_exists=>TRUE)",
+        hypertable_sql = ["SELECT create_hypertable('ts', 'time', 'uuid', 1, if_not_exists=>TRUE)",
                           "SELECT create_hypertable('flag', 'time', 'uuid', 1, if_not_exists=>TRUE)",
                           "SELECT create_hypertable('track', 'time', 'uuid', 1, if_not_exists=>TRUE)"]
         hypertable_sql = []
@@ -94,10 +93,10 @@ def main():
     setup_logging(plaintext=True)
     if Path.cwd() == Path('/app'):
         env_file = Path(__file__).parent / '..' / 'config' / 'localdocker.env'
-        odm2_location = Path(__file__).parent / 'ODM2'
+        odm2_location = None  # Path(__file__).parent / 'ODM2'
     else:
         env_file = Path(__file__).parent / '..' / 'config' / 'localdev.env'
-        odm2_location = Path(os.getcwd()) / '..' / '..' / '..' / '..' / 'ODM2'
+        odm2_location = None  # Path(os.getcwd()) / '..' / '..' / '..' / '..' / 'ODM2'
     load_dotenv(dotenv_path=env_file, verbose=True)
 
     # Get DB connection from environment
@@ -117,10 +116,10 @@ def main():
     connection_string = f'postgresql://{pg_user}:{pg_pwd}@{db_host}:{db_port}/{db_name}'
     asyncio.run(postgres_user_on_odm_db(connection_string, odm2_location, odm2_schema_name, db_mighty_user))
 
-    connection_string = f'postgresql://{db_mighty_user}:{db_mighty_pwd}@{db_host}:{db_port}/{db_name}'
-    asyncio.run(odm_user_on_odm_db(connection_string))
-
-    # Load controlled vocabularies
+    # connection_string = f'postgresql://{db_mighty_user}:{db_mighty_pwd}@{db_host}:{db_port}/{db_name}'
+    # asyncio.run(odm_user_on_odm_db(connection_string))
+    #
+    # # Load controlled vocabularies
     cvload.load_controlled_vocabularies(connection_string)
 
 

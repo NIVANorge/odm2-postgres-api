@@ -7,7 +7,7 @@ services:
       - "127.0.0.1:8701:5000"
     depends_on:
       - timescale_odm2
-      - odm2_init
+      - db_init
     restart: always
 
   timescale_odm2:
@@ -21,7 +21,7 @@ services:
 #    volumes:
 #      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
 
-  odm2_init:
+  db_init:
     build: "."
     command: python src/odm2_postgres_api/utils/db_initiate.py
     restart: on-failure

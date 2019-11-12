@@ -1,17 +1,31 @@
+import os
+import logging
+
 from fastapi import FastAPI
-from gino import Gino
+from odm2_postgres_api.ORM.models import db
 
 app = FastAPI(
     docs_url="/",
     title="ODM2 API",
     version="v1"
 )
-db = Gino()
 
 
 @app.on_event("startup")
 async def startup_event():
-    await db.set_bind('postgresql://postgres:postgres@timescaledb:5432/niva_odm2')
+    # Get DB connection from environment
+    db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
+    db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]
+    db_mighty_user = os.environ["ODM2_DB_USER"]
+    db_mighty_pwd = os.environ["ODM2_DB_PASSWORD"]
+    db_name = os.environ["ODM2_DB"]
+
+    logging.info(f'postgresql://{db_mighty_user}:{db_mighty_pwd}@{db_host}:{db_port}/{db_name}')
+    await db.set_bind(f'postgresql://{db_mighty_user}:{db_mighty_pwd}@{db_host}:{db_port}/{db_name}')
+    await db.gino.create_all()
+    await db.status(db.text("SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', "
+                            "chunk_time_interval => 100000)"))
+    # SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', chunk_time_interval => 100000);
 
 
 @app.on_event("shutdown")
