@@ -85,9 +85,13 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty
 
 
 async def odm_user_on_odm_db(connection_string):
-    # hyper_tables_sql = [
-    #     "SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', chunk_time_interval => 100000)",
-    # ]
+    hyper_tables_sql = [
+        "SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', chunk_time_interval => 100000)",
+        "SELECT create_hypertable('ODM2.TrackResultLocations',"
+        " 'valuedatetime', chunk_time_interval => interval '7 day')",
+        "SELECT create_hypertable('ODM2.TrackResultValues', 'valuedatetime', chunk_time_interval => interval '7 day');"
+    ]
+
     hyper_tables_sql = []
     conn = await asyncpg.connect(connection_string)
     try:
@@ -126,9 +130,6 @@ def main():
     connection_string = f'postgresql://{db_mighty_user}:{db_mighty_pwd}@{db_host}:{db_port}/{db_name}'
     asyncio.run(odm_user_on_odm_db(connection_string))
     logging.info("Database tables for odm2 created")
-
-    # Load controlled vocabularies
-    # cvload.load_controlled_vocabularies(connection_string)
 
 
 if __name__ == '__main__':

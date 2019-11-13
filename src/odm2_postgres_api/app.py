@@ -5,6 +5,7 @@ import asyncpg
 from fastapi import FastAPI, Depends
 
 from odm2_postgres_api.queries import get_power_of_2
+from odm2_postgres_api.controlled_vocabulary_queries import update_all_cv_tables
 
 app = FastAPI(
     docs_url="/",
@@ -55,3 +56,20 @@ async def hello(connection=Depends(api_pool_manager.get_conn)):
 @app.get("/make_con", summary="api 101 testing")
 async def make_con():
     return {"message": "connection is made"}
+
+
+@app.patch("/controlled_vocabularies", summary="api 101 testing")
+async def patch_controlled_vocabularies(connection=Depends(api_pool_manager.get_conn)):
+    await update_all_cv_tables(connection)
+    return {"message": "Tables are updated"}
+
+
+# @app.post("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
+# async def post_controlled_vocabularies(controlled_vocabulary, connection=Depends(api_pool_manager.get_conn)):
+#     async with connection.transaction():
+#         return {"message": "connection is made"}
+#
+#
+# @app.get("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
+# async def get_controlled_vocabularies(controlled_vocabulary, connection=Depends(api_pool_manager.get_conn)):
+#     return {"message": "connection is made"}
