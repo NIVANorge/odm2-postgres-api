@@ -36,37 +36,34 @@ async def startup_event():
     db_mighty_pwd = os.environ["ODM2_DB_PASSWORD"]
     db_name = os.environ["ODM2_DB"]
 
+    logging.info("Creating connection pool")
     api_pool_manager.pool = await asyncpg.create_pool(user=db_mighty_user, password=db_mighty_pwd,
                                                       host=db_host, port=db_port, database=db_name)
+    logging.info("Successfully created connection pool")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     logging.info('Closing connection pool')
     await api_pool_manager.pool.close()
-
-
-@app.get("/hello", summary="api 101 testing")
-async def hello(connection=Depends(api_pool_manager.get_conn)):
-    async with connection.transaction():
-        result = await core_queries.get_power_of_2(connection, 4)
-        logging.info(result)
-        return {"message": f"Hello World {result}"}
-
-
-@app.get("/make_con", summary="api 101 testing")
-async def make_con():
-    return {"message": "connection is made"}
+    logging.info('Successfully closed connection pool')
 
 
 @app.patch("/controlled_vocabularies", summary="api 101 testing")
 async def patch_controlled_vocabularies():
-    await synchronize_cv_tables(api_pool_manager.pool)
-    return {"message": "Tables are updated"}
+    return await synchronize_cv_tables(api_pool_manager.pool)
 
 
 @app.post("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
 async def post_controlled_vocabularies(controlled_vocabulary: schemas.cv_checker):  # type: ignore
-    new_terms = await synchronize_cv_tables(api_pool_manager.pool, [controlled_vocabulary])
-    return new_terms
+    return await synchronize_cv_tables(api_pool_manager.pool, [controlled_vocabulary])
 
+
+@app.post("/people", response_model=schemas.People)
+async def post_people(user: schemas.PeopleCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_person(connection, user)
+
+
+@app.post("/organizations", response_model=schemas.Organizations)
+async def post_organizations(user: schemas.OrganizationsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_organization(connection, user)

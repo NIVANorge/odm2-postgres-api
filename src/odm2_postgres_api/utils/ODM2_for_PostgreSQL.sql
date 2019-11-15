@@ -785,6 +785,29 @@ create table ODM2.ResultDerivationEquations (
 /*************************** CREATE ODM2RESULTS ****************************/
 /***************************************************************************/
 
+create table ODM2.TrackResults (
+	resultid bigint  NOT NULL primary key,
+	spatialreferenceid integer  NULL,
+	intendedtimespacing double precision  NULL,
+	intendedtimespacingunitsid integer  NULL,
+	aggregationstatisticcv varchar (255) NOT NULL,
+	CONSTRAINT track_result_unique UNIQUE (resultid, spatialreferenceid)
+);
+create table ODM2.TrackResultValues (
+	valuedatetime timestamp  NOT NULL,
+	spatialreferenceid integer  NOT NULL,
+	datavalue double precision  NOT NULL,
+	resultid bigint NOT NULL,
+	qualitycodecv varchar (255) NOT NULL,
+	CONSTRAINT track_result_value_unique UNIQUE (valuedatetime, resultid)
+);
+create table ODM2.TrackResultLocations (
+	valuedatetime timestamp  NOT NULL,
+	spatialreferenceid integer  NOT NULL,
+	featuregeometry geometry(POINT, 4326)  NOT NULL,
+	qualitycodecv varchar (255) NOT NULL,
+	CONSTRAINT track_result_location_unique UNIQUE (valuedatetime, spatialreferenceid)
+);
 create table ODM2.CategoricalResults (
 	resultid bigint  NOT NULL primary key,
 	xlocation double precision  NULL,
@@ -2270,4 +2293,16 @@ on update no Action on delete cascade;
 
 alter table ODM2.Simulations add constraint fk_Simulations_Models
 foreign key (ModelID) References ODM2.Models (ModelID)
+on update no Action on delete cascade;
+
+alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResults
+foreign key (ResultID, SpatialReferenceID) References ODM2.TrackResults (ResultID, SpatialReferenceID)
+on update no Action on delete cascade;
+
+alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResultLocations
+foreign key (valuedatetime, spatialreferenceid) References ODM2.TrackResultLocations (valuedatetime, spatialreferenceid)
+on update no Action on delete cascade;
+
+alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_SpatialReferences
+foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
 on update no Action on delete cascade;
