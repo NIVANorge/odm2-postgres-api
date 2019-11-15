@@ -4,8 +4,9 @@ import asyncpg
 
 from fastapi import FastAPI, Depends
 
-from odm2_postgres_api.queries import get_power_of_2
-from odm2_postgres_api.controlled_vocabulary_queries import update_all_cv_tables
+from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.queries import core_queries
+from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
 
 app = FastAPI(
     docs_url="/",
@@ -48,7 +49,7 @@ async def shutdown_event():
 @app.get("/hello", summary="api 101 testing")
 async def hello(connection=Depends(api_pool_manager.get_conn)):
     async with connection.transaction():
-        result = await get_power_of_2(connection, 4)
+        result = await core_queries.get_power_of_2(connection, 4)
         logging.info(result)
         return {"message": f"Hello World {result}"}
 
@@ -59,17 +60,13 @@ async def make_con():
 
 
 @app.patch("/controlled_vocabularies", summary="api 101 testing")
-async def patch_controlled_vocabularies(connection=Depends(api_pool_manager.get_conn)):
-    await update_all_cv_tables(connection)
+async def patch_controlled_vocabularies():
+    await synchronize_cv_tables(api_pool_manager.pool)
     return {"message": "Tables are updated"}
 
 
-# @app.post("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
-# async def post_controlled_vocabularies(controlled_vocabulary, connection=Depends(api_pool_manager.get_conn)):
-#     async with connection.transaction():
-#         return {"message": "connection is made"}
-#
-#
-# @app.get("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
-# async def get_controlled_vocabularies(controlled_vocabulary, connection=Depends(api_pool_manager.get_conn)):
-#     return {"message": "connection is made"}
+@app.post("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
+async def post_controlled_vocabularies(controlled_vocabulary: schemas.cv_checker):  # type: ignore
+    new_terms = await synchronize_cv_tables(api_pool_manager.pool, [controlled_vocabulary])
+    return new_terms
+

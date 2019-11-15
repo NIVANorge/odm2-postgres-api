@@ -18,8 +18,8 @@ services:
       - "8700:5432"
     environment:
       - POSTGRES_PASSWORD=postgres
-#    volumes:
-#      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
+    volumes:
+      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
 
   db_init:
     build: "."

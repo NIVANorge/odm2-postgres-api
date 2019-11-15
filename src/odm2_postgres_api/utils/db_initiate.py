@@ -70,16 +70,16 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty
             for extension in extensions:
                 res = await conn.execute(f'CREATE EXTENSION IF NOT EXISTS {extension} CASCADE')
                 logging.info(res)
+            with open(Path(__file__).parent / 'ODM2_for_PostgreSQL.sql') as my_file:
+                postgres_odm2_code = my_file.read()
+            for command in postgres_odm2_code.split(';'):
+                if command and '--' not in command:
+                    try:
+                        logging.info(await conn.execute(command))
+                    except (asyncpg.exceptions.DuplicateObjectError, asyncpg.exceptions.DuplicateTableError):
+                        pass
             await grant_all_on_db_to_role(conn, quoted_schema, quoted_mighty_user)
 
-        with open(Path(__file__).parent / 'ODM2_for_PostgreSQL.sql') as my_file:
-            postgres_odm2_code = my_file.read()
-        for command in postgres_odm2_code.split(';'):
-            if command and '--' not in command:
-                try:
-                    logging.info(await conn.execute(command))
-                except (asyncpg.exceptions.DuplicateObjectError, asyncpg.exceptions.DuplicateTableError):
-                    pass
     finally:
         await conn.close()
 

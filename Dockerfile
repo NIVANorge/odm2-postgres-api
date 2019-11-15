@@ -11,7 +11,7 @@ RUN pip install -r requirements.txt
 
 COPY . /app/
 RUN pycodestyle --config .pycodestyle src
-RUN mypy --namespace-packages --ignore-missing-imports src
+RUN mypy src
 RUN pip install .
 RUN pytest
 
