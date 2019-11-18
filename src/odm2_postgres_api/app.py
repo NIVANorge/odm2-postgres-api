@@ -67,3 +67,23 @@ async def post_people(user: schemas.PeopleCreate, connection=Depends(api_pool_ma
 @app.post("/organizations", response_model=schemas.Organizations)
 async def post_organizations(user: schemas.OrganizationsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_organization(connection, user)
+
+
+@app.post("/affiliations", response_model=schemas.Affiliations)
+async def post_affiliations(affiliation: schemas.AffiliationsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_affiliation(connection, affiliation)
+
+
+@app.post("/methods", response_model=schemas.Methods)
+async def post_methods(method: schemas.MethodsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_method(connection, method)
+
+
+@app.post("/action_by", response_model=schemas.ActionsBy)
+async def post_action_by(action_by: schemas.ActionsByCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_action_by(connection, action_by)
+
+
+@app.post("/actions", response_model=schemas.Action)
+async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.do_action(connection, action_create)
