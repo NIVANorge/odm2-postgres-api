@@ -64,8 +64,8 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty
         async with conn.transaction():
             if await conn.fetchval(f"SELECT count(*) FROM pg_namespace where nspname like '{quoted_schema}'") != 1:
                 logging.info(await conn.execute(f"CREATE SCHEMA {quoted_schema} AUTHORIZATION {quoted_mighty_user}"))
-                command = f"ALTER ROLE {quoted_mighty_user} IN DATABASE niva_odm2 SET search_path = {quoted_schema}"
-                logging.info(await conn.execute(command))
+            command = f"ALTER ROLE {quoted_mighty_user} IN DATABASE niva_odm2 SET search_path = {quoted_schema},public"
+            logging.info(await conn.execute(command))
             extensions = ['timescaledb', 'postgis', 'postgis_topology', 'fuzzystrmatch', 'postgis_tiger_geoCoder']
             for extension in extensions:
                 res = await conn.execute(f'CREATE EXTENSION IF NOT EXISTS {extension} CASCADE')

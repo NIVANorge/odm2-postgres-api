@@ -1,7 +1,9 @@
-from typing import Optional
+import uuid
 import datetime
+from typing import Optional
 
-from pydantic import BaseModel, constr
+import shapely.wkt
+from pydantic import BaseModel, BaseConfig, constr, validator
 
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
@@ -70,7 +72,7 @@ class ActionsByCreate(ActionsByFields):
     actionid: int
 
 
-class ActionsBy(ActionsByFields):
+class ActionsBy(ActionsByCreate):
     bridgeid: int
 
 
@@ -87,3 +89,27 @@ class ActionsCreate(ActionsByFields):
 
 class Action(ActionsCreate):
     actionid: int
+
+
+class SamplingFeaturesCreate(BaseModel):
+    class Config(BaseConfig):
+        arbitrary_types_allowed = True
+    samplingfeatureuuid: uuid.UUID
+    samplingfeaturetypecv: constr(max_length=255)  # type: ignore
+    samplingfeaturecode: constr(max_length=50)  # type: ignore
+    samplingfeaturename: constr(max_length=255) = None  # type: ignore
+    samplingfeaturedescription: constr(max_length=5000) = None  # type: ignore
+    samplingfeaturegeotypecv: constr(max_length=255) = None  # type: ignore
+    featuregeometrywkt: constr(max_length=8000) = None  # type: ignore
+    elevation_m: Optional[float]
+    elevationdatumcv: constr(max_length=255) = None  # type: ignore
+
+    @validator('featuregeometrywkt')
+    def username_alphanumeric(cls, wkt):
+        new_shape = shapely.wkt.loads(wkt)
+        assert new_shape.is_valid
+        return wkt
+
+
+class SamplingFeatures(SamplingFeaturesCreate):
+    samplingfeatureid: int

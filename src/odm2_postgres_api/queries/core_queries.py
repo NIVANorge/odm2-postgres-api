@@ -1,6 +1,8 @@
 import asyncpg
+import shapely.wkt
 
 from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.utils import shapely_postgres_adapter
 
 
 async def create_person(conn: asyncpg.connection, user: schemas.PeopleCreate):
@@ -58,4 +60,22 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
         action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
                                             isactionlead=action.isactionlead, roledescription=action.roledescription)
         action_by_row = await create_action_by(conn, action_by)
-    return schemas.Action(**action_row, **dict(action_by_row))
+    # Dict allows overwriting of key while pydantic schema does not, action_id exists in both return rows
+    return schemas.Action(**{**action_row, **dict(action_by_row)})
+
+
+async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
+    await shapely_postgres_adapter.set_shapely_adapter(conn)
+    row = await conn.fetchrow(
+        "INSERT INTO samplingfeatures (samplingfeatureuuid, samplingfeaturetypecv, samplingfeaturecode, "
+        "samplingfeaturename, samplingfeaturedescription, samplingfeaturegeotypecv, featuregeometry, "
+        "featuregeometrywkt, elevation_m, elevationdatumcv) "
+        "VALUES ($1, $2, $3, $4, $5, $6, "
+        "ST_SetSRID($7::geometry, 4326), $8, $9, $10) returning *",
+        sampling_feature.samplingfeatureuuid, sampling_feature.samplingfeaturetypecv,
+        sampling_feature.samplingfeaturecode, sampling_feature.samplingfeaturename,
+        sampling_feature.samplingfeaturedescription, sampling_feature.samplingfeaturegeotypecv,
+        shapely.wkt.loads(sampling_feature.featuregeometrywkt), sampling_feature.featuregeometrywkt,
+        sampling_feature.elevation_m, sampling_feature.elevationdatumcv
+    )
+    return schemas.SamplingFeatures(**row)

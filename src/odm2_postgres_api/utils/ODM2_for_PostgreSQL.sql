@@ -146,7 +146,8 @@ create table ODM2.DatasetsResults (
 create table ODM2.FeatureActions (
 	featureactionid serial  NOT NULL primary key,
 	samplingfeatureid integer  NOT NULL,
-	actionid integer  NOT NULL
+	actionid integer  NOT NULL,
+	UNIQUE (samplingfeatureid, actionid)
 );
 create table ODM2.Methods (
 	methodid serial  NOT NULL primary key,
@@ -212,7 +213,7 @@ create table ODM2.SamplingFeatures (
 	samplingfeaturename varchar (255) NULL,
 	samplingfeaturedescription varchar (5000) NULL,
 	samplingfeaturegeotypecv varchar (255) NULL,
-	featuregeometry geometry  NULL,
+	featuregeometry geometry(Geometry,4326)  NULL,
 	featuregeometrywkt varchar (8000) NULL,
 	elevation_m double precision  NULL,
 	elevationdatumcv varchar (255) NULL,
@@ -804,7 +805,7 @@ create table ODM2.TrackResultValues (
 create table ODM2.TrackResultLocations (
 	valuedatetime timestamp  NOT NULL,
 	spatialreferenceid integer  NOT NULL,
-	featuregeometry geometry(POINT, 4326)  NOT NULL,
+	featuregeometry_tracklocation geometry(POINT, 4326)  NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
 	CONSTRAINT track_result_location_unique UNIQUE (valuedatetime, spatialreferenceid)
 );

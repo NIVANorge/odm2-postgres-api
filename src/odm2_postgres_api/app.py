@@ -87,3 +87,9 @@ async def post_action_by(action_by: schemas.ActionsByCreate, connection=Depends(
 @app.post("/actions", response_model=schemas.Action)
 async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.do_action(connection, action_create)
+
+
+@app.post("/sampling_features", response_model=schemas.SamplingFeatures)
+async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreate,
+                                 connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_sampling_feature(connection, sampling_feature)
