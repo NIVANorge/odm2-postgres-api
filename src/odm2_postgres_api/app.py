@@ -93,3 +93,30 @@ async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(
 async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreate,
                                  connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_sampling_feature(connection, sampling_feature)
+
+
+@app.post("/processing_levels", response_model=schemas.ProcessingLevels)
+async def post_processing_levels(processing_level: schemas.ProcessingLevelsCreate,
+                                 connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_processing_level(connection, processing_level)
+
+
+@app.post("/units", response_model=schemas.Units)
+async def post_units(unit: schemas.UnitsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_unit(connection, unit)
+
+
+@app.post("/variables", response_model=schemas.Variables)
+async def post_variables(variable: schemas.VariablesCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_variable(connection, variable)
+
+
+@app.post("/feature_actions", response_model=schemas.FeatureActions)
+async def post_feature_action(feature_action: schemas.FeatureActionsCreate,
+                              connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_feature_action(connection, feature_action)
+
+
+@app.post("/results", response_model=schemas.Results)
+async def post_results(result: schemas.ResultsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_result(connection, result)

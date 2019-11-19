@@ -60,7 +60,7 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
         action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
                                             isactionlead=action.isactionlead, roledescription=action.roledescription)
         action_by_row = await create_action_by(conn, action_by)
-    # Dict allows overwriting of key while pydantic schema does not, action_id exists in both return rows
+    # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
     return schemas.Action(**{**action_row, **dict(action_by_row)})
 
 
@@ -79,3 +79,54 @@ async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: sc
         sampling_feature.elevation_m, sampling_feature.elevationdatumcv
     )
     return schemas.SamplingFeatures(**row)
+
+
+async def create_processing_level(conn: asyncpg.connection, processing_level: schemas.ProcessingLevelsCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO processinglevels (processinglevelcode, definition, explanation) "
+        "VALUES ($1, $2, $3) returning *",
+        processing_level.processinglevelcode, processing_level.definition, processing_level.explanation)
+    return schemas.ProcessingLevels(**row)
+
+
+async def create_unit(conn: asyncpg.connection, unit: schemas.UnitsCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO units (unitstypecv, unitsabbreviation, unitsname, unitslink) "
+        "VALUES ($1, $2, $3, $4) returning *",
+        unit.unitstypecv, unit.unitsabbreviation, unit.unitsname, unit.unitslink)
+    return schemas.Units(**row)
+
+
+async def create_variable(conn: asyncpg.connection, variable: schemas.VariablesCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO variables (variabletypecv, variablecode, variablenamecv, variabledefinition, "
+        "speciationcv, nodatavalue) VALUES ($1, $2, $3, $4, $5, $6) returning *",
+        variable.variabletypecv, variable.variablecode, variable.variablenamecv, variable.variabledefinition,
+        variable.speciationcv, variable.nodatavalue)
+    return schemas.Variables(**row)
+
+
+async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO featureactions (samplingfeatureid, actionid) "
+        "VALUES ($1, $2) "
+        "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
+        feature_action.samplingfeatureid, feature_action.actionid)
+    return schemas.FeatureActions(**row)
+
+
+async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate):
+    async with conn.transaction():
+        feature_action_row = await create_feature_action(conn, schemas.FeatureActionsCreate(
+            samplingfeatureid=result.samplingfeatureid, actionid=result.actionid))
+        result_row = await conn.fetchrow(
+            "INSERT INTO results (resultuuid, featureactionid, resulttypecv, variableid, unitsid,"
+            "taxonomicclassifierid, processinglevelid, resultdatetime, resultdatetimeutcoffset, validdatetime,"
+            "validdatetimeutcoffset, statuscv, sampledmediumcv, valuecount) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning *",
+            result.resultuuid, feature_action_row.featureactionid, result.resulttypecv, result.variableid,
+            result.unitsid, result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
+            result.resultdatetimeutcoffset, result.validdatetime, result.validdatetimeutcoffset, result.statuscv,
+            result.sampledmediumcv, result.valuecount)
+    # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
+    return schemas.Results(**{**result_row, **dict(feature_action_row)})

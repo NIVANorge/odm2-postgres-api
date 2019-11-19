@@ -113,3 +113,66 @@ class SamplingFeaturesCreate(BaseModel):
 
 class SamplingFeatures(SamplingFeaturesCreate):
     samplingfeatureid: int
+
+
+class ProcessingLevelsCreate(BaseModel):
+    processinglevelcode: constr(max_length=50)  # type: ignore
+    definition: constr(max_length=5000) = None  # type: ignore
+    explanation: constr(max_length=5000) = None  # type: ignore
+
+
+class ProcessingLevels(ProcessingLevelsCreate):
+    processinglevelid: int
+
+
+class UnitsCreate(BaseModel):
+    unitstypecv: constr(max_length=255)  # type: ignore
+    unitsabbreviation: constr(max_length=50)  # type: ignore
+    unitsname: constr(max_length=255)  # type: ignore
+    unitslink: constr(max_length=255) = None  # type: ignore
+
+
+class Units(UnitsCreate):
+    unitsid: int
+
+
+class VariablesCreate(BaseModel):
+    variabletypecv: constr(max_length=255)  # type: ignore
+    variablecode: constr(max_length=50)  # type: ignore
+    variablenamecv: constr(max_length=255)  # type: ignore
+    variabledefinition: constr(max_length=5000) = None  # type: ignore
+    speciationcv: constr(max_length=255) = None  # type: ignore
+    nodatavalue: float
+
+
+class Variables(VariablesCreate):
+    variableid: int
+
+
+class FeatureActionsCreate(BaseModel):
+    samplingfeatureid: int
+    actionid: int
+
+
+class FeatureActions(FeatureActionsCreate):
+    featureactionid: int
+
+
+class ResultsCreate(FeatureActionsCreate):
+    resultuuid: uuid.UUID
+    resulttypecv: constr(max_length=255)  # type: ignore
+    variableid: int
+    unitsid: int
+    taxonomicclassifierid: Optional[int] = None
+    processinglevelid: int
+    resultdatetime: Optional[datetime.datetime] = None
+    resultdatetimeutcoffset: Optional[int] = None
+    validdatetime: Optional[datetime.datetime] = None
+    validdatetimeutcoffset: Optional[int] = None
+    statuscv: constr(max_length=255) = None  # type: ignore
+    sampledmediumcv: constr(max_length=5000) = None  # type: ignore
+    valuecount: int
+
+
+class Results(ResultsCreate):
+    resultid: int
