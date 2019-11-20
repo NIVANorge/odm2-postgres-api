@@ -89,6 +89,23 @@ async def create_processing_level(conn: asyncpg.connection, processing_level: sc
     return schemas.ProcessingLevels(**row)
 
 
+async def create_spatial_reference(conn: asyncpg.connection, spatial_reference: schemas.SpatialReferencesCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO spatialreferences (srscode, srsname, srsdescription, srslink) "
+        "VALUES ($1, $2, $3, $4) returning *",
+        spatial_reference.srscode, spatial_reference.srsname,
+        spatial_reference.srsdescription, spatial_reference.srslink)
+    return schemas.SpatialReferences(**row)
+
+
+async def create_site(conn: asyncpg.connection, site: schemas.Sites):
+    row = await conn.fetchrow(
+        "INSERT INTO sites (samplingfeatureid, sitetypecv, latitude, longitude, spatialreferenceid) "
+        "VALUES ($1, $2, $3, $4, $5) returning *",
+        site.samplingfeatureid, site.sitetypecv, site.latitude, site.longitude, site.spatialreferenceid)
+    return schemas.Sites(**row)
+
+
 async def create_unit(conn: asyncpg.connection, unit: schemas.UnitsCreate):
     row = await conn.fetchrow(
         "INSERT INTO units (unitstypecv, unitsabbreviation, unitsname, unitslink) "
@@ -106,10 +123,26 @@ async def create_variable(conn: asyncpg.connection, variable: schemas.VariablesC
     return schemas.Variables(**row)
 
 
+async def create_data_quality(conn: asyncpg.connection, data_quality: schemas.DataQualityCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO dataquality (dataqualitytypecv, dataqualitycode, dataqualityvalue, dataqualityvalueunitsid,"
+        "dataqualitydescription, dataqualitylink) VALUES ($1, $2, $3, $4, $5, $6) returning *",
+        data_quality.dataqualitytypecv, data_quality.dataqualitycode, data_quality.dataqualityvalue,
+        data_quality.dataqualityvalueunitsid, data_quality.dataqualitydescription, data_quality.dataqualitylink)
+    return schemas.DataQuality(**row)
+
+
+async def create_result_data_quality(conn: asyncpg.connection, result_data_quality: schemas.ResultsDataQualityCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO resultsdataquality (resultid, dataqualityid) VALUES ($1, $2) "
+        "ON CONFLICT (resultid, dataqualityid) DO UPDATE SET resultid = EXCLUDED.resultid returning *",
+        result_data_quality.resultid, result_data_quality.dataqualityid)
+    return schemas.ResultsDataQuality(**row)
+
+
 async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
     row = await conn.fetchrow(
-        "INSERT INTO featureactions (samplingfeatureid, actionid) "
-        "VALUES ($1, $2) "
+        "INSERT INTO featureactions (samplingfeatureid, actionid) VALUES ($1, $2) "
         "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
         feature_action.samplingfeatureid, feature_action.actionid)
     return schemas.FeatureActions(**row)
@@ -128,5 +161,8 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
             result.unitsid, result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
             result.resultdatetimeutcoffset, result.validdatetime, result.validdatetimeutcoffset, result.statuscv,
             result.sampledmediumcv, result.valuecount)
+        if result.dataqualityid is not None:
+            await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
+                resultid=result_row['resultid'], dataqualityid=result.dataqualityid))
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
     return schemas.Results(**{**result_row, **dict(feature_action_row)})

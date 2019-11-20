@@ -1,6 +1,6 @@
 import uuid
 import datetime
-from typing import Optional
+from typing import Optional, List, Tuple
 
 import shapely.wkt
 from pydantic import BaseModel, BaseConfig, constr, validator
@@ -115,6 +115,25 @@ class SamplingFeatures(SamplingFeaturesCreate):
     samplingfeatureid: int
 
 
+class SpatialReferencesCreate(BaseModel):
+    srscode: constr(max_length=50) = None  # type: ignore
+    srsname: constr(max_length=255)  # type: ignore
+    srsdescription: constr(max_length=5000) = None  # type: ignore
+    srslink: constr(max_length=255) = None  # type: ignore
+
+
+class SpatialReferences(SpatialReferencesCreate):
+    spatialreferenceid: int
+
+
+class Sites(BaseModel):
+    samplingfeatureid: int
+    sitetypecv: constr(max_length=255)  # type: ignore
+    latitude: float
+    longitude: float
+    spatialreferenceid: int
+
+
 class ProcessingLevelsCreate(BaseModel):
     processinglevelcode: constr(max_length=50)  # type: ignore
     definition: constr(max_length=5000) = None  # type: ignore
@@ -149,6 +168,28 @@ class Variables(VariablesCreate):
     variableid: int
 
 
+class DataQualityCreate(BaseModel):
+    dataqualitytypecv: constr(max_length=255)  # type: ignore
+    dataqualitycode: constr(max_length=255)  # type: ignore
+    dataqualityvalue: Optional[float]
+    dataqualityvalueunitsid: Optional[int]
+    dataqualitydescription: constr(max_length=5000) = None  # type: ignore
+    dataqualitylink: constr(max_length=255) = None  # type: ignore
+
+
+class DataQuality(DataQualityCreate):
+    dataqualityid: int
+
+
+class ResultsDataQualityCreate(BaseModel):
+    resultid: int
+    dataqualityid: int
+
+
+class ResultsDataQuality(ResultsDataQualityCreate):
+    bridgeid: int
+
+
 class FeatureActionsCreate(BaseModel):
     samplingfeatureid: int
     actionid: int
@@ -159,6 +200,7 @@ class FeatureActions(FeatureActionsCreate):
 
 
 class ResultsCreate(FeatureActionsCreate):
+    dataqualityid: Optional[int]
     resultuuid: uuid.UUID
     resulttypecv: constr(max_length=255)  # type: ignore
     variableid: int

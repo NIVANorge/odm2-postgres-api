@@ -4,7 +4,7 @@
 -- CREATE EXTENSION if not exists fuzzystrmatch;
 -- CREATE EXTENSION if not exists postgis_tiger_geoCoder;
 --
--- drop schema if exists ODM2 cascade;
+-- drop schema if exists ODM2 restrict;
 --
 -- create schema ODM2;
 
@@ -442,7 +442,7 @@ create table ODM2.CV_VariableType (
 /***************************************************************************/
 
 create table ODM2.DataQuality (
-	dataqualityid integer  NOT NULL primary key,
+	dataqualityid serial  NOT NULL primary key,
 	dataqualitytypecv varchar (255) NOT NULL,
 	dataqualitycode varchar (255) NOT NULL,
 	dataqualityvalue double precision  NULL,
@@ -479,7 +479,8 @@ create table ODM2.ResultNormalizationValues (
 create table ODM2.ResultsDataQuality (
 	bridgeid serial  NOT NULL primary key,
 	resultid bigint  NOT NULL,
-	dataqualityid integer  NOT NULL
+	dataqualityid integer  NOT NULL,
+	UNIQUE (resultid, dataqualityid)
 );
 /***************************************************************************/
 /************************** CREATE ODM2EQUIPMENT ***************************/
@@ -788,11 +789,11 @@ create table ODM2.ResultDerivationEquations (
 
 create table ODM2.TrackResults (
 	resultid bigint  NOT NULL primary key,
-	spatialreferenceid integer  NULL,
+	spatialreferenceid integer  NOT NULL,
 	intendedtimespacing double precision  NULL,
 	intendedtimespacingunitsid integer  NULL,
 	aggregationstatisticcv varchar (255) NOT NULL,
-	CONSTRAINT track_result_unique UNIQUE (resultid, spatialreferenceid)
+	CONSTRAINT track_result_unique UNIQUE (ResultID, SpatialReferenceID)
 );
 create table ODM2.TrackResultValues (
 	valuedatetime timestamp  NOT NULL,
@@ -800,14 +801,14 @@ create table ODM2.TrackResultValues (
 	datavalue double precision  NOT NULL,
 	resultid bigint NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
-	CONSTRAINT track_result_value_unique UNIQUE (valuedatetime, resultid)
+	CONSTRAINT track_result_value_unique UNIQUE (ValueDateTime, ResultID)
 );
 create table ODM2.TrackResultLocations (
 	valuedatetime timestamp  NOT NULL,
 	spatialreferenceid integer  NOT NULL,
-	featuregeometry_tracklocation geometry(POINT, 4326)  NOT NULL,
+	trackpoint geometry(POINT, 4326)  NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
-	CONSTRAINT track_result_location_unique UNIQUE (valuedatetime, spatialreferenceid)
+	CONSTRAINT track_result_location_unique UNIQUE (ValueDateTime, SpatialReferenceID)
 );
 create table ODM2.CategoricalResults (
 	resultid bigint  NOT NULL primary key,
@@ -1142,1168 +1143,1176 @@ create table ODM2.Simulations (
 
 alter table ODM2.ActionAnnotations add constraint fk_ActionAnnotations_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionAnnotations add constraint fk_ActionAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Annotations add constraint fk_Annotations_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Annotations add constraint fk_Annotations_CV_AnnotationType
 foreign key (AnnotationTypeCV) References ODM2.CV_AnnotationType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Annotations add constraint fk_Annotations_People
 foreign key (AnnotatorID) References ODM2.People (PersonID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CategoricalResultValueAnnotations add constraint fk_CategoricalResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CategoricalResultValueAnnotations add constraint fk_CategoricalResultValueAnnotations_CategoricalResultValues
 foreign key (ValueID) References ODM2.CategoricalResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.EquipmentAnnotations add constraint fk_EquipmentAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.EquipmentAnnotations add constraint fk_EquipmentAnnotations_Equipment
 foreign key (EquipmentID) References ODM2.Equipment (EquipmentID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResultValueAnnotations add constraint fk_MeasurementResultValueAnnotations_MeasurementResultValues
 foreign key (ValueID) References ODM2.MeasurementResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResultValueAnnotations add constraint fk_ResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodAnnotations add constraint fk_MethodAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodAnnotations add constraint fk_MethodAnnotations_Methods
 foreign key (MethodID) References ODM2.Methods (MethodID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValueAnnotations add constraint fk_PointCoverageResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValueAnnotations add constraint fk_PointCoverageResultValueAnnotations_PointCoverageResultValues
 foreign key (ValueID) References ODM2.PointCoverageResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValueAnnotations add constraint fk_ProfileResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValueAnnotations add constraint fk_ProfileResultValueAnnotations_ProfileResultValues
 foreign key (ValueID) References ODM2.ProfileResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultAnnotations add constraint fk_ResultAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultAnnotations add constraint fk_ResultAnnotations_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatureAnnotations add constraint fk_SamplingFeatureAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatureAnnotations add constraint fk_SamplingFeatureAnnotations_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValueAnnotations add constraint fk_SectionResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValueAnnotations add constraint fk_SectionResultValueAnnotations_SectionResultValues
 foreign key (ValueID) References ODM2.SectionResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValueAnnotations add constraint fk_SpectraResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValueAnnotations add constraint fk_SpectraResultValueAnnotations_SpectraResultValues
 foreign key (ValueID) References ODM2.SpectraResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResultValueAnnotations add constraint fk_TimeSeriesResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResultValueAnnotations add constraint fk_TimeSeriesResultValueAnnotations_TimeSeriesResultValues
 foreign key (ValueID) References ODM2.TimeSeriesResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValueAnnotations add constraint fk_TrajectoryResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValueAnnotations add constraint fk_TrajectoryResultValueAnnotations_TrajectoryResultValues
 foreign key (ValueID) References ODM2.TrajectoryResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValueAnnotations add constraint fk_TransectResultValueAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValueAnnotations add constraint fk_TransectResultValueAnnotations_TransectResultValues
 foreign key (ValueID) References ODM2.TransectResultValues (ValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionBy add constraint fk_ActionPeople_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionBy add constraint fk_ActionPeople_Affiliations
 foreign key (AffiliationID) References ODM2.Affiliations (AffiliationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Actions add constraint fk_Actions_CV_ActionType
 foreign key (ActionTypeCV) References ODM2.CV_ActionType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Actions add constraint fk_Actions_Methods
 foreign key (MethodID) References ODM2.Methods (MethodID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Affiliations add constraint fk_Affiliations_Organizations
 foreign key (OrganizationID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Affiliations add constraint fk_Affiliations_People
 foreign key (PersonID) References ODM2.People (PersonID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Datasets add constraint fk_Datasets_CV_DatasetTypeCV
 foreign key (DatasetTypeCV) References ODM2.CV_DatasetType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DatasetsResults add constraint fk_DataSetsResults_DataSets
 foreign key (DatasetID) References ODM2.Datasets (DatasetID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DatasetsResults add constraint fk_DataSetsResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.FeatureActions add constraint fk_FeatureActions_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.FeatureActions add constraint fk_FeatureActions_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Methods add constraint fk_Methods_CV_MethodType
 foreign key (MethodTypeCV) References ODM2.CV_MethodType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Methods add constraint fk_Methods_Organizations
 foreign key (OrganizationID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Organizations add constraint fk_Organizations_CV_OrganizationType
 foreign key (OrganizationTypeCV) References ODM2.CV_OrganizationType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Organizations add constraint fk_Organizations_Organizations
 foreign key (ParentOrganizationID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedActions add constraint fk_RelatedActions_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedActions add constraint fk_RelatedActions_Actions_AreRelated
 foreign key (RelatedActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedActions add constraint fk_RelatedActions_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_CV_Medium
 foreign key (SampledMediumCV) References ODM2.CV_Medium (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_CV_ResultType
 foreign key (ResultTypeCV) References ODM2.CV_ResultType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_CV_Status
 foreign key (StatusCV) References ODM2.CV_Status (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_FeatureActions
 foreign key (FeatureActionID) References ODM2.FeatureActions (FeatureActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_ProcessingLevels
 foreign key (ProcessingLevelID) References ODM2.ProcessingLevels (ProcessingLevelID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_TaxonomicClassifiers
 foreign key (TaxonomicClassifierID) References ODM2.TaxonomicClassifiers (TaxonomicClassifierID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_Units
 foreign key (UnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Results add constraint fk_Results_Variables
 foreign key (VariableID) References ODM2.Variables (VariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatures add constraint fk_SamplingFeatures_CV_ElevationDatum
 foreign key (ElevationDatumCV) References ODM2.CV_ElevationDatum (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatures add constraint fk_SamplingFeatures_CV_SamplingFeatureGeoType
 foreign key (SamplingFeatureGeotypeCV) References ODM2.CV_SamplingFeatureGeoType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatures add constraint fk_SamplingFeatures_CV_SamplingFeatureType
 foreign key (SamplingFeatureTypeCV) References ODM2.CV_SamplingFeatureType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TaxonomicClassifiers add constraint fk_ParentTaxon_Taxon
 foreign key (ParentTaxonomicClassifierID) References ODM2.TaxonomicClassifiers (TaxonomicClassifierID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TaxonomicClassifiers add constraint fk_TaxonomicClassifiers_CV_TaxonomicClassifierType
 foreign key (TaxonomicClassifierTypeCV) References ODM2.CV_TaxonomicClassifierType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Units add constraint fk_Units_CV_UnitsType
 foreign key (UnitsTypeCV) References ODM2.CV_UnitsType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Variables add constraint fk_Variables_CV_Speciation
 foreign key (SpeciationCV) References ODM2.CV_Speciation (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Variables add constraint fk_Variables_CV_VariableName
 foreign key (VariableNameCV) References ODM2.CV_VariableName (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Variables add constraint fk_Variables_CV_VariableType
 foreign key (VariableTypeCV) References ODM2.CV_VariableType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataQuality add constraint fk_DataQuality_CV_DataQualityType
 foreign key (DataQualityTypeCV) References ODM2.CV_DataQualityType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataQuality add constraint fk_DataQuality_Units
 foreign key (DataQualityValueUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterials add constraint fk_ReferenceMaterials_CV_Medium
 foreign key (ReferenceMaterialMediumCV) References ODM2.CV_Medium (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterials add constraint fk_ReferenceMaterials_Organizations
 foreign key (ReferenceMaterialOrganizationID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterials add constraint fk_ReferenceMaterials_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterialValues add constraint fk_ReferenceMaterialValues_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterialValues add constraint fk_ReferenceMaterialValues_ReferenceMaterials
 foreign key (ReferenceMaterialID) References ODM2.ReferenceMaterials (ReferenceMaterialID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterialValues add constraint fk_ReferenceMaterialValues_Units
 foreign key (UnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterialValues add constraint fk_ReferenceMaterialValues_Variables
 foreign key (VariableID) References ODM2.Variables (VariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultNormalizationValues add constraint fk_ResultNormalizationValues_ReferenceMaterialValues
 foreign key (NormalizedByReferenceMaterialValueID) References ODM2.ReferenceMaterialValues (ReferenceMaterialValueID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultNormalizationValues add constraint fk_ResultNormalizationValues_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultsDataQuality add constraint fk_ResultsDataQuality_DataQuality
 foreign key (DataQualityID) References ODM2.DataQuality (DataQualityID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultsDataQuality add constraint fk_ResultsDataQuality_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CalibrationActions add constraint fk_CalibrationActions_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CalibrationActions add constraint fk_CalibrationActions_InstrumentOutputVariables
 foreign key (InstrumentOutputVariableID) References ODM2.InstrumentOutputVariables (InstrumentOutputVariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CalibrationReferenceEquipment add constraint fk_CalibrationReferenceEquipment_CalibrationActions
 foreign key (ActionID) References ODM2.CalibrationActions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CalibrationReferenceEquipment add constraint fk_CalibrationReferenceEquipment_Equipment
 foreign key (EquipmentID) References ODM2.Equipment (EquipmentID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CalibrationStandards add constraint fk_CalibrationStandards_CalibrationActions
 foreign key (ActionID) References ODM2.CalibrationActions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CalibrationStandards add constraint fk_FieldCalibrationStandards_ReferenceMaterials
 foreign key (ReferenceMaterialID) References ODM2.ReferenceMaterials (ReferenceMaterialID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerFileColumns add constraint fk_DataloggerFileColumns_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerFileColumns add constraint fk_DataloggerFileColumns_DataLoggerFiles
 foreign key (DataLoggerFileID) References ODM2.DataLoggerFiles (DataLoggerFileID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerFileColumns add constraint fk_DataloggerFileColumns_InstrumentOutputVariables
 foreign key (InstrumentOutputVariableID) References ODM2.InstrumentOutputVariables (InstrumentOutputVariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerFileColumns add constraint fk_DataloggerFileColumns_RecordingUnits
 foreign key (RecordingIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerFileColumns add constraint fk_DataloggerFileColumns_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerFileColumns add constraint fk_DataloggerFileColumns_ScanUnits
 foreign key (ScanIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataLoggerFiles add constraint fk_DataLoggerFiles_DataloggerProgramFiles
 foreign key (ProgramID) References ODM2.DataloggerProgramFiles (ProgramID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DataloggerProgramFiles add constraint fk_DataloggerProgramFiles_Affiliations
 foreign key (AffiliationID) References ODM2.Affiliations (AffiliationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Equipment add constraint fk_Equipment_CV_EquipmentType
 foreign key (EquipmentTypeCV) References ODM2.CV_EquipmentType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Equipment add constraint fk_Equipment_EquipmentModels
 foreign key (EquipmentModelID) References ODM2.EquipmentModels (EquipmentModelID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Equipment add constraint fk_Equipment_Organizations
 foreign key (EquipmentVendorID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Equipment add constraint fk_Equipment_People
 foreign key (EquipmentOwnerID) References ODM2.People (PersonID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.EquipmentModels add constraint fk_EquipmentModels_Organizations
 foreign key (ModelManufacturerID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.EquipmentUsed add constraint fk_EquipmentActions_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.EquipmentUsed add constraint fk_EquipmentActions_Equipment
 foreign key (EquipmentID) References ODM2.Equipment (EquipmentID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.InstrumentOutputVariables add constraint fk_InstrumentOutputVariables_EquipmentModels
 foreign key (ModelID) References ODM2.EquipmentModels (EquipmentModelID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.InstrumentOutputVariables add constraint fk_InstrumentOutputVariables_Methods
 foreign key (InstrumentMethodID) References ODM2.Methods (MethodID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.InstrumentOutputVariables add constraint fk_InstrumentOutputVariables_Units
 foreign key (InstrumentRawOutputUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.InstrumentOutputVariables add constraint fk_InstrumentOutputVariables_Variables
 foreign key (VariableID) References ODM2.Variables (VariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MaintenanceActions add constraint fk_MaintenanceActions_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedEquipment add constraint fk_RelatedEquipment_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedEquipment add constraint fk_RelatedEquipment_Equipment
 foreign key (EquipmentID) References ODM2.Equipment (EquipmentID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedEquipment add constraint fk_RelatedEquipment_Equipment_AreRelated
 foreign key (RelatedEquipmentID) References ODM2.Equipment (EquipmentID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionExtensionPropertyValues add constraint fk_ActionExtensionPropertyValues_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionExtensionPropertyValues add constraint fk_ActionExtensionPropertyValues_ExtensionProperties
 foreign key (PropertyID) References ODM2.ExtensionProperties (PropertyID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CitationExtensionPropertyValues add constraint fk_CitationExtensionPropertyValues_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CitationExtensionPropertyValues add constraint fk_CitationExtensionPropertyValues_ExtensionProperties
 foreign key (PropertyID) References ODM2.ExtensionProperties (PropertyID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ExtensionProperties add constraint fk_ExtensionProperties_CV_PropertyDataType
 foreign key (PropertyDataTypeCV) References ODM2.CV_PropertyDataType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ExtensionProperties add constraint fk_ExtensionProperties_Units
 foreign key (PropertyUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodExtensionPropertyValues add constraint fk_MethodExtensionPropertyValues_ExtensionProperties
 foreign key (PropertyID) References ODM2.ExtensionProperties (PropertyID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodExtensionPropertyValues add constraint fk_MethodExtensionPropertyValues_Methods
 foreign key (MethodID) References ODM2.Methods (MethodID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultExtensionPropertyValues add constraint fk_ResultExtensionPropertyValues_ExtensionProperties
 foreign key (PropertyID) References ODM2.ExtensionProperties (PropertyID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultExtensionPropertyValues add constraint fk_ResultExtensionPropertyValues_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatureExtensionPropertyValues add constraint fk_SamplingFeatureExtensionPropertyValues_ExtensionProperties
 foreign key (PropertyID) References ODM2.ExtensionProperties (PropertyID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatureExtensionPropertyValues add constraint fk_SamplingFeatureExtensionPropertyValues_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.VariableExtensionPropertyValues add constraint fk_VariableExtensionPropertyValues_ExtensionProperties
 foreign key (PropertyID) References ODM2.ExtensionProperties (PropertyID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.VariableExtensionPropertyValues add constraint fk_VariableExtensionPropertyValues_Variables
 foreign key (VariableID) References ODM2.Variables (VariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CitationExternalIdentifiers add constraint fk_CitationExternalIdentifiers_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CitationExternalIdentifiers add constraint fk_CitationExternalIdentifiers_ExternalIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ExternalIdentifierSystems add constraint fk_ExternalIdentifierSystems_Organizations
 foreign key (IdentifierSystemOrganizationID) References ODM2.Organizations (OrganizationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodExternalIdentifiers add constraint fk_MethodExternalIdentifiers_ExternalIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodExternalIdentifiers add constraint fk_MethodExternalIdentifiers_Methods
 foreign key (MethodID) References ODM2.Methods (MethodID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PersonExternalIdentifiers add constraint fk_PersonExternalIdentifiers_ExternalIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PersonExternalIdentifiers add constraint fk_PersonExternalIdentifiers_People
 foreign key (PersonID) References ODM2.People (PersonID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterialExternalIdentifiers add constraint fk_RefMaterialExtIdentifiers_ExtIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ReferenceMaterialExternalIdentifiers add constraint fk_RefMaterialExtIdentifiers_RefMaterials
 foreign key (ReferenceMaterialID) References ODM2.ReferenceMaterials (ReferenceMaterialID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatureExternalIdentifiers add constraint fk_SamplingFeatureExternalIdentifiers_ExternalIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SamplingFeatureExternalIdentifiers add constraint fk_SamplingFeatureExternalIdentifiers_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpatialReferenceExternalIdentifiers add constraint fk_SpatialReferenceExternalIdentifiers_ExternalIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpatialReferenceExternalIdentifiers add constraint fk_SpatialReferenceExternalIdentifiers_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TaxonomicClassifierExternalIdentifiers add constraint fk_TaxonomicClassifierExtIDs_ExtIDSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TaxonomicClassifierExternalIdentifiers add constraint fk_TaxonomicClassifierExtIDs_TaxonomicClassifiers
 foreign key (TaxonomicClassifierID) References ODM2.TaxonomicClassifiers (TaxonomicClassifierID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.VariableExternalIdentifiers add constraint fk_VariableExternalIdentifiers_ExternalIdentifierSystems
 foreign key (ExternalIdentifierSystemID) References ODM2.ExternalIdentifierSystems (ExternalIdentifierSystemID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.VariableExternalIdentifiers add constraint fk_VariableExternalIdentifiers_Variables
 foreign key (VariableID) References ODM2.Variables (VariableID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionDirectives add constraint fk_ActionDirectives_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ActionDirectives add constraint fk_ActionDirectives_Directives
 foreign key (DirectiveID) References ODM2.Directives (DirectiveID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Directives add constraint fk_Directives_CV_DirectiveType
 foreign key (DirectiveTypeCV) References ODM2.CV_DirectiveType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpecimenBatchPostions add constraint fk_SpecimenBatchPostions_FeatureActions
 foreign key (FeatureActionID) References ODM2.FeatureActions (FeatureActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.AuthorLists add constraint fk_AuthorLists_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.AuthorLists add constraint fk_AuthorLists_People
 foreign key (PersonID) References ODM2.People (PersonID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DatasetCitations add constraint fk_DataSetCitations_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DatasetCitations add constraint fk_DatasetCitations_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.DatasetCitations add constraint fk_DataSetCitations_DataSets
 foreign key (DataSetID) References ODM2.Datasets (DatasetID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodCitations add constraint fk_MethodCitations_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodCitations add constraint fk_MethodCitations_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MethodCitations add constraint fk_MethodCitations_Methods
 foreign key (MethodID) References ODM2.Methods (MethodID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedAnnotations add constraint fk_RelatedAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedAnnotations add constraint fk_RelatedAnnotations_Annotations_AreRelated
 foreign key (RelatedAnnotationID) References ODM2.Annotations (AnnotationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedAnnotations add constraint fk_RelatedAnnotations_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedCitations add constraint fk_RelatedCitations_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedCitations add constraint fk_RelatedCitations_Citations_AreRelated
 foreign key (RelatedCitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedCitations add constraint fk_RelatedCitations_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedDatasets add constraint fk_RelatedDatasets_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedDatasets add constraint fk_RelatedDatasets_DataSets
 foreign key (DataSetID) References ODM2.Datasets (DatasetID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedDatasets add constraint fk_RelatedDatasets_DataSets_AreRelated
 foreign key (RelatedDatasetID) References ODM2.Datasets (DatasetID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedResults add constraint fk_RelatedResults_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedResults add constraint fk_RelatedResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedResults add constraint fk_RelatedResults_Results_AreRelated
 foreign key (RelatedResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultDerivationEquations add constraint fk_ResultDerivationEquations_DerivationEquations
 foreign key (DerivationEquationID) References ODM2.DerivationEquations (DerivationEquationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ResultDerivationEquations add constraint fk_ResultDerivationEquations_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CategoricalResults add constraint fk_CategoricalResults_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CategoricalResults add constraint fk_CategoricalResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CategoricalResults add constraint fk_CategoricalResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.CategoricalResultValues add constraint fk_CategoricalResultValues_CategoricalResults
 foreign key (ResultID) References ODM2.CategoricalResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResults add constraint fk_MeasurementResults_ZUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.MeasurementResultValues add constraint fk_MeasurementResultValues_MeasurementResults
 foreign key (ResultID) References ODM2.MeasurementResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResults add constraint fk_PointCoverageResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResults add constraint fk_PointCoverageResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResults add constraint fk_PointCoverageResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResults add constraint fk_PointCoverageResults_XUnits
 foreign key (IntendedXSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResults add constraint fk_PointCoverageResults_YUnits
 foreign key (IntendedYSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResults add constraint fk_PointCoverageResults_ZUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValues add constraint fk_PointCoverageResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValues add constraint fk_PointCoverageResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValues add constraint fk_PointCoverageResultValues_PointCoverageResults
 foreign key (ResultID) References ODM2.PointCoverageResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValues add constraint fk_PointCoverageResultValues_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.PointCoverageResultValues add constraint fk_PointCoverageResultValues_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_DUnits
 foreign key (IntendedZSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_TUnits
 foreign key (IntendedTimeSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResults add constraint fk_ProfileResults_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValues add constraint fk_ProfileResultValues_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValues add constraint fk_ProfileResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValues add constraint fk_ProfileResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValues add constraint fk_ProfileResultValues_DUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ProfileResultValues add constraint fk_ProfileResultValues_ProfileResults
 foreign key (ResultID) References ODM2.ProfileResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_TMUnits
 foreign key (IntendedTimeSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_Units
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_XUnits
 foreign key (IntendedXSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResults add constraint fk_SectionResults_ZUnits
 foreign key (IntendedZSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_SectionResults
 foreign key (ResultID) References ODM2.SectionResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SectionResultValues add constraint fk_SectionResultValues_ZUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_Units
 foreign key (IntendedWavelengthSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResults add constraint fk_SpectraResults_ZUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValues add constraint fk_SpectraResultValues_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValues add constraint fk_SpectraResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValues add constraint fk_SpectraResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValues add constraint fk_SpectraResultValues_SpectraResults
 foreign key (ResultID) References ODM2.SpectraResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpectraResultValues add constraint fk_SpectraResultValues_WUnits
 foreign key (WavelengthUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_TUnits
 foreign key (IntendedTimeSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResults add constraint fk_TimeSeriesResults_ZUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResultValues add constraint fk_TimeSeriesResultValues_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResultValues add constraint fk_TimeSeriesResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResultValues add constraint fk_TimeSeriesResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TimeSeriesResultValues add constraint fk_TimeSeriesResultValues_TimeSeriesResults
 foreign key (ResultID) References ODM2.TimeSeriesResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResults add constraint fk_TrajectoryResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResults add constraint fk_TrajectoryResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResults add constraint fk_TrajectoryResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResults add constraint fk_TrajectoryResults_TSUnits
 foreign key (IntendedTrajectorySpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResults add constraint fk_TrajectoryResults_TUnits
 foreign key (IntendedTimeSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_DistanceUnits
 foreign key (TrajectoryDistanceUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_TrajectoryResults
 foreign key (ResultID) References ODM2.TrajectoryResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrajectoryResultValues add constraint fk_TrajectoryResultValues_ZUnits
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResults add constraint fk_TransectResults_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResults add constraint fk_TransectResults_Results
 foreign key (ResultID) References ODM2.Results (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResults add constraint fk_TransectResults_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResults add constraint fk_TransectResults_TMUnits
 foreign key (IntendedTimeSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResults add constraint fk_TransectResults_TSUnits
 foreign key (IntendedTransectSpacingUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResults add constraint fk_TransectResults_Units
 foreign key (ZLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_AIUnits
 foreign key (TimeAggregationIntervalUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_CV_AggregationStatistic
 foreign key (AggregationStatisticCV) References ODM2.CV_AggregationStatistic (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_CV_CensorCode
 foreign key (CensorCodeCV) References ODM2.CV_CensorCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_DistanceUnits
 foreign key (TransectDistanceUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_TransectResults
 foreign key (ResultID) References ODM2.TransectResults (ResultID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_XUnits
 foreign key (XLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TransectResultValues add constraint fk_TransectResultValues_YUnits
 foreign key (YLocationUnitsID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedFeatures add constraint fk_FeatureParents_FeaturesParent
 foreign key (RelatedFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedFeatures add constraint fk_FeatureParents_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedFeatures add constraint fk_FeatureParents_SpatialOffsets
 foreign key (SpatialOffsetID) References ODM2.SpatialOffsets (SpatialOffsetID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedFeatures add constraint fk_RelatedFeatures_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Sites add constraint fk_Sites_CV_SiteType
 foreign key (SiteTypeCV) References ODM2.CV_SiteType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Sites add constraint fk_Sites_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Sites add constraint fk_Sites_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpatialOffsets add constraint fk_SpatialOffsets_CV_SpatialOffsetType
 foreign key (SpatialOffsetTypeCV) References ODM2.CV_SpatialOffsetType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpatialOffsets add constraint fk_SpatialOffsets_Offset1Units
 foreign key (Offset1UnitID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpatialOffsets add constraint fk_SpatialOffsets_Offset2Units
 foreign key (Offset2UnitID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpatialOffsets add constraint fk_SpatialOffsets_Offset3Units
 foreign key (Offset3UnitID) References ODM2.Units (UnitsID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Specimens add constraint fk_Specimens_CV_Medium
 foreign key (SpecimenMediumCV) References ODM2.CV_Medium (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Specimens add constraint fk_Specimens_CV_SpecimenType
 foreign key (SpecimenTypeCV) References ODM2.CV_SpecimenType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Specimens add constraint fk_Specimens_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpecimenTaxonomicClassifiers add constraint fk_SpecimenTaxonomicClassifiers_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpecimenTaxonomicClassifiers add constraint fk_SpecimenTaxonomicClassifiers_Specimens
 foreign key (SamplingFeatureID) References ODM2.Specimens (SamplingFeatureID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.SpecimenTaxonomicClassifiers add constraint fk_SpecimenTaxonomicClassifiers_TaxonomicClassifiers
 foreign key (TaxonomicClassifierID) References ODM2.TaxonomicClassifiers (TaxonomicClassifierID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ModelAffiliations add constraint fk_ModelAffiliations_Affiliations
 foreign key (AffiliationID) References ODM2.Affiliations (AffiliationID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.ModelAffiliations add constraint fk_ModelAffiliations_Models
 foreign key (ModelID) References ODM2.Models (ModelID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedModels add constraint fk_RelatedModels_CV_RelationshipType
 foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.RelatedModels add constraint fk_RelatedModels_Models
 foreign key (ModelID) References ODM2.Models (ModelID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Simulations add constraint fk_Simulations_Actions
 foreign key (ActionID) References ODM2.Actions (ActionID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.Simulations add constraint fk_Simulations_Models
 foreign key (ModelID) References ODM2.Models (ModelID)
-on update no Action on delete cascade;
-
-alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResults
-foreign key (ResultID, SpatialReferenceID) References ODM2.TrackResults (ResultID, SpatialReferenceID)
-on update no Action on delete cascade;
-
-alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResultLocations
-foreign key (valuedatetime, spatialreferenceid) References ODM2.TrackResultLocations (valuedatetime, spatialreferenceid)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
 
 alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_SpatialReferences
 foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
-on update no Action on delete cascade;
+on update no Action on delete RESTRICT;
+
+alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResults
+foreign key (ResultID, SpatialReferenceID) References ODM2.TrackResults (ResultID, SpatialReferenceID)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResultLocations
+foreign key (valuedatetime, SpatialReferenceID) References ODM2.TrackResultLocations (valuedatetime, SpatialReferenceID)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_CV_QualityCode
+foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_CV_QualityCode
+foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
+on update no Action on delete RESTRICT;

@@ -95,6 +95,17 @@ async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreat
     return await core_queries.create_sampling_feature(connection, sampling_feature)
 
 
+@app.post("/spatial_references", response_model=schemas.SpatialReferences)
+async def post_spatial_references(spatial_reference: schemas.SpatialReferencesCreate,
+                                  connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_spatial_reference(connection, spatial_reference)
+
+
+@app.post("/sites", response_model=schemas.Sites)
+async def post_sites(site: schemas.Sites, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_site(connection, site)
+
+
 @app.post("/processing_levels", response_model=schemas.ProcessingLevels)
 async def post_processing_levels(processing_level: schemas.ProcessingLevelsCreate,
                                  connection=Depends(api_pool_manager.get_conn)):
@@ -109,6 +120,17 @@ async def post_units(unit: schemas.UnitsCreate, connection=Depends(api_pool_mana
 @app.post("/variables", response_model=schemas.Variables)
 async def post_variables(variable: schemas.VariablesCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_variable(connection, variable)
+
+
+@app.post("/data_quality", response_model=schemas.DataQuality)
+async def post_data_quality(data_quality: schemas.DataQualityCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_data_quality(connection, data_quality)
+
+
+@app.post("/result_data_quality", response_model=schemas.ResultsDataQuality)
+async def post_result_data_quality(data_quality_result: schemas.ResultsDataQualityCreate,
+                                   connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_result_data_quality(connection, data_quality_result)
 
 
 @app.post("/feature_actions", response_model=schemas.FeatureActions)

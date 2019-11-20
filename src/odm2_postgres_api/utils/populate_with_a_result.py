@@ -45,6 +45,15 @@ initial_data = {'people': {
     "samplingfeaturegeotypecv": "Line string",
     "featuregeometrywkt": "LINESTRING (59.916667 10.733333, 54.323333 10.139444)",
     "elevationdatumcv": "MSL"
+}, 'spatial_references': {
+    "srsname": "Color Fantasy",
+    "srsdescription": "Ferrybox between Oslo and Kiel"
+}, 'sites': {
+    "samplingfeatureid": 1,
+    "sitetypecv": "Ocean",
+    "latitude": 57.12,
+    "longitude": 10.4363885,
+    "spatialreferenceid": 1
 }, 'processing_levels': {
     "processinglevelcode": "0",
     "definition": "There has been no quality control or processing on this data",
@@ -58,9 +67,22 @@ initial_data = {'people': {
     "variablecode": "001",
     "variablenamecv": "Salinity",
     "nodatavalue": -9000
-}, 'results': {
+}, 'data_quality': [{
+    "dataqualitytypecv": "Physical limit upper bound",
+    "dataqualitycode": "001",
+    "dataqualityvalue": 41,
+    "dataqualityvalueunitsid": 1,
+    "dataqualitydescription": "Ferrybox salinity upper bound"
+}, {
+    "dataqualitytypecv": "Physical limit lower bound",
+    "dataqualitycode": "002",
+    "dataqualityvalue": 2,
+    "dataqualityvalueunitsid": 1,
+    "dataqualitydescription": "Ferrybox salinity lower bound"
+}], 'results': {
     "samplingfeatureid": 1,
     "actionid": 1,
+    "dataqualityid": 1,
     "resultuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "resulttypecv": "Time series coverage",
     "variableid": 1,
@@ -69,16 +91,26 @@ initial_data = {'people': {
     "valuecount": 0,
     "statuscv": "Ongoing",
     "sampledmediumcv": "Liquid aqueous"
+}, 'result_data_quality': {
+    "resultid": 1,
+    "dataqualityid": 2
 }}
+
+
+def do_post(endpoint, data):
+    response = requests.post('http://localhost:5000/' + endpoint, json=data)
+    response.raise_for_status()
+    logging.info(f"Succesfully inserted into '{endpoint}': {response.json()}")
 
 
 def main():
     setup_logging(plaintext=True)
-    api_url = 'http://localhost:5000/'
     for endpoint, data in initial_data.items():
-        response = requests.post(api_url + endpoint, json=data)
-        response.raise_for_status()
-        logging.info(f"Succesfully inserted into '{endpoint}': {response.json()}")
+        if type(data) == list:
+            for data_item in data:
+                do_post(endpoint, data_item)
+        else:
+            do_post(endpoint, data)
 
 
 if __name__ == '__main__':
