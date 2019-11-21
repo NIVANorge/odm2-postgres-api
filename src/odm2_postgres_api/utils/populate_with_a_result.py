@@ -1,4 +1,5 @@
 import logging
+import datetime as dt
 
 import requests
 
@@ -94,7 +95,37 @@ initial_data = {'people': {
 }, 'result_data_quality': {
     "resultid": 1,
     "dataqualityid": 2
+}, 'track_results': {
+    "resultid": 1,
+    "spatialreferenceid": 1,
+    "aggregationstatisticcv": "Continuous",
+    "track_result_values": [
+        (dt.datetime(2018, 12, 10).isoformat(), 1.1, 'Good'),
+        (dt.datetime(2018, 12, 10, 5).isoformat(), 2.2, 'Good'),
+        (dt.datetime(2018, 12, 10, 10).isoformat(), 3.3, 'Good')
+    ],
+    "track_result_locations": [
+        (dt.datetime(2018, 12, 10).isoformat(), 57.12, 10.43, 'Good'),
+        (dt.datetime(2018, 12, 10, 5).isoformat(), 57.13, 10.44, 'Good'),
+        (dt.datetime(2018, 12, 10, 10).isoformat(), 57.14, 10.45, 'Good')
+    ]
 }}
+
+# {
+#   "resultid": 1,
+#   "spatialreferenceid": 1,
+#   "aggregationstatisticcv": "Continuous",
+#   "track_result_values": [
+#     ["2018-12-10T00:00:00", 1.1, "Good"],
+#     ["2018-12-10T05:00:00", 2.2, "Good"],
+#     ["2018-12-10T10:00:00", 3.3, "Good"]
+#   ],
+#   "track_result_locations": [
+#     ["2018-12-10T00:00:00", 57.12, 10.43, "Good"],
+#     ["2018-12-10T05:00:00", 57.13, 10.44, "Good"],
+#     ["2018-12-10T10:00:00", 57.14, 10.45, "Good"]
+#   ]
+# }
 
 
 def do_post(endpoint, data):

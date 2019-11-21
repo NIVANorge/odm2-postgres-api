@@ -797,17 +797,17 @@ create table ODM2.TrackResults (
 );
 create table ODM2.TrackResultValues (
 	valuedatetime timestamp  NOT NULL,
-	spatialreferenceid integer  NOT NULL,
 	datavalue double precision  NOT NULL,
-	resultid bigint NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
+	resultid bigint NOT NULL,
+	spatialreferenceid integer  NOT NULL,
 	CONSTRAINT track_result_value_unique UNIQUE (ValueDateTime, ResultID)
 );
 create table ODM2.TrackResultLocations (
 	valuedatetime timestamp  NOT NULL,
-	spatialreferenceid integer  NOT NULL,
 	trackpoint geometry(POINT, 4326)  NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
+	spatialreferenceid integer  NOT NULL,
 	CONSTRAINT track_result_location_unique UNIQUE (ValueDateTime, SpatialReferenceID)
 );
 create table ODM2.CategoricalResults (
@@ -2305,9 +2305,9 @@ alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResu
 foreign key (ResultID, SpatialReferenceID) References ODM2.TrackResults (ResultID, SpatialReferenceID)
 on update no Action on delete RESTRICT;
 
-alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResultLocations
-foreign key (valuedatetime, SpatialReferenceID) References ODM2.TrackResultLocations (valuedatetime, SpatialReferenceID)
-on update no Action on delete RESTRICT;
+-- alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResultLocations
+-- foreign key (valuedatetime, SpatialReferenceID) References ODM2.TrackResultLocations (valuedatetime, SpatialReferenceID)
+-- on update no Action on delete RESTRICT;
 
 alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)

@@ -218,3 +218,21 @@ class ResultsCreate(FeatureActionsCreate):
 
 class Results(ResultsCreate):
     resultid: int
+
+
+class TrackResultsFields(BaseModel):
+    resultid: int
+    spatialreferenceid: int
+    intendedtimespacing: Optional[float]
+    intendedtimespacingunitsid: Optional[int]
+    aggregationstatisticcv: constr(max_length=255)  # type: ignore
+
+
+class TrackResultsCreate(TrackResultsFields):
+    track_result_values: List[Tuple[datetime.datetime, float, str]]
+    track_result_locations: List[Tuple[datetime.datetime, float, float, str]]
+
+
+class TrackResultsReport(TrackResultsFields):
+    inserted_track_result_values: int
+    inserted_track_result_locations: int

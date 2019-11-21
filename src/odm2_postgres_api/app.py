@@ -142,3 +142,8 @@ async def post_feature_action(feature_action: schemas.FeatureActionsCreate,
 @app.post("/results", response_model=schemas.Results)
 async def post_results(result: schemas.ResultsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_result(connection, result)
+
+
+@app.post("/track_results", response_model=schemas.TrackResultsReport)
+async def post_track_results(track_result: schemas.TrackResultsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.upsert_track_result(connection, track_result)

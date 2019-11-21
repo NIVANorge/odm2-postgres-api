@@ -1,5 +1,6 @@
 import asyncpg
 import shapely.wkt
+import logging
 
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.utils import shapely_postgres_adapter
@@ -166,3 +167,41 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
                 resultid=result_row['resultid'], dataqualityid=result.dataqualityid))
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
     return schemas.Results(**{**result_row, **dict(feature_action_row)})
+
+
+async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):
+    await shapely_postgres_adapter.set_shapely_adapter(conn)
+    async with conn.transaction():
+        row = await conn.fetchrow(
+            "INSERT INTO trackresults (resultid, spatialreferenceid, intendedtimespacing, intendedtimespacingunitsid,"
+            "aggregationstatisticcv) VALUES ($1, $2, $3, $4, $5) "
+            "ON CONFLICT (resultid, spatialreferenceid) DO UPDATE SET "
+            "intendedtimespacing = EXCLUDED.intendedtimespacing, "
+            "intendedtimespacingunitsid = EXCLUDED.intendedtimespacingunitsid,"
+            "aggregationstatisticcv = EXCLUDED.aggregationstatisticcv returning *",
+            track_result.resultid, track_result.spatialreferenceid, track_result.intendedtimespacing,
+            track_result.intendedtimespacingunitsid, track_result.aggregationstatisticcv)
+        if track_result.track_result_locations:
+            location_records = ((rec[0], shapely.wkt.loads(f"POINT({rec[1]} {rec[2]})"), rec[3],
+                                 track_result.spatialreferenceid) for rec in track_result.track_result_locations)
+            await conn.executemany("INSERT INTO trackresultlocations (valuedatetime, trackpoint, qualitycodecv, "
+                                   "spatialreferenceid) VALUES ($1, ST_SetSRID($2::geometry, 4326), $3, $4) "
+                                   "ON CONFLICT (valuedatetime, spatialreferenceid) DO UPDATE SET "
+                                   "trackpoint = excluded.trackpoint, qualitycodecv = excluded.qualitycodecv",
+                                   location_records)
+            # result = await conn.copy_records_to_table(table_name='trackresultlocations',
+            #                                           records=location_records, schema_name='odm2')
+            # logging.info(result)
+        if track_result.track_result_values:
+            value_records = ((rec[0], rec[1], rec[2], track_result.resultid, track_result.spatialreferenceid)
+                             for rec in track_result.track_result_values)
+            await conn.executemany("INSERT INTO trackresultvalues (valuedatetime, datavalue, qualitycodecv, resultid, "
+                                   "spatialreferenceid) VALUES ($1, $2, $3, $4, $5) "
+                                   "ON CONFLICT (valuedatetime, resultid) DO UPDATE SET "
+                                   "datavalue = excluded.datavalue, qualitycodecv = excluded.qualitycodecv",
+                                   value_records)
+            # result = await conn.copy_records_to_table(table_name='trackresultvalues',
+            #                                           records=records, schema_name='odm2')
+            # logging.info(result)
+    return schemas.TrackResultsReport(**row, inserted_track_result_values=len(track_result.track_result_values),
+                                      inserted_track_result_locations=len(track_result.track_result_locations))

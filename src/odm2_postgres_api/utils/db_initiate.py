@@ -81,6 +81,7 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty
                     except (asyncpg.exceptions.DuplicateObjectError, asyncpg.exceptions.DuplicateTableError):
                         failed_commands += 1
         logging.info(f'Duplicate commands from ODM2_for_PostgreSQL.sql: {failed_commands}')
+        await run_create_hypertable_commands(connection_string)
         async with conn.transaction():
             await grant_all_on_db_to_role(conn, quoted_schema, quoted_mighty_user)
 
@@ -88,15 +89,14 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty
         await conn.close()
 
 
-async def odm_user_on_odm_db(connection_string):
+async def run_create_hypertable_commands(connection_string):
     hyper_tables_sql = [
-        "SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', chunk_time_interval => 100000)",
+        # "SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', chunk_time_interval => 100000)",
         "SELECT create_hypertable('ODM2.TrackResultLocations',"
         " 'valuedatetime', chunk_time_interval => interval '7 day')",
         "SELECT create_hypertable('ODM2.TrackResultValues', 'valuedatetime', chunk_time_interval => interval '7 day');"
     ]
 
-    hyper_tables_sql = []
     conn = await asyncpg.connect(connection_string)
     try:
         async with conn.transaction():
@@ -131,8 +131,6 @@ def main():
     connection_string = f'postgresql://{pg_user}:{pg_pwd}@{db_host}:{db_port}/{db_name}'
     asyncio.run(postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty_user))
 
-    connection_string = f'postgresql://{db_mighty_user}:{db_mighty_pwd}@{db_host}:{db_port}/{db_name}'
-    asyncio.run(odm_user_on_odm_db(connection_string))
     logging.info("Database tables for odm2 created")
 
 
