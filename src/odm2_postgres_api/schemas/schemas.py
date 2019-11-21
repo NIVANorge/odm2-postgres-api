@@ -10,6 +10,15 @@ from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_V
 cv_checker = constr(regex=f'({"|".join([f"^{cv}$" for cv in CONTROLLED_VOCABULARY_TABLE_NAMES])})')
 
 
+class ControlledVocabulary(BaseModel):
+    term: constr(max_length=255)  # type: ignore
+    name: constr(max_length=255) = None  # type: ignore
+    definition: constr(max_length=255) = None  # type: ignore
+    category: constr(max_length=255) = None  # type: ignore
+    # sourcevocabularyuri: constr(max_length=255) = None  # type: ignore
+    controlled_vocabulary_table_name: cv_checker  # type: ignore
+
+
 class PeopleCreate(BaseModel):
     personfirstname: constr(max_length=255)  # type: ignore
     personmiddlename: constr(max_length=255) = None  # type: ignore

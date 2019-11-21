@@ -53,11 +53,12 @@ async def fetch(session, url):
 
 
 async def update_cv_table(session, pool, table_name):
-    xml_string = await fetch(session, CV_URL % table_name[3:])
+    # Check against hardcoded table names otherwise this could be an SQL injection
     if table_name not in CONTROLLED_VOCABULARY_TABLE_NAMES:
         raise RuntimeError(f"table_name: '{table_name}' is invalid")
     sql_statement = f"INSERT INTO {table_name} (term, name, definition, category, sourcevocabularyuri) " \
                     f"VALUES ($1, $2, $3, $4, $5)"
+    xml_string = await fetch(session, CV_URL % table_name[3:])
     root = ElementTree.fromstring(xml_string)
     terms = []
     async with pool.acquire() as connection:

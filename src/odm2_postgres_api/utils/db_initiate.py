@@ -3,7 +3,6 @@ import logging
 import asyncio
 from pathlib import Path
 
-
 import asyncpg
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -92,9 +91,10 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty
 async def run_create_hypertable_commands(connection_string):
     hyper_tables_sql = [
         # "SELECT create_hypertable('odm2.TimeSeriesResultValues', 'valueid', chunk_time_interval => 100000)",
-        "SELECT create_hypertable('ODM2.TrackResultLocations',"
-        " 'valuedatetime', chunk_time_interval => interval '7 day')",
-        "SELECT create_hypertable('ODM2.TrackResultValues', 'valuedatetime', chunk_time_interval => interval '7 day');"
+        "SELECT create_hypertable('ODM2.TrackResultLocations', 'valuedatetime', "
+        "chunk_time_interval => interval '7 day', if_not_exists=>TRUE)",
+        "SELECT create_hypertable('ODM2.TrackResultValues', 'valuedatetime', "
+        "chunk_time_interval => interval '7 day', if_not_exists=>TRUE);"
     ]
 
     conn = await asyncpg.connect(connection_string)

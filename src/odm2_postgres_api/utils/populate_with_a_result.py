@@ -5,8 +5,15 @@ import requests
 
 from nivacloud_logging.log_utils import setup_logging
 
-
-initial_data = {'people': {
+initial_data = {'controlled_vocabularies': {
+    "term": "trackSeriesCoverage",
+    "name": "Track series coverage",
+    "definition": "A series of ResultValues for a single Variable, measured with a moving platform or some sort of "
+                  "variable location, using a single Method, with specific Units, having a specific ProcessingLevel, "
+                  "and measured over time.",
+    "category": "Coverage",
+    "controlled_vocabulary_table_name": "cv_resulttype"
+}, 'people': {
     "personfirstname": "Roald",
     "personlastname": "Storm"
 }, 'organizations': {
@@ -85,7 +92,7 @@ initial_data = {'people': {
     "actionid": 1,
     "dataqualityid": 1,
     "resultuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "resulttypecv": "Time series coverage",
+    "resulttypecv": "Track series coverage",
     "variableid": 1,
     "unitsid": 1,
     "processinglevelid": 1,

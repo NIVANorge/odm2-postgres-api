@@ -54,9 +54,15 @@ async def patch_controlled_vocabularies():
     return await synchronize_cv_tables(api_pool_manager.pool)
 
 
-@app.post("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
-async def post_controlled_vocabularies(controlled_vocabulary: schemas.cv_checker):  # type: ignore
+@app.patch("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
+async def patch_single_controlled_vocabulary(controlled_vocabulary: schemas.cv_checker):  # type: ignore
     return await synchronize_cv_tables(api_pool_manager.pool, [controlled_vocabulary])
+
+
+@app.post("/controlled_vocabularies", summary="api 101 testing")
+async def post_controlled_vocabularies(controlled_vocabulary: schemas.ControlledVocabulary,
+                                       connection=Depends(api_pool_manager.get_conn)):  # type: ignore
+    return await core_queries.create_new_controlled_vocabulary_item(connection, controlled_vocabulary)
 
 
 @app.post("/people", response_model=schemas.People)

@@ -4,6 +4,20 @@ import logging
 
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.utils import shapely_postgres_adapter
+from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
+
+
+async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
+                                                controlled_vocabulary: schemas.ControlledVocabulary):
+    table_name = controlled_vocabulary.controlled_vocabulary_table_name
+    # Check against hardcoded table names otherwise this could be an SQL injection
+    if table_name not in CONTROLLED_VOCABULARY_TABLE_NAMES:
+        raise RuntimeError(f"table_name: '{table_name}' is invalid")
+    sql_statement = f"INSERT INTO {table_name} (term, name, definition, category) " \
+                    f"VALUES ($1, $2, $3, $4) returning *"
+    row = await conn.fetchrow(sql_statement, controlled_vocabulary.term, controlled_vocabulary.name,
+                              controlled_vocabulary.definition, controlled_vocabulary.category)
+    return schemas.ControlledVocabulary(**{**dict(controlled_vocabulary), **row})
 
 
 async def create_person(conn: asyncpg.connection, user: schemas.PeopleCreate):
