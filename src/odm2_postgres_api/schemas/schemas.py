@@ -209,7 +209,7 @@ class FeatureActions(FeatureActionsCreate):
 
 
 class ResultsCreate(FeatureActionsCreate):
-    dataqualityid: Optional[int]
+    dataqualityids: List[int]
     resultuuid: uuid.UUID
     resulttypecv: constr(max_length=255)  # type: ignore
     variableid: int

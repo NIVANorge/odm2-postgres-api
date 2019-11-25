@@ -176,11 +176,11 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
             result.unitsid, result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
             result.resultdatetimeutcoffset, result.validdatetime, result.validdatetimeutcoffset, result.statuscv,
             result.sampledmediumcv, result.valuecount)
-        if result.dataqualityid is not None:
+        for data_quality_id in result.dataqualityids:
             await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
-                resultid=result_row['resultid'], dataqualityid=result.dataqualityid))
+                resultid=result_row['resultid'], dataqualityid=data_quality_id))
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
-    return schemas.Results(**{**result_row, **dict(feature_action_row)})
+    return schemas.Results(**{**result_row, **dict(feature_action_row)}, dataqualityids=result.dataqualityids)
 
 
 async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):

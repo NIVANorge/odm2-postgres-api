@@ -1,7 +1,9 @@
 # Docker file for tsb
 # Use an official Python runtime as a parent image
-FROM python:3.7-buster
+FROM python:3.8-buster
 MAINTAINER Roald Storm <roald.storm@niva.no>
+
+RUN apt-get update &&  apt-get install -y --no-install-recommends libgeos-dev
 
 # Set the working directory to /app
 WORKDIR /app
