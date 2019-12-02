@@ -58,6 +58,84 @@ class Affiliations(AffiliationsCreate):
     affiliationid: int
 
 
+class UnitsCreate(BaseModel):
+    unitstypecv: constr(max_length=255)  # type: ignore
+    unitsabbreviation: constr(max_length=50)  # type: ignore
+    unitsname: constr(max_length=255)  # type: ignore
+    unitslink: constr(max_length=255) = None  # type: ignore
+
+
+class Units(UnitsCreate):
+    unitsid: int
+
+
+class VariablesCreate(BaseModel):
+    variabletypecv: constr(max_length=255)  # type: ignore
+    variablecode: constr(max_length=50)  # type: ignore
+    variablenamecv: constr(max_length=255)  # type: ignore
+    variabledefinition: constr(max_length=5000) = None  # type: ignore
+    speciationcv: constr(max_length=255) = None  # type: ignore
+    nodatavalue: float
+
+
+class Variables(VariablesCreate):
+    variableid: int
+
+
+class EquipmentModelCreate(BaseModel):
+    modelmanufacturerid: int
+    modelpartnumber: constr(max_length=50) = None  # type: ignore
+    modelname: constr(max_length=255)  # type: ignore
+    modeldescription: constr(max_length=5000) = None  # type: ignore
+    isinstrument: bool
+    modelspecificationsfilelink: constr(max_length=255) = None  # type: ignore
+    modellink: constr(max_length=255) = None  # type: ignore
+
+
+class EquipmentModel(EquipmentModelCreate):
+    equipmentmodelid: int
+
+
+class InstrumentOutputVariablesCreate(BaseModel):
+    modelid: int
+    variableid: int
+    instrumentmethodid: int
+    instrumentresolution: constr(max_length=255) = None  # type: ignore
+    instrumentaccuracy: constr(max_length=255) = None  # type: ignore
+    instrumentrawoutputunitsid: int
+
+
+class InstrumentOutputVariables(InstrumentOutputVariablesCreate):
+    instrumentoutputvariableid: int
+
+
+class EquipmentCreate(BaseModel):
+    equipmentcode: constr(max_length=50)  # type: ignore
+    equipmentname: constr(max_length=255)  # type: ignore
+    equipmenttypecv: constr(max_length=255)  # type: ignore
+    equipmentmodelid: int
+    equipmentserialnumber: constr(max_length=50)  # type: ignore
+    equipmentownerid: int
+    equipmentvendorid: int
+    equipmentpurchasedate: datetime.datetime
+    equipmentpurchaseordernumber: constr(max_length=50) = None  # type: ignore
+    equipmentdescription: constr(max_length=5000) = None  # type: ignore
+    equipmentdocumentationlink: constr(max_length=255) = None  # type: ignore
+
+
+class Equipment(EquipmentCreate):
+    equipmentid: int
+
+
+class EquipmentUsedCreate(BaseModel):
+    actionid: int
+    equipmentid: int
+
+
+class EquipmentUsed(EquipmentUsedCreate):
+    bridgeid: int
+
+
 class MethodsCreate(BaseModel):
     methodtypecv: constr(max_length=255)  # type: ignore
     methodcode: constr(max_length=50)  # type: ignore
@@ -94,6 +172,7 @@ class ActionsCreate(ActionsByFields):
     enddatetimeutcoffset: Optional[int] = None
     actiondescription: constr(max_length=5000) = None  # type: ignore
     actionfilelink: constr(max_length=255) = None  # type: ignore
+    equipmentids: List[int]
 
 
 class Action(ActionsCreate):
@@ -101,8 +180,6 @@ class Action(ActionsCreate):
 
 
 class SamplingFeaturesCreate(BaseModel):
-    class Config(BaseConfig):
-        arbitrary_types_allowed = True
     samplingfeatureuuid: uuid.UUID
     samplingfeaturetypecv: constr(max_length=255)  # type: ignore
     samplingfeaturecode: constr(max_length=50)  # type: ignore
@@ -114,9 +191,10 @@ class SamplingFeaturesCreate(BaseModel):
     elevationdatumcv: constr(max_length=255) = None  # type: ignore
 
     @validator('featuregeometrywkt')
-    def username_alphanumeric(cls, wkt):
+    def featuregeometrywkt_validator(cls, wkt):
         new_shape = shapely.wkt.loads(wkt)
-        assert new_shape.is_valid
+        if not new_shape.is_valid:
+            raise ValueError('well known text is not valid!')
         return wkt
 
 
@@ -151,30 +229,6 @@ class ProcessingLevelsCreate(BaseModel):
 
 class ProcessingLevels(ProcessingLevelsCreate):
     processinglevelid: int
-
-
-class UnitsCreate(BaseModel):
-    unitstypecv: constr(max_length=255)  # type: ignore
-    unitsabbreviation: constr(max_length=50)  # type: ignore
-    unitsname: constr(max_length=255)  # type: ignore
-    unitslink: constr(max_length=255) = None  # type: ignore
-
-
-class Units(UnitsCreate):
-    unitsid: int
-
-
-class VariablesCreate(BaseModel):
-    variabletypecv: constr(max_length=255)  # type: ignore
-    variablecode: constr(max_length=50)  # type: ignore
-    variablenamecv: constr(max_length=255)  # type: ignore
-    variabledefinition: constr(max_length=5000) = None  # type: ignore
-    speciationcv: constr(max_length=255) = None  # type: ignore
-    nodatavalue: float
-
-
-class Variables(VariablesCreate):
-    variableid: int
 
 
 class DataQualityCreate(BaseModel):

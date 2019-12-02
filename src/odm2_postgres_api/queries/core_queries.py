@@ -47,6 +47,64 @@ async def create_affiliation(conn: asyncpg.connection, affiliation: schemas.Affi
     return schemas.Affiliations(**row)
 
 
+async def create_unit(conn: asyncpg.connection, unit: schemas.UnitsCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO units (unitstypecv, unitsabbreviation, unitsname, unitslink) "
+        "VALUES ($1, $2, $3, $4) returning *",
+        unit.unitstypecv, unit.unitsabbreviation, unit.unitsname, unit.unitslink)
+    return schemas.Units(**row)
+
+
+async def create_variable(conn: asyncpg.connection, variable: schemas.VariablesCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO variables (variabletypecv, variablecode, variablenamecv, variabledefinition, "
+        "speciationcv, nodatavalue) VALUES ($1, $2, $3, $4, $5, $6) returning *",
+        variable.variabletypecv, variable.variablecode, variable.variablenamecv, variable.variabledefinition,
+        variable.speciationcv, variable.nodatavalue)
+    return schemas.Variables(**row)
+
+
+async def create_equipment_model(conn: asyncpg.connection, equipment_model: schemas.EquipmentModelCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO equipmentmodels (modelmanufacturerid, modelpartnumber, modelname, modeldescription, isinstrument,"
+        " modelspecificationsfilelink, modellink) VALUES ($1, $2, $3, $4, $5, $6, $7) returning *",
+        equipment_model.modelmanufacturerid, equipment_model.modelpartnumber, equipment_model.modelname,
+        equipment_model.modeldescription, equipment_model.isinstrument, equipment_model.modelspecificationsfilelink,
+        equipment_model.modellink)
+    return schemas.Variables(**row)
+
+
+async def create_instrument_output_variable(conn: asyncpg.connection,
+                                            instrument_output_variable: schemas.InstrumentOutputVariablesCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO instrumentoutputvariables (modelid, variableid, instrumentmethodid, instrumentresolution,"
+        "instrumentaccuracy, instrumentrawoutputunitsid) VALUES ($1, $2, $3, $4, $5, $6) returning *",
+        instrument_output_variable.modelid, instrument_output_variable.variableid,
+        instrument_output_variable.instrumentmethodid, instrument_output_variable.instrumentresolution,
+        instrument_output_variable.instrumentaccuracy, instrument_output_variable.instrumentrawoutputunitsid)
+    return schemas.Variables(**row)
+
+
+async def create_equipment(conn: asyncpg.connection, equipment: schemas.EquipmentCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO equipment (equipmentcode, equipmentname, equipmenttypecv, equipmentmodelid,"
+        "equipmentserialnumber, equipmentownerid, equipmentvendorid, equipmentpurchasedate,"
+        "equipmentpurchaseordernumber, equipmentdescription, equipmentdocumentationlink) "
+        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning *",
+        equipment.equipmentcode, equipment.equipmentname, equipment.equipmenttypecv, equipment.equipmentmodelid,
+        equipment.equipmentserialnumber, equipment.equipmentownerid, equipment.equipmentvendorid,
+        equipment.equipmentpurchasedate, equipment.equipmentpurchaseordernumber, equipment.equipmentdescription,
+        equipment.equipmentdocumentationlink)
+    return schemas.Equipment(**row)
+
+
+async def create_equipment_used(conn: asyncpg.connection, equipmentused: schemas.EquipmentUsedCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO equipmentused (actionid, equipmentid) VALUES ($1, $2) returning *",
+        equipmentused.actionid, equipmentused.equipmentid)
+    return schemas.EquipmentUsed(**row)
+
+
 async def create_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
     row = await conn.fetchrow(
         "INSERT INTO methods (methodtypecv, methodcode, methodname, methoddescription, methodlink, organizationid) "
@@ -75,8 +133,11 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
         action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
                                             isactionlead=action.isactionlead, roledescription=action.roledescription)
         action_by_row = await create_action_by(conn, action_by)
+        for equipmentid in action.equipmentids:
+            await create_equipment_used(conn, schemas.EquipmentUsedCreate(
+                actionid=action_row['actionid'], equipmentid=equipmentid))
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
-    return schemas.Action(**{**action_row, **dict(action_by_row)})
+    return schemas.Action(equipmentids=action.equipmentids, **{**action_row, **dict(action_by_row)})
 
 
 async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
@@ -121,23 +182,6 @@ async def create_site(conn: asyncpg.connection, site: schemas.Sites):
     return schemas.Sites(**row)
 
 
-async def create_unit(conn: asyncpg.connection, unit: schemas.UnitsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO units (unitstypecv, unitsabbreviation, unitsname, unitslink) "
-        "VALUES ($1, $2, $3, $4) returning *",
-        unit.unitstypecv, unit.unitsabbreviation, unit.unitsname, unit.unitslink)
-    return schemas.Units(**row)
-
-
-async def create_variable(conn: asyncpg.connection, variable: schemas.VariablesCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO variables (variabletypecv, variablecode, variablenamecv, variabledefinition, "
-        "speciationcv, nodatavalue) VALUES ($1, $2, $3, $4, $5, $6) returning *",
-        variable.variabletypecv, variable.variablecode, variable.variablenamecv, variable.variabledefinition,
-        variable.speciationcv, variable.nodatavalue)
-    return schemas.Variables(**row)
-
-
 async def create_data_quality(conn: asyncpg.connection, data_quality: schemas.DataQualityCreate):
     row = await conn.fetchrow(
         "INSERT INTO dataquality (dataqualitytypecv, dataqualitycode, dataqualityvalue, dataqualityvalueunitsid,"
@@ -180,7 +224,7 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
             await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
                 resultid=result_row['resultid'], dataqualityid=data_quality_id))
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
-    return schemas.Results(**{**result_row, **dict(feature_action_row)}, dataqualityids=result.dataqualityids)
+    return schemas.Results(dataqualityids=result.dataqualityids, **{**result_row, **dict(feature_action_row)})
 
 
 async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):
@@ -217,5 +261,5 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
             # result = await conn.copy_records_to_table(table_name='trackresultvalues',
             #                                           records=records, schema_name='odm2')
             # logging.info(result)
-    return schemas.TrackResultsReport(**row, inserted_track_result_values=len(track_result.track_result_values),
-                                      inserted_track_result_locations=len(track_result.track_result_locations))
+    return schemas.TrackResultsReport(inserted_track_result_values=len(track_result.track_result_values),
+                                      inserted_track_result_locations=len(track_result.track_result_locations), **row)

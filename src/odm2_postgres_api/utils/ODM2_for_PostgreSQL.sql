@@ -2316,3 +2316,9 @@ on update no Action on delete RESTRICT;
 alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
 on update no Action on delete RESTRICT;
+
+create index TrackResultValues_resultid_time_idx
+    on trackresultvalues (resultid asc, valuedatetime desc);
+
+create index TrackResultLocations_resultid_time_idx
+    on TrackResultLocations (spatialreferenceid asc, valuedatetime desc);

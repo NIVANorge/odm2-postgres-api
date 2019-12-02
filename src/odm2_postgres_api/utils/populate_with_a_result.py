@@ -172,7 +172,8 @@ initial_data = {'controlled_vocabularies': {
     "actiontypecv": "Instrument deployment",
     "methodid": 1,
     "begindatetime": "2019-11-18T09:55:05",
-    "begindatetimeutcoffset": 0
+    "begindatetimeutcoffset": 0,
+    "equipmentids": []
 }, 'data_quality': [{
     "dataqualitytypecv": "Physical limit upper bound",
     "dataqualitycode": "001",
@@ -312,7 +313,8 @@ def create_new_fantasy_track_result(new_track_result: dict):
         "actiontypecv": "Instrument deployment",
         "methodid": 1,  # methodid = 1: "A method from NIVA for deploying instruments"
         "begindatetime": new_track_result["begin_datetime"],
-        "begindatetimeutcoffset": 0
+        "begindatetimeutcoffset": 0,
+        "equipmentids": []
     })
 
     result_response = post_to_odm2_api('results', {
@@ -328,6 +330,7 @@ def create_new_fantasy_track_result(new_track_result: dict):
         "sampledmediumcv": "Liquid aqueous",
         "dataqualityids": []
     })
+
     track_result_response = post_to_odm2_api('track_results', {
         "resultid": result_response["resultid"],
         "spatialreferenceid": 1,  # samplingfeatureid = 1: "Oslo-Kiel shiptrack"
@@ -335,7 +338,7 @@ def create_new_fantasy_track_result(new_track_result: dict):
         "track_result_values": [],
         "track_result_locations": []
     })
-    logging.info(f"successfully added trackresult: {new_track_result}, response: {result_response}")
+    logging.info(f"successfully added trackresult: {new_track_result}, response: {track_result_response}")
 
 
 def main():

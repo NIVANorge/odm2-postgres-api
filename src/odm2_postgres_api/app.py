@@ -2,6 +2,7 @@ import os
 import logging
 import asyncpg
 
+import uuid
 from fastapi import FastAPI, Depends
 
 from odm2_postgres_api.schemas import schemas
@@ -21,6 +22,10 @@ class ApiPoolManager:
 
     async def get_conn(self) -> asyncpg.connection.Connection:
         async with self.pool.acquire() as connection:
+            # asyncpg has a faster implementation for uuid's but it conflicts with fastapi =(
+            # TODO: resolve if https://github.com/MagicStack/asyncpg/issues/512 resolves
+            await connection.set_type_codec('uuid', encoder=lambda u: u.bytes, decoder=lambda u: uuid.UUID(bytes=u),
+                                            schema='pg_catalog', format='binary')
             yield connection
 
 
