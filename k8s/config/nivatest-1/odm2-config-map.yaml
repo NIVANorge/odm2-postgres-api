@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: odm2-config-map
+data:
+  NIVA_ENVIRONMENT: dev
+  GOOGLE_CLOUD_PROJECT: nivatest-1
+  ODM2_API_SERVICE_HOST: odm2-postgres-api.default.svc.cluster.local
+  ODM2_API_SERVICE_PORT: "5000"
+  ODM2_DB: niva_odm2
+  ODM2_SCHEMA_NAME: odm2
+  ODM2_DB_USER: niva_odm2_owner
+  POSTGRES_USER: postgres
+  TIMESCALE_ODM2_SERVICE_HOST: timescale-odm2.default.svc.cluster.local
+  TIMESCALE_ODM2_SERVICE_PORT: "5432"

@@ -34,6 +34,7 @@ api_pool_manager = ApiPoolManager()
 
 @app.on_event("startup")
 async def startup_event():
+    # TODO: locally this startup might run before the database is fully initialized. This causes unrecognized tables
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
     db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]

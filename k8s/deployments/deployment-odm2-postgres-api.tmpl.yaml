@@ -1,0 +1,116 @@
+# All in one deployment of tsb on GCP Kubernetes engine
+#
+# Before deploying make sure:
+#    * Make sure the timescale/PostgreSQL engine is running
+#    * The Kubernetes secret for tsb connection to postgres is place
+#
+# Service exposing the timescale DB
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: odm2-postgres-api
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+  labels:
+    app: odm2-postgres-api
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+  selector:
+    app: odm2-postgres-api
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: odm2-postgres-api
+  labels:
+    app: odm2-postgres-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: odm2-postgres-api
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape_port: '8000'
+        prometheus.io/scrape: 'true'
+      labels:
+        app: odm2-postgres-api
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 10
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                        - odm2-postgres-api
+                topologyKey: "kubernetes.io/hostname"
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-preemptible
+                    operator: NotIn
+                    values:
+                      - 'true'
+      containers:
+        - name: odm2-postgres-api
+          image: ODM2_API_IMAGENAME
+          imagePullPolicy: Always
+          env:
+          - name: ODM2_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: odm2-db-password
+                key: password
+          envFrom:
+            - configMapRef:
+                name: odm2-config-map
+          ports:
+            - containerPort: 5000
+              name: tsb
+            - containerPort: 8000
+              name: metrics
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 2
+      initContainers:
+        - name: init-odm2
+          image: ODM2_API_IMAGENAME
+          imagePullPolicy: Always
+          env:
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: odm2-postgres-password
+                key: password
+          - name: ODM2_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: odm2-db-password
+                key: password
+          envFrom:
+            - configMapRef:
+                name: odm2-config-map
+          command: ['python', 'src/odm2_postgres_api/utils/db_initiate.py']

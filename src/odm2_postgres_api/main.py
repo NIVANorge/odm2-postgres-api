@@ -1,3 +1,4 @@
+import os
 import logging
 from pathlib import Path
 
@@ -13,12 +14,12 @@ if __name__ == "__main__":
     # fastapi sets up logging import time, so it does not help to declare logging afterwards.
     # setting up logging before importing everything else
     setup_logging(plaintext=True)
-    if Path.cwd() == Path('/app'):
-        env_file = Path(__file__).parent / 'config' / 'localdocker.env'
-    else:
-        env_file = Path(__file__).parent / 'config' / 'localdev.env'
-    logging.info(Path.cwd())
-    load_dotenv(dotenv_path=env_file, verbose=True)
+    if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:
+        if Path.cwd() == Path('/app'):
+            env_file = Path(__file__).parent / 'config' / 'localdocker.env'
+        else:
+            env_file = Path(__file__).parent / 'config' / 'localdev.env'
+        load_dotenv(dotenv_path=env_file, verbose=True)
 
     from odm2_postgres_api.app import app
 
