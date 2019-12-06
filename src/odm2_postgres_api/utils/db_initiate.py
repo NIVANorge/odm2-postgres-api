@@ -17,14 +17,14 @@ def quoter(word):
     return ENGINE.dialect.preparer(ENGINE.dialect).quote(word)
 
 
-async def create_database_if_not_exists(conn, quoted_db_name):
+async def create_database_if_not_exists(conn, quoted_db_name: str):
     if not await conn.fetchval(f"SELECT COUNT(*) FROM pg_catalog.pg_database WHERE datname = $1", quoted_db_name) == 1:
         logging.info(await conn.execute(f"CREATE DATABASE {quoted_db_name}"))
     else:
         logging.info("Database exists, doing nothing", extra={'database': quoted_db_name})
 
 
-async def create_user_if_not_exists(conn, user, password=None):
+async def create_user_if_not_exists(conn, user: str, password: str):
     if await conn.fetchval(f"SELECT count(*) FROM pg_catalog.pg_roles WHERE rolname = $1", user) != 0:
         logging.info(f"User/role exists, doing nothing", extra={'db_user': user})
     else:
@@ -34,7 +34,7 @@ async def create_user_if_not_exists(conn, user, password=None):
             logging.info(await conn.execute(f"CREATE ROLE {user}"))
 
 
-async def grant_all_on_db_to_role(conn, quoted_schema, quoted_mighty_user):
+async def grant_all_on_db_to_role(conn, quoted_schema: str, quoted_mighty_user: str):
     commands = [
         f"GRANT USAGE ON SCHEMA {quoted_schema} TO {quoted_mighty_user}",
         f"GRANT ALL ON ALL TABLES IN SCHEMA {quoted_schema} TO {quoted_mighty_user}",
@@ -44,18 +44,19 @@ async def grant_all_on_db_to_role(conn, quoted_schema, quoted_mighty_user):
         logging.info(await conn.execute(command))
 
 
-async def postgres_user_on_postgres_db(connection_string, new_db, db_mighty_user, db_mighty_pwd):
+async def postgres_user_on_postgres_db(connection_string, new_db: str, db_mighty_user: str, db_mighty_pwd: str):
     conn = await asyncpg.connect(connection_string)
     try:
         await create_database_if_not_exists(conn, quoter(new_db))
         async with conn.transaction():
-            await create_user_if_not_exists(conn, quoter(db_mighty_user), quoter(db_mighty_pwd))
+            # password cannot be run through qouter because it is unpredictable if it gets qouted or not...
+            await create_user_if_not_exists(conn, quoter(db_mighty_user), db_mighty_pwd)
 
     finally:
         await conn.close()
 
 
-async def postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty_user):
+async def postgres_user_on_odm_db(connection_string, odm2_schema_name: str, db_mighty_user: str):
     quoted_schema = quoter(odm2_schema_name)
     quoted_mighty_user = quoter(db_mighty_user)
     conn = await asyncpg.connect(connection_string)
