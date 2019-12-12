@@ -86,6 +86,33 @@ async def post_affiliations(affiliation: schemas.AffiliationsCreate, connection=
     return await core_queries.create_affiliation(connection, affiliation)
 
 
+@app.post("/units", response_model=schemas.Units)
+async def post_units(unit: schemas.UnitsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_unit(connection, unit)
+
+
+@app.post("/variables", response_model=schemas.Variables)
+async def post_variables(variable: schemas.VariablesCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_variable(connection, variable)
+
+
+@app.post("/equipment_model", response_model=schemas.EquipmentModelCreate)
+async def post_equipment_model(equipment_model: schemas.EquipmentModelCreate,
+                               connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_equipment_model(connection, equipment_model)
+
+
+@app.post("/instrument_output_variable", response_model=schemas.InstrumentOutputVariablesCreate)
+async def post_instrument_output_variable(instrument_output_variable: schemas.InstrumentOutputVariablesCreate,
+                                          connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_instrument_output_variable(connection, instrument_output_variable)
+
+
+@app.post("/equipment", response_model=schemas.EquipmentCreate)
+async def post_equipment(equipment: schemas.EquipmentCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_equipment(connection, equipment)
+
+
 @app.post("/methods", response_model=schemas.Methods)
 async def post_methods(method: schemas.MethodsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_method(connection, method)
@@ -107,6 +134,12 @@ async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreat
     return await core_queries.create_sampling_feature(connection, sampling_feature)
 
 
+@app.post("/processing_levels", response_model=schemas.ProcessingLevels)
+async def post_processing_levels(processing_level: schemas.ProcessingLevelsCreate,
+                                 connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_processing_level(connection, processing_level)
+
+
 @app.post("/spatial_references", response_model=schemas.SpatialReferences)
 async def post_spatial_references(spatial_reference: schemas.SpatialReferencesCreate,
                                   connection=Depends(api_pool_manager.get_conn)):
@@ -116,22 +149,6 @@ async def post_spatial_references(spatial_reference: schemas.SpatialReferencesCr
 @app.post("/sites", response_model=schemas.Sites)
 async def post_sites(site: schemas.Sites, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_site(connection, site)
-
-
-@app.post("/processing_levels", response_model=schemas.ProcessingLevels)
-async def post_processing_levels(processing_level: schemas.ProcessingLevelsCreate,
-                                 connection=Depends(api_pool_manager.get_conn)):
-    return await core_queries.create_processing_level(connection, processing_level)
-
-
-@app.post("/units", response_model=schemas.Units)
-async def post_units(unit: schemas.UnitsCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await core_queries.create_unit(connection, unit)
-
-
-@app.post("/variables", response_model=schemas.Variables)
-async def post_variables(variable: schemas.VariablesCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await core_queries.create_variable(connection, variable)
 
 
 @app.post("/data_quality", response_model=schemas.DataQuality)

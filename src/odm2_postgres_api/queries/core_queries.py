@@ -122,6 +122,14 @@ async def create_action_by(conn: asyncpg.connection, action_by: schemas.ActionsB
     return schemas.ActionsBy(**row)
 
 
+async def create_related_action(conn: asyncpg.connection, related_action: schemas.RelatedActionCreate):
+    row = await conn.fetchrow(
+        "INSERT INTO niva_odm2.odm2.relatedactions (actionid, relationshiptypecv, relatedactionid) "
+        "VALUES ($1, $2, $3) returning *",
+        related_action.actionid, related_action.relationshiptypecv, related_action.relatedactionid)
+    return schemas.RelatedAction(**row)
+
+
 async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
     async with conn.transaction():
         action_row = await conn.fetchrow(
@@ -136,6 +144,9 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
         for equipmentid in action.equipmentids:
             await create_equipment_used(conn, schemas.EquipmentUsedCreate(
                 actionid=action_row['actionid'], equipmentid=equipmentid))
+        for action_id, relation_ship_type in action.relatedactions:
+            await create_related_action(conn, schemas.RelatedActionCreate(
+                actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id))
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
     return schemas.Action(equipmentids=action.equipmentids, **{**action_row, **dict(action_by_row)})
 
@@ -201,16 +212,17 @@ async def create_result_data_quality(conn: asyncpg.connection, result_data_quali
 
 async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
     row = await conn.fetchrow(
-        "INSERT INTO featureactions (samplingfeatureid, actionid) VALUES ($1, $2) "
+        "INSERT INTO featureactions (samplingfeatureid, actionid) "
+        "VALUES ((SELECT samplingfeatureid FROM samplingfeatures where samplingfeatureuuid = $1), $2) "
         "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
-        feature_action.samplingfeatureid, feature_action.actionid)
-    return schemas.FeatureActions(**row)
+        feature_action.samplingfeatureuuid, feature_action.actionid)
+    return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
 
 
 async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate):
     async with conn.transaction():
         feature_action_row = await create_feature_action(conn, schemas.FeatureActionsCreate(
-            samplingfeatureid=result.samplingfeatureid, actionid=result.actionid))
+            samplingfeatureuuid=result.samplingfeatureuuid, actionid=result.actionid))
         result_row = await conn.fetchrow(
             "INSERT INTO results (resultuuid, featureactionid, resulttypecv, variableid, unitsid,"
             "taxonomicclassifierid, processinglevelid, resultdatetime, resultdatetimeutcoffset, validdatetime,"
@@ -230,36 +242,37 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
 async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):
     await shapely_postgres_adapter.set_shapely_adapter(conn)
     async with conn.transaction():
+        row = await conn.fetchrow("SELECT samplingfeatureid FROM featureactions WHERE featureactionid = "
+                                  "(SELECT featureactionid FROM results WHERE resultid = $1)", track_result.resultid)
+        if row["samplingfeatureid"] != track_result.samplingfeatureid:
+            raise ValueError('THIS IS ALLL WROOONGNGNGNGNGNNG')
         row = await conn.fetchrow(
-            "INSERT INTO trackresults (resultid, spatialreferenceid, intendedtimespacing, intendedtimespacingunitsid,"
-            "aggregationstatisticcv) VALUES ($1, $2, $3, $4, $5) "
-            "ON CONFLICT (resultid, spatialreferenceid) DO UPDATE SET "
-            "intendedtimespacing = EXCLUDED.intendedtimespacing, "
-            "intendedtimespacingunitsid = EXCLUDED.intendedtimespacingunitsid,"
-            "aggregationstatisticcv = EXCLUDED.aggregationstatisticcv returning *",
-            track_result.resultid, track_result.spatialreferenceid, track_result.intendedtimespacing,
-            track_result.intendedtimespacingunitsid, track_result.aggregationstatisticcv)
+            "INSERT INTO trackresults (resultid, intendedtimespacing, intendedtimespacingunitsid, "
+            "aggregationstatisticcv) VALUES ($1, $2, $3, $4) "
+            "ON CONFLICT (resultid) DO UPDATE SET intendedtimespacing = EXCLUDED.intendedtimespacing returning *",
+            track_result.resultid, track_result.intendedtimespacing, track_result.intendedtimespacingunitsid,
+            track_result.aggregationstatisticcv)
         if track_result.track_result_locations:
             location_records = ((rec[0], shapely.wkt.loads(f"POINT({rec[1]} {rec[2]})"), rec[3],
-                                 track_result.spatialreferenceid) for rec in track_result.track_result_locations)
+                                 track_result.samplingfeatureid) for rec in track_result.track_result_locations)
             await conn.executemany("INSERT INTO trackresultlocations (valuedatetime, trackpoint, qualitycodecv, "
-                                   "spatialreferenceid) VALUES ($1, ST_SetSRID($2::geometry, 4326), $3, $4) "
-                                   "ON CONFLICT (valuedatetime, spatialreferenceid) DO UPDATE SET "
+                                   "samplingfeatureid) VALUES ($1, ST_SetSRID($2::geometry, 4326), $3, $4) "
+                                   "ON CONFLICT (valuedatetime, samplingfeatureid) DO UPDATE SET "
                                    "trackpoint = excluded.trackpoint, qualitycodecv = excluded.qualitycodecv",
                                    location_records)
             # result = await conn.copy_records_to_table(table_name='trackresultlocations',
             #                                           records=location_records, schema_name='odm2')
             # logging.info(result)
         if track_result.track_result_values:
-            value_records = ((rec[0], rec[1], rec[2], track_result.resultid, track_result.spatialreferenceid)
+            value_records = ((rec[0], rec[1], rec[2], track_result.resultid)
                              for rec in track_result.track_result_values)
-            await conn.executemany("INSERT INTO trackresultvalues (valuedatetime, datavalue, qualitycodecv, resultid, "
-                                   "spatialreferenceid) VALUES ($1, $2, $3, $4, $5) "
-                                   "ON CONFLICT (valuedatetime, resultid) DO UPDATE SET "
+            await conn.executemany("INSERT INTO trackresultvalues (valuedatetime, datavalue, qualitycodecv, resultid) "
+                                   "VALUES ($1, $2, $3, $4) ON CONFLICT (valuedatetime, resultid) DO UPDATE SET "
                                    "datavalue = excluded.datavalue, qualitycodecv = excluded.qualitycodecv",
                                    value_records)
             # result = await conn.copy_records_to_table(table_name='trackresultvalues',
             #                                           records=records, schema_name='odm2')
             # logging.info(result)
-    return schemas.TrackResultsReport(inserted_track_result_values=len(track_result.track_result_values),
+    return schemas.TrackResultsReport(samplingfeatureid=track_result.samplingfeatureid,
+                                      inserted_track_result_values=len(track_result.track_result_values),
                                       inserted_track_result_locations=len(track_result.track_result_locations), **row)

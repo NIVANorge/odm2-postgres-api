@@ -149,6 +149,16 @@ class Methods(MethodsCreate):
     methodid: int
 
 
+class RelatedActionCreate(BaseModel):
+    actionid: int
+    relationshiptypecv: constr(max_length=255)  # type: ignore
+    relatedactionid: int
+
+
+class RelatedAction(RelatedActionCreate):
+    relationid: int
+
+
 class ActionsByFields(BaseModel):
     affiliationid: int
     isactionlead: bool
@@ -172,7 +182,8 @@ class ActionsCreate(ActionsByFields):
     enddatetimeutcoffset: Optional[int] = None
     actiondescription: constr(max_length=5000) = None  # type: ignore
     actionfilelink: constr(max_length=255) = None  # type: ignore
-    equipmentids: List[int]
+    equipmentids: List[int] = []
+    relatedactions: List[Tuple[int, str]] = []
 
 
 class Action(ActionsCreate):
@@ -254,7 +265,7 @@ class ResultsDataQuality(ResultsDataQualityCreate):
 
 
 class FeatureActionsCreate(BaseModel):
-    samplingfeatureid: int
+    samplingfeatureuuid: uuid.UUID
     actionid: int
 
 
@@ -285,7 +296,7 @@ class Results(ResultsCreate):
 
 class TrackResultsFields(BaseModel):
     resultid: int
-    spatialreferenceid: int
+    samplingfeatureid: int
     intendedtimespacing: Optional[float]
     intendedtimespacingunitsid: Optional[int]
     aggregationstatisticcv: constr(max_length=255)  # type: ignore
