@@ -79,7 +79,7 @@ processing_levels = {'processing_levels': [{
 units_and_variables = {'units': [{
     "unitstypecv": "Salinity",
     "unitsabbreviation": "PSU",
-    "unitsname": "Practical Salinity Unit"
+    "unitsname": "practical salinity unit"
 }, {
     "unitstypecv": "Mass temperature",
     "unitsabbreviation": "degC",
@@ -91,42 +91,92 @@ units_and_variables = {'units': [{
 }, {
     "unitstypecv": "Concentration count per count",
     "unitsabbreviation": "ppb",
-    "unitsname": "Parts Per billion"
+    "unitsname": "parts per billion"
+}, {
+    "unitstypecv": "Concentration or density mass per volume",
+    "unitsabbreviation": "μg/m^3",
+    "unitsname": "microgram per cubic meter"
+}, {
+    "unitstypecv": "Concentration or density mass per volume",
+    "unitsabbreviation": "micro mol/l",
+    "unitsname": "microgram mol per liter"
+}, {
+    "unitstypecv": "Turbidity",
+    "unitsabbreviation": "FTU",
+    "unitsname": "formazin turbidity unit"
+}, {
+    "unitstypecv": "Turbidity",
+    "unitsabbreviation": "NTU",
+    "unitsname": "nepphelometric turbidity unit"
+}, {
+    "unitstypecv": "Pressure or stress",
+    "unitsabbreviation": "bar",
+    "unitsname": "bar"
+}, {
+    "unitstypecv": "Electrical conductivity",
+    "unitsabbreviation": "S/m",
+    "unitsname": "siemens per meter"
+}, {
+    "unitstypecv": "Volumetric flow rate",
+    "unitsabbreviation": "m3/s",
+    "unitsname": "cubic meters per second"
+}, {
+    "unitstypecv": "Linear velocity",
+    "unitsabbreviation": "m/s",
+    "unitsname": "meter per second"
 }], 'variables': [{
     "variabletypecv": "Chemistry",
     "variablenamecv": "Salinity",
-    "variabledefinition": "A variable for measuring salinity",
+    "variabledefinition": "salinity",
     "variablecode": "001",
     "nodatavalue": -9999
 }, {
     "variabletypecv": "Climate",
     "variablenamecv": "Temperature",
-    "variabledefinition": "A variable for measuring temperature",
+    "variabledefinition": "temperature",
     "variablecode": "002",
     "nodatavalue": -9999
 }, {
     "variabletypecv": "Water quality",
     "variablenamecv": "Chlorophyll fluorescence",
-    "variabledefinition": "A variable for measuring chla_fluorescence",
+    "variabledefinition": "fluorescence from  chlorophyll A",
     "variablecode": "003",
     "nodatavalue": -9999
 }, {
     "variabletypecv": "Water quality",
     "variablenamecv": "Chlorophyll fluorescence",
-    "variabledefinition": "A variable for measuring pah_fluorescence",
+    "variabledefinition": "pah_fluorescence",
     "variablecode": "004",
     "nodatavalue": -9999
 }, {
     "variabletypecv": "Water quality",
     "variablenamecv": "Chlorophyll fluorescence",
-    "variabledefinition": "A variable for measuring cyano_fluorescence",
+    "variabledefinition": "fluorescence from cyanobacteria",
     "variablecode": "005",
     "nodatavalue": -9999
 }, {
     "variabletypecv": "Water quality",
     "variablenamecv": "Chlorophyll fluorescence",
-    "variabledefinition": "A variable for measuring cdom_fluorescence",
+    "variabledefinition": "cdom_fluorescence",
     "variablecode": "006",
+    "nodatavalue": -9999
+}, {
+    "variabletypecv": "Water quality",
+    "variablenamecv": "Turbidity",
+    "variabledefinition": "turbidity in water",
+    "variablecode": "007",
+    "nodatavalue": -9999
+}, {
+    "variabletypecv": "Climate",
+    "variablenamecv": "Barometric pressure",
+    "variabledefinition": "atmospheric pressure",
+    "variablecode": "008",
+    "nodatavalue": -9999
+}, {
+    "variabletypecv": "Chemistry",
+    "variablenamecv": "Electrical conductivity",
+    "variabledefinition": "electrical conductivity of substance",
+    "variablecode": "009",
     "nodatavalue": -9999
 }]}
 

@@ -71,7 +71,7 @@ async def create_equipment_model(conn: asyncpg.connection, equipment_model: sche
         equipment_model.modelmanufacturerid, equipment_model.modelpartnumber, equipment_model.modelname,
         equipment_model.modeldescription, equipment_model.isinstrument, equipment_model.modelspecificationsfilelink,
         equipment_model.modellink)
-    return schemas.Variables(**row)
+    return schemas.EquipmentModel(**row)
 
 
 async def create_instrument_output_variable(conn: asyncpg.connection,
@@ -141,9 +141,11 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
         action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
                                             isactionlead=action.isactionlead, roledescription=action.roledescription)
         action_by_row = await create_action_by(conn, action_by)
+
         for equipmentid in action.equipmentids:
             await create_equipment_used(conn, schemas.EquipmentUsedCreate(
                 actionid=action_row['actionid'], equipmentid=equipmentid))
+
         for action_id, relation_ship_type in action.relatedactions:
             await create_related_action(conn, schemas.RelatedActionCreate(
                 actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id))
@@ -204,10 +206,11 @@ async def create_data_quality(conn: asyncpg.connection, data_quality: schemas.Da
 
 async def create_result_data_quality(conn: asyncpg.connection, result_data_quality: schemas.ResultsDataQualityCreate):
     row = await conn.fetchrow(
-        "INSERT INTO resultsdataquality (resultid, dataqualityid) VALUES ($1, $2) "
+        "INSERT INTO resultsdataquality (resultid, dataqualityid) "
+        "VALUES ($1, (SELECT dataqualityid FROM dataquality where dataqualitycode = $2)) "
         "ON CONFLICT (resultid, dataqualityid) DO UPDATE SET resultid = EXCLUDED.resultid returning *",
-        result_data_quality.resultid, result_data_quality.dataqualityid)
-    return schemas.ResultsDataQuality(**row)
+        result_data_quality.resultid, result_data_quality.dataqualitycode)
+    return schemas.ResultsDataQuality(dataqualitycode=result_data_quality.dataqualitycode, **row)
 
 
 async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
@@ -232,11 +235,11 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
             result.unitsid, result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
             result.resultdatetimeutcoffset, result.validdatetime, result.validdatetimeutcoffset, result.statuscv,
             result.sampledmediumcv, result.valuecount)
-        for data_quality_id in result.dataqualityids:
+        for data_quality_code in result.dataqualitycodes:
             await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
-                resultid=result_row['resultid'], dataqualityid=data_quality_id))
+                resultid=result_row['resultid'], dataqualitycode=data_quality_code))
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
-    return schemas.Results(dataqualityids=result.dataqualityids, **{**result_row, **dict(feature_action_row)})
+    return schemas.Results(dataqualitycodes=result.dataqualitycodes, **{**result_row, **dict(feature_action_row)})
 
 
 async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):
@@ -244,6 +247,7 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
     async with conn.transaction():
         row = await conn.fetchrow("SELECT samplingfeatureid FROM featureactions WHERE featureactionid = "
                                   "(SELECT featureactionid FROM results WHERE resultid = $1)", track_result.resultid)
+
         if row["samplingfeatureid"] != track_result.samplingfeatureid:
             raise ValueError('THIS IS ALLL WROOONGNGNGNGNGNNG')
         row = await conn.fetchrow(
@@ -252,6 +256,7 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
             "ON CONFLICT (resultid) DO UPDATE SET intendedtimespacing = EXCLUDED.intendedtimespacing returning *",
             track_result.resultid, track_result.intendedtimespacing, track_result.intendedtimespacingunitsid,
             track_result.aggregationstatisticcv)
+
         if track_result.track_result_locations:
             location_records = ((rec[0], shapely.wkt.loads(f"POINT({rec[1]} {rec[2]})"), rec[3],
                                  track_result.samplingfeatureid) for rec in track_result.track_result_locations)
@@ -263,6 +268,7 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
             # result = await conn.copy_records_to_table(table_name='trackresultlocations',
             #                                           records=location_records, schema_name='odm2')
             # logging.info(result)
+
         if track_result.track_result_values:
             value_records = ((rec[0], rec[1], rec[2], track_result.resultid)
                              for rec in track_result.track_result_values)
@@ -273,6 +279,7 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
             # result = await conn.copy_records_to_table(table_name='trackresultvalues',
             #                                           records=records, schema_name='odm2')
             # logging.info(result)
+
     return schemas.TrackResultsReport(samplingfeatureid=track_result.samplingfeatureid,
                                       inserted_track_result_values=len(track_result.track_result_values),
                                       inserted_track_result_locations=len(track_result.track_result_locations), **row)

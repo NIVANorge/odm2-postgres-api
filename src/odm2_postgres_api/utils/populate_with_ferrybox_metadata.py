@@ -28,13 +28,13 @@ initial_data = {'actions': {
     "begindatetimeutcoffset": 0
 }, 'data_quality': [{
     "dataqualitytypecv": "Physical limit upper bound",
-    "dataqualitycode": "001",
+    "dataqualitycode": "FA_salinity_upper",
     "dataqualityvalue": 41,
     "dataqualityvalueunitsid": 1,
     "dataqualitydescription": "Ferrybox salinity upper bound"
 }, {
     "dataqualitytypecv": "Physical limit lower bound",
-    "dataqualitycode": "002",
+    "dataqualitycode": "FA_salinity_lower",
     "dataqualityvalue": 2,
     "dataqualityvalueunitsid": 1,
     "dataqualitydescription": "Ferrybox salinity lower bound"
@@ -42,7 +42,7 @@ initial_data = {'actions': {
     # path in old tsb = FA/ferrybox/CTD/SALINITY
     "samplingfeatureuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",  # "Oslo-Kiel shiptrack"
     "actionid": 1,
-    "dataqualityids": [1],
+    "dataqualitycodes": ["FA_salinity_upper"],
     "resultuuid": "314cd400-14a7-489a-ab97-bce6b11ad068",
     "resulttypecv": "Track series coverage",
     "variableid": 1,
@@ -53,7 +53,7 @@ initial_data = {'actions': {
     "sampledmediumcv": "Liquid aqueous"
 }, 'result_data_quality': {  # Add this data quality manually to verify that endpoint works
     "resultid": 1,
-    "dataqualityid": 2
+    "dataqualitycode": "FA_salinity_lower"
 }}
 
 # {'track_results': {
@@ -115,7 +115,7 @@ new_track_results = [{
     "variableid": 3,
     "begin_datetime": "2010-04-19T09:25:29",
     "result_uuid": "2030a48e-024d-4f6a-a293-eb673321aaa2",
-    "derived_from": 6
+    "derived_from": 6  # This is result "9f20e09a-9c5f-4a00-933a-80065fc19251" (the previous one)
 }, {
     # path in old tsb = FA/ferrybox/PAH_FLUORESCENCE/RAW
     # I think the units here should be different (because of raw)
@@ -129,7 +129,7 @@ new_track_results = [{
     "variableid": 4,
     "begin_datetime": "2017-06-08T08:48:59",
     "result_uuid": "67578fb7-8773-427c-adc5-2c2c39957ab3",
-    "derived_from": 8
+    "derived_from": 8  # This is result "128b534f-34c4-45f5-b3b3-ccdff24b56a8" (the previous one)
 }, {
     # path in old tsb = FA/ferrybox/CYANO_FLUORESCENCE/RAW
     # I think the units here should be different (because of raw)
@@ -143,7 +143,7 @@ new_track_results = [{
     "variableid": 5,
     "begin_datetime": "2010-04-19T09:25:29",
     "result_uuid": "99a674ad-4dc3-400b-acea-890bf009e2ac",
-    "derived_from": 10
+    "derived_from": 10  # This is result "9a787978-448a-42ae-92b7-cc655c22575c" (the previous one)
 }, {
     # path in old tsb = FA/ferrybox/CDOM_FLUORESCENCE/ADJUSTED
     "unitsid": 4,
@@ -196,7 +196,7 @@ def create_new_fantasy_track_result(new_track_result: dict):
         "valuecount": 0,
         "statuscv": "Ongoing",
         "sampledmediumcv": "Liquid aqueous",
-        "dataqualityids": []
+        "dataqualitycodes": []
     })
 
     track_result_response = post_to_odm2_api('track_results', {

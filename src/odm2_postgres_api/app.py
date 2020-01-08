@@ -108,7 +108,7 @@ async def post_instrument_output_variable(instrument_output_variable: schemas.In
     return await core_queries.create_instrument_output_variable(connection, instrument_output_variable)
 
 
-@app.post("/equipment", response_model=schemas.EquipmentCreate)
+@app.post("/equipment", response_model=schemas.Equipment)
 async def post_equipment(equipment: schemas.EquipmentCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_equipment(connection, equipment)
 

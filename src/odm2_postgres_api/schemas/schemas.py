@@ -257,7 +257,7 @@ class DataQuality(DataQualityCreate):
 
 class ResultsDataQualityCreate(BaseModel):
     resultid: int
-    dataqualityid: int
+    dataqualitycode: str
 
 
 class ResultsDataQuality(ResultsDataQualityCreate):
@@ -274,7 +274,7 @@ class FeatureActions(FeatureActionsCreate):
 
 
 class ResultsCreate(FeatureActionsCreate):
-    dataqualityids: List[int]
+    dataqualitycodes: List[str]
     resultuuid: uuid.UUID
     resulttypecv: constr(max_length=255)  # type: ignore
     variableid: int
