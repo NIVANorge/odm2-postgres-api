@@ -1,10 +1,18 @@
+import logging
 import asyncpg
 import shapely.wkt
-import logging
 
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.utils import shapely_postgres_adapter
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
+
+
+def argument_placeholder(arguments: dict):
+    return ', '.join(f'${n+1}' for n in range(len(arguments)))
+
+
+def make_sql_query(table: str, data: dict):
+    return f"INSERT INTO {table} ({','.join(data.keys())}) VALUES ({argument_placeholder(data)}) returning *"
 
 
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
@@ -153,21 +161,44 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
     return schemas.Action(equipmentids=action.equipmentids, **{**action_row, **dict(action_by_row)})
 
 
-async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
-    await shapely_postgres_adapter.set_shapely_adapter(conn)
+async def create_related_sampling_feature(conn: asyncpg.connection,
+                                          related_feature: schemas.RelatedSamplingFeatureCreate):
     row = await conn.fetchrow(
-        "INSERT INTO samplingfeatures (samplingfeatureuuid, samplingfeaturetypecv, samplingfeaturecode, "
-        "samplingfeaturename, samplingfeaturedescription, samplingfeaturegeotypecv, featuregeometry, "
-        "featuregeometrywkt, elevation_m, elevationdatumcv) "
-        "VALUES ($1, $2, $3, $4, $5, $6, "
-        "ST_SetSRID($7::geometry, 4326), $8, $9, $10) returning *",
-        sampling_feature.samplingfeatureuuid, sampling_feature.samplingfeaturetypecv,
-        sampling_feature.samplingfeaturecode, sampling_feature.samplingfeaturename,
-        sampling_feature.samplingfeaturedescription, sampling_feature.samplingfeaturegeotypecv,
-        shapely.wkt.loads(sampling_feature.featuregeometrywkt), sampling_feature.featuregeometrywkt,
-        sampling_feature.elevation_m, sampling_feature.elevationdatumcv
+        "INSERT INTO niva_odm2.odm2.relatedfeatures (samplingfeatureid, relationshiptypecv, relatedfeatureid,"
+        "spatialoffsetid) VALUES ($1, $2, $3, $4) returning *",
+        related_feature.samplingfeatureid, related_feature.relationshiptypecv, related_feature.relatedfeatureid,
+        related_feature.spatialoffsetid
     )
-    return schemas.SamplingFeatures(**row)
+    return schemas.RelatedSamplingFeature(**row)
+
+
+async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
+    # Todo: Find a better way to deal with 'Null' geometry
+    if sampling_feature.featuregeometrywkt:
+        await shapely_postgres_adapter.set_shapely_adapter(conn)
+        featuregeometry = shapely.wkt.loads(sampling_feature.featuregeometrywkt)
+    else:
+        featuregeometry = None
+
+    async with conn.transaction():
+        sampling_row = await conn.fetchrow(
+            "INSERT INTO samplingfeatures (samplingfeatureuuid, samplingfeaturetypecv, samplingfeaturecode, "
+            "samplingfeaturename, samplingfeaturedescription, samplingfeaturegeotypecv, featuregeometry, "
+            "featuregeometrywkt, elevation_m, elevationdatumcv) "
+            "VALUES ($1, $2, $3, $4, $5, $6, "
+            "ST_SetSRID($7::geometry, 4326), $8, $9, $10) returning *",
+            sampling_feature.samplingfeatureuuid, sampling_feature.samplingfeaturetypecv,
+            sampling_feature.samplingfeaturecode, sampling_feature.samplingfeaturename,
+            sampling_feature.samplingfeaturedescription, sampling_feature.samplingfeaturegeotypecv,
+            featuregeometry, sampling_feature.featuregeometrywkt,
+            sampling_feature.elevation_m, sampling_feature.elevationdatumcv
+        )
+        for sampling_feature_id, relation_ship_type in sampling_feature.relatedsamplingfeatures:
+            await create_related_sampling_feature(conn, schemas.RelatedSamplingFeatureCreate(
+                samplingfeatureid=sampling_row['samplingfeatureid'], relationshiptypecv=relation_ship_type,
+                relatedfeatureid=sampling_feature_id,
+            ))
+    return schemas.SamplingFeatures(**sampling_row)
 
 
 async def create_processing_level(conn: asyncpg.connection, processing_level: schemas.ProcessingLevelsCreate):
@@ -283,3 +314,27 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
     return schemas.TrackResultsReport(samplingfeatureid=track_result.samplingfeatureid,
                                       inserted_track_result_values=len(track_result.track_result_values),
                                       inserted_track_result_locations=len(track_result.track_result_locations), **row)
+
+
+async def upsert_measurement_result(conn: asyncpg.connection, measurement_result: schemas.MeasurementResultsCreate):
+    async with conn.transaction():
+        value_keys = ['datavalue', 'valuedatetime', 'valuedatetimeutcoffset']
+        measurementresults_data = {k: v for k, v in measurement_result if k not in value_keys}
+        measurementresultvalues_data = {k: v for k, v in measurement_result if k in value_keys or k == 'resultid'}
+
+        await conn.fetchrow(make_sql_query('measurementresults', measurementresults_data),
+                            *measurementresults_data.values())
+        await conn.fetchrow(make_sql_query('measurementresultvalues', measurementresultvalues_data),
+                            *measurementresultvalues_data.values())
+
+
+async def upsert_categorical_result(conn: asyncpg.connection, categorical_result: schemas.CategoricalResultsCreate):
+    async with conn.transaction():
+        value_keys = ['datavalue', 'valuedatetime', 'valuedatetimeutcoffset']
+        categoricalresults_data = {k: v for k, v in categorical_result if k not in value_keys}
+        categoricalresultvalues_data = {k: v for k, v in categorical_result if k in value_keys or k == 'resultid'}
+
+        await conn.fetchrow(make_sql_query('categoricalresults', categoricalresults_data),
+                            *categoricalresults_data.values())
+        await conn.fetchrow(make_sql_query('categoricalresultvalues', categoricalresultvalues_data),
+                            *categoricalresultvalues_data.values())

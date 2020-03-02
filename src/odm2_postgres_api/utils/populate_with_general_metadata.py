@@ -5,23 +5,34 @@ import requests
 from nivacloud_logging.log_utils import setup_logging
 
 
-people_and_organizations = {"people": {
+people_and_organizations = {"people": [{
     "personfirstname": "Roald",
     "personlastname": "Storm"
-}, "organizations": {
+}, {
+    "personfirstname": "Uknown begroing employee",
+    "personlastname": "NIVA"
+}], "organizations": {
     "organizationtypecv": "Research institute",
     "organizationcode": "niva-no",
     "organizationname": "NIVA Norsk institut for vannforskning",
     "organizationdescription": "The Norwegian institute for water research",
     "organizationlink": "www.niva.no"
-}, "affiliations": {
+}, "affiliations": [{
     "personid": 1,
     "affiliationstartdate": "2018-12-15",
     "primaryemail": "roald.storm@niva.no",
     "organizationid": 1,
     "isprimaryorganizationcontact": "false",
     "primaryphone": "0047 413 60 753"
-}}
+}, {
+    # Todo: Add in contact information for someone relevant instead of me
+    "personid": 2,
+    "affiliationstartdate": "1958-01-01",
+    "primaryemail": "roald.storm@niva.no",
+    "organizationid": 1,
+    "isprimaryorganizationcontact": "false",
+    "primaryphone": "0047 413 60 753"
+}]}
 
 
 # processing levels copied from : https://github.com/ODM2/ODM2/blob/master/doc/ODM2Docs/core_processinglevels.md
@@ -124,6 +135,32 @@ units_and_variables = {'units': [{
     "unitstypecv": "Linear velocity",
     "unitsabbreviation": "m/s",
     "unitsname": "meter per second"
+}, {
+    "unitstypecv": "Dimensionless",
+    "unitsabbreviation": "Microscopic semi quantitative abundance classifier",
+    "unitsname": "Microscopic semi quantitative abundance classifier, x = observed, xx = common, xxx = frequent"
+}, {
+    "unitstypecv": "Dimensionless",
+    "unitsabbreviation": "PrsAbs",
+    "unitsname": "Presence or Absence",
+    "unitslink": "http://qwwebservices.usgs.gov/service-domains.html"
+}, {
+    "unitstypecv": "Dimensionless",
+    "unitsabbreviation": "Macroscopic species coverage 1-5 scale",
+    "unitsname": "Macroscopic species coverage 1-5 scale, 1 = single / rare (<1% coverage), 2 = scattered / occasional (1 <5% coverage), 3 = regular / frequent (5 <25% coverage), 4 = frequent / abundant (25 <50% coverage) ), 5 = dominant / dominant (50-100% coverage)"  # nopep8
+}, {
+    "unitstypecv": "Dimensionless",
+    "unitsabbreviation": "%",
+    "unitsname": "Kiselalger Relative abundance",
+    "unitslink": "http://qudt.org/vocab/unit#Percent; http://unitsofmeasure.org/ucum.html#para-29; http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Units&id=1125579048; http://www.unidata.ucar.edu/software/udunits/; http://qwwebservices.usgs.gov/service-domains.html"  # nopep8
+}, {
+    "unitstypecv": "Dimensionless",
+    "unitsabbreviation": "%",
+    "unitsname": "Percent"
+}, {
+    "unitstypecv": "Time",
+    "unitsabbreviation": "s",
+    "unitsname": "second"
 }], 'variables': [{
     "variabletypecv": "Chemistry",
     "variablenamecv": "Salinity",
@@ -178,6 +215,12 @@ units_and_variables = {'units': [{
     "variabledefinition": "electrical conductivity of substance",
     "variablecode": "009",
     "nodatavalue": -9999
+}, {
+    "variabletypecv": "Biota",
+    "variablenamecv": "Abundance",
+    "variabledefinition": "This variable indicates the abundance of the taxon of the result",
+    "variablecode": "010",
+    "nodatavalue": -9999
 }]}
 
 other_stuff = {'controlled_vocabularies': {
@@ -192,14 +235,44 @@ other_stuff = {'controlled_vocabularies': {
     "methodtypecv": "Instrument deployment",
     "methodcode": "000",
     "methodname": "Deploy an Instrument",
-    "methoddescription": "A method from NIVA for deploying instruments",
-    "organizationid": 1
+    "methoddescription": "A method for deploying instruments",
+    "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Derivation",
     "methodcode": "001",
     "methodname": "Derive an adjusted result from a raw result",
-    "methoddescription": "A method from NIVA for deriving a result from another result",
-    "organizationid": 1
+    "methoddescription": "A method for deriving a result from another result",
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Specimen analysis",
+    "methodcode": "002",
+    "methodname": "Microspcopic species abundance observation",
+    "methoddescription": "A method for observing the abundance of a species in a sample, this method is tied the unit: 'Microscopic semi quantitative abundance classifier'. The observation is conducted by looking at the sample through a microspic and classifying the abundance of an organism.",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Observation",
+    "methodcode": "003",
+    "methodname": "Species absence/presence observation",
+    "methoddescription": "A person observes if a species is present in the observed area or not.",
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Observation",
+    "methodcode": "004",
+    "methodname": "Macroscopic species abundance observation",
+    "methoddescription": "A semi quantitative observation is made assessing the abundance of a species using the unit:'Macroscopic species coverage 1-5 scale'",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Observation",
+    "methodcode": "005",
+    "methodname": "Macroscopic species coverage observation",
+    "methoddescription": "A quantitative observation is made assessing the abundance of a species in percentage of area covered.",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Observation",
+    "methodcode": "006",
+    "methodname": "Kiselalger relative species abundance observation",
+    "methoddescription": "Relative abundance is the percent composition of an organism of a particular kind relative to the total number of organisms in the area. This observation has percentage as it's unit and it needs a classifying taxon in the result to make sense.",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
 }]}
 
 

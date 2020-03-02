@@ -2,7 +2,6 @@ import os
 import logging
 import asyncpg
 
-import uuid
 from fastapi import FastAPI, Depends
 
 from odm2_postgres_api.schemas import schemas
@@ -22,10 +21,6 @@ class ApiPoolManager:
 
     async def get_conn(self) -> asyncpg.connection.Connection:
         async with self.pool.acquire() as connection:
-            # asyncpg has a faster implementation for uuid's but it conflicts with fastapi =(
-            # TODO: resolve if https://github.com/MagicStack/asyncpg/issues/512 resolves
-            await connection.set_type_codec('uuid', encoder=lambda u: u.bytes, decoder=lambda u: uuid.UUID(bytes=u),
-                                            schema='pg_catalog', format='binary')
             yield connection
 
 
@@ -176,3 +171,15 @@ async def post_results(result: schemas.ResultsCreate, connection=Depends(api_poo
 @app.post("/track_results", response_model=schemas.TrackResultsReport)
 async def post_track_results(track_result: schemas.TrackResultsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.upsert_track_result(connection, track_result)
+
+
+@app.post("/measurement_results", response_model=schemas.MeasurementResults)
+async def post_measurement_results(measurement_result: schemas.MeasurementResultsCreate,
+                                   connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.upsert_measurement_result(connection, measurement_result)
+
+
+@app.post("/categorical_results", response_model=schemas.CategoricalResults)
+async def post_categorical_results(categorical_result: schemas.CategoricalResultsCreate,
+                                   connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.upsert_categorical_result(connection, categorical_result)

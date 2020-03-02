@@ -200,17 +200,30 @@ class SamplingFeaturesCreate(BaseModel):
     featuregeometrywkt: constr(max_length=8000) = None  # type: ignore
     elevation_m: Optional[float]
     elevationdatumcv: constr(max_length=255) = None  # type: ignore
+    relatedsamplingfeatures: List[Tuple[int, str]] = []
 
     @validator('featuregeometrywkt')
     def featuregeometrywkt_validator(cls, wkt):
-        new_shape = shapely.wkt.loads(wkt)
-        if not new_shape.is_valid:
-            raise ValueError('well known text is not valid!')
+        if wkt:
+            new_shape = shapely.wkt.loads(wkt)
+            if not new_shape.is_valid:
+                raise ValueError('well known text is not valid!')
         return wkt
 
 
 class SamplingFeatures(SamplingFeaturesCreate):
     samplingfeatureid: int
+
+
+class RelatedSamplingFeatureCreate(BaseModel):
+    samplingfeatureid: int
+    relationshiptypecv: constr(max_length=255)  # type: ignore
+    relatedfeatureid: int
+    spatialoffsetid: Optional[int]
+
+
+class RelatedSamplingFeature(RelatedSamplingFeatureCreate):
+    relationid: int
 
 
 class SpatialReferencesCreate(BaseModel):
@@ -310,3 +323,40 @@ class TrackResultsCreate(TrackResultsFields):
 class TrackResultsReport(TrackResultsFields):
     inserted_track_result_values: int
     inserted_track_result_locations: int
+
+
+class ResultSharedBase(BaseModel):
+    resultid: int
+    xlocation: Optional[float]
+    xlocationunitsid: Optional[int]
+    ylocation: Optional[float]
+    ylocationunitsid: Optional[int]
+    zlocation: Optional[float]
+    zlocationunitsid: Optional[int]
+    spatialreferenceid: Optional[int]
+
+
+class CategoricalResultsCreate(ResultSharedBase):
+    qualitycodecv: constr(max_length=255)  # type: ignore
+    datavalue: constr(max_length=255)  # type: ignore
+    valuedatetime: datetime.datetime
+    valuedatetimeutcoffset: int
+
+
+class CategoricalResults(CategoricalResultsCreate):
+    valueid: int
+
+
+class MeasurementResultsCreate(ResultSharedBase):
+    censorcodecv: constr(max_length=255)  # type: ignore
+    qualitycodecv: constr(max_length=255)  # type: ignore
+    aggregationstatisticcv: constr(max_length=255)  # type: ignore
+    timeaggregationinterval: float
+    timeaggregationintervalunitsid: int
+    datavalue: float
+    valuedatetime: datetime.datetime
+    valuedatetimeutcoffset: int
+
+
+class MeasurementResults(MeasurementResultsCreate):
+    valueid: int
