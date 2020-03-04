@@ -4,6 +4,8 @@ import asyncpg
 
 from fastapi import FastAPI, Depends
 
+from nivacloud_logging.log_utils import setup_logging
+
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
@@ -29,6 +31,7 @@ api_pool_manager = ApiPoolManager()
 
 @app.on_event("startup")
 async def startup_event():
+    setup_logging()
     # TODO: This can run before the database is ready, it should actually be lazily tried on the first connection
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]

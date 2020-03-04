@@ -1,5 +1,4 @@
 import os
-import logging
 from pathlib import Path
 
 import uvicorn
@@ -7,13 +6,8 @@ from dotenv import load_dotenv
 from nivacloud_logging.starlette_trace import StarletteTracingMiddleware
 from starlette_prometheus import PrometheusMiddleware, metrics
 
-from nivacloud_logging.log_utils import setup_logging
-
 
 if __name__ == "__main__":
-    # fastapi sets up logging import time, so it does not help to declare logging afterwards.
-    # setting up logging before importing everything else
-    setup_logging(plaintext=True)
     if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:
         if Path.cwd() == Path('/app'):
             env_file = Path(__file__).parent / 'config' / 'localdocker.env'

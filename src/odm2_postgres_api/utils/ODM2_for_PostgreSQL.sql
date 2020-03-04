@@ -2257,6 +2257,7 @@ on update no Action on delete RESTRICT;
 alter table ODM2.Specimens add constraint fk_Specimens_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
 on update no Action on delete RESTRICT;
+COMMENT ON CONSTRAINT "fk_specimens_samplingfeatures" ON "odm2"."specimens" IS E'@foreignSingleFieldName singleSpecimenBySamplingfeatureid';
 
 alter table ODM2.SpecimenTaxonomicClassifiers add constraint fk_SpecimenTaxonomicClassifiers_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
