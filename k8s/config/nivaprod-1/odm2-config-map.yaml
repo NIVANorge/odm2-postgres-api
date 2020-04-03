@@ -13,3 +13,4 @@ data:
   POSTGRES_USER: postgres
   TIMESCALE_ODM2_SERVICE_HOST: timescale-odm2.default.svc.cluster.local
   TIMESCALE_ODM2_SERVICE_PORT: "5432"
+  ODM2_DB_READ_ONLY_USER: niva_odm2_read_only_user

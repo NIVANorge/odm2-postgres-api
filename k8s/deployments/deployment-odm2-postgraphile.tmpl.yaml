@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: odm2-postgraphile-api
+  labels:
+    app: odm2-postgraphile-api
+spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app: odm2-postgraphile-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odm2-postgraphile-api
+  labels:
+    app: odm2-postgraphile-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: odm2-postgraphile-api
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+      labels:
+        app: odm2-postgraphile-api
+    spec:
+      containers:
+        - name: odm2-postgraphile-api-container
+          image: graphile/postgraphile
+          imagePullPolicy: Always
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: odm2-postgres-password
+                  key: password
+            - name: ODM2_DB_READ_ONLY_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: odm2-db-read-only-password
+                    key: password
+          envFrom:
+            - configMapRef:
+                name: odm2-config-map
+          args: ["--enhance-graphiql", "--owner-connection", \
+                 "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(TIMESCALE_ODM2_SERVICE_HOST):$(TIMESCALE_ODM2_SERVICE_PORT)/$(ODM2_DB)", \
+                 "--connection", "postgres://$(ODM2_DB_READ_ONLY_USER):$(ODM2_DB_READ_ONLY_PASSWORD)@$(ODM2_API_SERVICE_HOST):$(ODM2_API_SERVICE_PORT)/$(ODM2_DB)", \
+                 "--schema", "$(ODM2_SCHEMA_NAME)", "--watch"]
+          ports:
+            - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 2

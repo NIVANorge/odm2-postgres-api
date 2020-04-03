@@ -62,7 +62,7 @@ spec:
           - name: ODM2_DB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: odm2-db-password
+                name: odm2-db-owner-password
                 key: password
           envFrom:
             - configMapRef:
@@ -99,8 +99,13 @@ spec:
           - name: ODM2_DB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: odm2-db-password
+                name: odm2-db-owner-password
                 key: password
+          - name: ODM2_DB_READ_ONLY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: odm2-db-read-only-password
+                  key: password
           envFrom:
             - configMapRef:
                 name: odm2-config-map
