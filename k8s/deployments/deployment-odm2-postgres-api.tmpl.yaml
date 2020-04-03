@@ -102,10 +102,10 @@ spec:
                 name: odm2-db-owner-password
                 key: password
           - name: ODM2_DB_READ_ONLY_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: odm2-db-read-only-password
-                  key: password
+            valueFrom:
+              secretKeyRef:
+                name: odm2-db-read-only-password
+                key: password
           envFrom:
             - configMapRef:
                 name: odm2-config-map
