@@ -54,7 +54,7 @@ spec:
                  "--owner-connection",
                  "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(TIMESCALE_ODM2_SERVICE_HOST):$(TIMESCALE_ODM2_SERVICE_PORT)/$(ODM2_DB)",
                  "--connection",
-                 "postgres://$(ODM2_DB_READ_ONLY_USER):$(ODM2_DB_READ_ONLY_PASSWORD)@$(ODM2_API_SERVICE_HOST):$(ODM2_API_SERVICE_PORT)/$(ODM2_DB)",
+                 "postgres://$(ODM2_DB_READ_ONLY_USER):$(ODM2_DB_READ_ONLY_PASSWORD)@$(TIMESCALE_ODM2_SERVICE_HOST):$(TIMESCALE_ODM2_SERVICE_PORT)/$(ODM2_DB)",
                  "--schema",
                  "$(ODM2_SCHEMA_NAME)",
                  "--watch"]
