@@ -1,4 +1,3 @@
-import logging
 import asyncpg
 import shapely.wkt
 
@@ -8,7 +7,7 @@ from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_V
 
 
 def argument_placeholder(arguments: dict):
-    return ', '.join(f'${n+1}' for n in range(len(arguments)))
+    return ', '.join(f'${n+1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
 
 
 def make_sql_query(table: str, data: dict):

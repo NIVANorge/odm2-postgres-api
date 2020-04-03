@@ -51,9 +51,8 @@ async def postgres_user_on_postgres_db(connection_string, db_name: str, db_users
     conn = await asyncpg.connect(connection_string)
     try:
         await create_database_if_not_exists(conn, db_name)
-        async with conn.transaction():
-            await create_user_if_not_exists(conn, db_users['odm2_owner'])
-            await create_user_if_not_exists(conn, db_users['read_only_user'])
+        await create_user_if_not_exists(conn, db_users['odm2_owner'])
+        await create_user_if_not_exists(conn, db_users['read_only_user'])
     finally:
         await conn.close()
 
