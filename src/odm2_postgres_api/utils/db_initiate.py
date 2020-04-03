@@ -5,16 +5,7 @@ from pathlib import Path
 
 import asyncpg
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-
 from nivacloud_logging.log_utils import setup_logging
-
-# This SQLAlchemy engine is purely used for escaping strings
-ENGINE = create_engine('postgresql://user:password@nohost')
-
-
-def quoter(word):
-    return ENGINE.dialect.preparer(ENGINE.dialect).quote(word)
 
 
 async def create_database_if_not_exists(conn, quoted_db_name: str):
@@ -25,46 +16,41 @@ async def create_database_if_not_exists(conn, quoted_db_name: str):
 
 
 async def create_user_if_not_exists(conn, credentials: dict):
-    # password cannot be run through qouter because it is unpredictable if it gets qouted or not...
-    user = quoter(credentials['user_name'])
-    password = credentials['password']
+    user, password = credentials['user_name'], credentials['password']
 
     if await conn.fetchval(f"SELECT count(*) FROM pg_catalog.pg_roles WHERE rolname = $1", user) != 0:
         logging.info(f"User/role exists, doing nothing", extra={'db_user': user})
     else:
-        if password:
-            logging.info(await conn.execute(f"CREATE ROLE {user} WITH LOGIN ENCRYPTED PASSWORD '{password}'"))
-        else:
-            logging.info(await conn.execute(f"CREATE ROLE {user}"))
+        logging.info(await conn.execute(f"CREATE ROLE {user} WITH LOGIN ENCRYPTED PASSWORD '{password}'"))
 
 
-async def grant_all_on_db_to_role(conn, quoted_schema: str, quoted_mighty_user: str):
+async def grant_all_on_db_to_role(conn, schema: str, owning_user: str):
     commands = [
-        f"GRANT USAGE ON SCHEMA {quoted_schema} TO {quoted_mighty_user}",
-        f"GRANT ALL ON ALL TABLES IN SCHEMA {quoted_schema} TO {quoted_mighty_user}",
-        f"GRANT ALL ON ALL SEQUENCES IN SCHEMA {quoted_schema} TO {quoted_mighty_user}",
+        f"GRANT USAGE ON SCHEMA {schema} TO {owning_user}",
+        f"GRANT ALL ON ALL TABLES IN SCHEMA {schema} TO {owning_user}",
+        f"GRANT ALL ON ALL SEQUENCES IN SCHEMA {schema} TO {owning_user}",
     ]
     for command in commands:
         logging.info(await conn.execute(command))
 
 
-async def grant_read_only(conn, quoted_schema, db_name, read_only_user, granting_user):
+async def grant_read_only(conn, schema, db_name, read_only_user, granting_user):
     commands = [
         f"REVOKE ALL ON DATABASE {db_name} FROM {read_only_user}",
         f"GRANT CONNECT ON DATABASE {db_name} TO {read_only_user}",
-        f"GRANT USAGE ON SCHEMA {quoted_schema} TO {read_only_user}",
-        f"GRANT SELECT ON ALL TABLES IN SCHEMA {quoted_schema}  TO {read_only_user}",
-        f"ALTER DEFAULT PRIVILEGES FOR ROLE {granting_user} IN SCHEMA {quoted_schema} "
+        f"GRANT USAGE ON SCHEMA {schema} TO {read_only_user}",
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema}  TO {read_only_user}",
+        f"ALTER DEFAULT PRIVILEGES FOR ROLE {granting_user} IN SCHEMA {schema} "
         f"GRANT SELECT ON TABLES TO {read_only_user}",
     ]
     for command in commands:
         logging.info(await conn.execute(command))
 
 
-async def postgres_user_on_postgres_db(connection_string, new_db: str, db_users: dict):
+async def postgres_user_on_postgres_db(connection_string, db_name: str, db_users: dict):
     conn = await asyncpg.connect(connection_string)
     try:
-        await create_database_if_not_exists(conn, quoter(new_db))
+        await create_database_if_not_exists(conn, db_name)
         async with conn.transaction():
             await create_user_if_not_exists(conn, db_users['odm2_owner'])
             await create_user_if_not_exists(conn, db_users['read_only_user'])
@@ -72,18 +58,16 @@ async def postgres_user_on_postgres_db(connection_string, new_db: str, db_users:
         await conn.close()
 
 
-async def postgres_user_on_odm_db(connection_string, db_name: str, odm2_schema_name: str, users: dict):
-    quoted_schema = quoter(odm2_schema_name)
-    quoted_mighty_user = quoter(users['odm2_owner']['user_name'])
-    quoted_read_only_user = quoter(users['read_only_user']['user_name'])
+async def postgres_user_on_odm_db(connection_string, db_name: str, schema_name: str, users: dict):
+    owning_user, read_only_user = users['odm2_owner']['user_name'], users['read_only_user']['user_name']
     conn = await asyncpg.connect(connection_string)
     try:
         async with conn.transaction():
-            if await conn.fetchval(f"SELECT count(*) FROM pg_namespace where nspname like '{quoted_schema}'") != 1:
-                logging.info(await conn.execute(f"CREATE SCHEMA {quoted_schema} AUTHORIZATION {quoted_mighty_user}"))
+            if await conn.fetchval(f"SELECT count(*) FROM pg_namespace where nspname like '{schema_name}'") != 1:
+                logging.info(await conn.execute(f"CREATE SCHEMA {schema_name} AUTHORIZATION {owning_user}"))
             commands = [
-                f"ALTER ROLE {quoted_mighty_user} IN DATABASE {db_name} SET search_path = {quoted_schema},public",
-                f"ALTER ROLE {quoted_read_only_user} IN DATABASE {db_name} SET search_path = {quoted_schema},public",
+                f"ALTER ROLE {owning_user} IN DATABASE {db_name} SET search_path = {schema_name},public",
+                f"ALTER ROLE {read_only_user} IN DATABASE {db_name} SET search_path = {schema_name},public",
             ]
             for command in commands:
                 logging.info(await conn.execute(command))
@@ -104,8 +88,8 @@ async def postgres_user_on_odm_db(connection_string, db_name: str, odm2_schema_n
         logging.info(f'Duplicate commands from ODM2_for_PostgreSQL.sql: {failed_commands}')
         await run_create_hypertable_commands(connection_string)
         async with conn.transaction():
-            await grant_all_on_db_to_role(conn, quoted_schema, quoted_mighty_user)
-            await grant_read_only(conn, quoted_schema, db_name, quoted_read_only_user, quoted_mighty_user)
+            await grant_all_on_db_to_role(conn, schema_name, owning_user)
+            await grant_read_only(conn, schema_name, db_name, read_only_user, owning_user)
     finally:
         await conn.close()
 
