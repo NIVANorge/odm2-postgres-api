@@ -68,7 +68,7 @@ setup(
     extras_require=EXTRAS,
     tests_require=TEST_REQUIRES,
     include_package_data=True,
-    license='Owned by NIVA',
+    license='MIT license',
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
