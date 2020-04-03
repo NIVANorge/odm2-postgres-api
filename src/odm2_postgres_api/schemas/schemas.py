@@ -277,6 +277,18 @@ class ResultsDataQuality(ResultsDataQualityCreate):
     bridgeid: int
 
 
+class TaxonomicClassifierCreate(BaseModel):
+    taxonomicclassifiertypecv: constr(max_length=255)  # type: ignore
+    taxonomicclassifiername: constr(max_length=255)  # type: ignore
+    taxonomicclassifiercommonname: constr(max_length=255) = None  # type: ignore
+    taxonomicclassifierdescription: constr(max_length=5000) = None  # type: ignore
+    parenttaxonomicclassifierid: Optional[int]
+
+
+class TaxonomicClassifier(TaxonomicClassifierCreate):
+    taxonomicclassifierid: int
+
+
 class FeatureActionsCreate(BaseModel):
     samplingfeatureuuid: uuid.UUID
     actionid: int

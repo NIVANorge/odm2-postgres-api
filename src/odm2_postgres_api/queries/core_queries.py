@@ -15,127 +15,23 @@ def make_sql_query(table: str, data: dict):
     return f"INSERT INTO {table} ({','.join(data.keys())}) VALUES ({argument_placeholder(data)}) returning *"
 
 
+async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pydantic_object, response_model):
+    pydantic_dict = pydantic_object.dict()
+    row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
+    return response_model(**row)
+
+
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
                                                 controlled_vocabulary: schemas.ControlledVocabulary):
     table_name = controlled_vocabulary.controlled_vocabulary_table_name
     # Check against hardcoded table names otherwise this could be an SQL injection
     if table_name not in CONTROLLED_VOCABULARY_TABLE_NAMES:
         raise RuntimeError(f"table_name: '{table_name}' is invalid")
-    sql_statement = f"INSERT INTO {table_name} (term, name, definition, category) " \
-                    f"VALUES ($1, $2, $3, $4) returning *"
-    row = await conn.fetchrow(sql_statement, controlled_vocabulary.term, controlled_vocabulary.name,
-                              controlled_vocabulary.definition, controlled_vocabulary.category)
+    value_keys = ['term', 'name', 'definition', 'category']
+    controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
+    row = await conn.fetchrow(make_sql_query(table_name, controlled_vocabulary_data),
+                              *controlled_vocabulary_data.values())
     return schemas.ControlledVocabulary(**{**dict(controlled_vocabulary), **row})
-
-
-async def create_person(conn: asyncpg.connection, user: schemas.PeopleCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO people (personfirstname, personmiddlename, personlastname) VALUES ($1, $2, $3) returning *",
-        user.personfirstname, user.personmiddlename, user.personlastname)
-    return schemas.People(**row)
-
-
-async def create_organization(conn: asyncpg.connection, organization: schemas.OrganizationsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO organizations (organizationtypecv, organizationcode, organizationname, organizationdescription, "
-        "organizationlink, parentorganizationid) VALUES ($1, $2, $3, $4, $5, $6) returning *",
-        organization.organizationtypecv, organization.organizationcode, organization.organizationname,
-        organization.organizationdescription, organization.organizationlink, organization.parentorganizationid)
-    return schemas.Organizations(**row)
-
-
-async def create_affiliation(conn: asyncpg.connection, affiliation: schemas.AffiliationsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO affiliations (personid, organizationid, isprimaryorganizationcontact, affiliationstartdate, "
-        "affiliationenddate, primaryphone, primaryemail, primaryaddress, personlink) "
-        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *",
-        affiliation.personid, affiliation.organizationid, affiliation.isprimaryorganizationcontact,
-        affiliation.affiliationstartdate, affiliation.affiliationenddate, affiliation.primaryphone,
-        affiliation.primaryemail, affiliation.primaryaddress, affiliation.personlink)
-    return schemas.Affiliations(**row)
-
-
-async def create_unit(conn: asyncpg.connection, unit: schemas.UnitsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO units (unitstypecv, unitsabbreviation, unitsname, unitslink) "
-        "VALUES ($1, $2, $3, $4) returning *",
-        unit.unitstypecv, unit.unitsabbreviation, unit.unitsname, unit.unitslink)
-    return schemas.Units(**row)
-
-
-async def create_variable(conn: asyncpg.connection, variable: schemas.VariablesCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO variables (variabletypecv, variablecode, variablenamecv, variabledefinition, "
-        "speciationcv, nodatavalue) VALUES ($1, $2, $3, $4, $5, $6) returning *",
-        variable.variabletypecv, variable.variablecode, variable.variablenamecv, variable.variabledefinition,
-        variable.speciationcv, variable.nodatavalue)
-    return schemas.Variables(**row)
-
-
-async def create_equipment_model(conn: asyncpg.connection, equipment_model: schemas.EquipmentModelCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO equipmentmodels (modelmanufacturerid, modelpartnumber, modelname, modeldescription, isinstrument,"
-        " modelspecificationsfilelink, modellink) VALUES ($1, $2, $3, $4, $5, $6, $7) returning *",
-        equipment_model.modelmanufacturerid, equipment_model.modelpartnumber, equipment_model.modelname,
-        equipment_model.modeldescription, equipment_model.isinstrument, equipment_model.modelspecificationsfilelink,
-        equipment_model.modellink)
-    return schemas.EquipmentModel(**row)
-
-
-async def create_instrument_output_variable(conn: asyncpg.connection,
-                                            instrument_output_variable: schemas.InstrumentOutputVariablesCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO instrumentoutputvariables (modelid, variableid, instrumentmethodid, instrumentresolution,"
-        "instrumentaccuracy, instrumentrawoutputunitsid) VALUES ($1, $2, $3, $4, $5, $6) returning *",
-        instrument_output_variable.modelid, instrument_output_variable.variableid,
-        instrument_output_variable.instrumentmethodid, instrument_output_variable.instrumentresolution,
-        instrument_output_variable.instrumentaccuracy, instrument_output_variable.instrumentrawoutputunitsid)
-    return schemas.Variables(**row)
-
-
-async def create_equipment(conn: asyncpg.connection, equipment: schemas.EquipmentCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO equipment (equipmentcode, equipmentname, equipmenttypecv, equipmentmodelid,"
-        "equipmentserialnumber, equipmentownerid, equipmentvendorid, equipmentpurchasedate,"
-        "equipmentpurchaseordernumber, equipmentdescription, equipmentdocumentationlink) "
-        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning *",
-        equipment.equipmentcode, equipment.equipmentname, equipment.equipmenttypecv, equipment.equipmentmodelid,
-        equipment.equipmentserialnumber, equipment.equipmentownerid, equipment.equipmentvendorid,
-        equipment.equipmentpurchasedate, equipment.equipmentpurchaseordernumber, equipment.equipmentdescription,
-        equipment.equipmentdocumentationlink)
-    return schemas.Equipment(**row)
-
-
-async def create_equipment_used(conn: asyncpg.connection, equipmentused: schemas.EquipmentUsedCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO equipmentused (actionid, equipmentid) VALUES ($1, $2) returning *",
-        equipmentused.actionid, equipmentused.equipmentid)
-    return schemas.EquipmentUsed(**row)
-
-
-async def create_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO methods (methodtypecv, methodcode, methodname, methoddescription, methodlink, organizationid) "
-        "VALUES ($1, $2, $3, $4, $5, $6) returning *",
-        method.methodtypecv, method.methodcode, method.methodname, method.methoddescription,
-        method.methodlink, method.organizationid)
-    return schemas.Methods(**row)
-
-
-async def create_action_by(conn: asyncpg.connection, action_by: schemas.ActionsByCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO actionby (actionid, affiliationid, isactionlead, roledescription) "
-        "VALUES ($1, $2, $3, $4) returning *",
-        action_by.actionid, action_by.affiliationid, action_by.isactionlead, action_by.roledescription)
-    return schemas.ActionsBy(**row)
-
-
-async def create_related_action(conn: asyncpg.connection, related_action: schemas.RelatedActionCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO niva_odm2.odm2.relatedactions (actionid, relationshiptypecv, relatedactionid) "
-        "VALUES ($1, $2, $3) returning *",
-        related_action.actionid, related_action.relationshiptypecv, related_action.relatedactionid)
-    return schemas.RelatedAction(**row)
 
 
 async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
@@ -146,30 +42,22 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
             "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
             action.actiontypecv, action.methodid, action.begindatetime, action.begindatetimeutcoffset,
             action.enddatetime, action.enddatetimeutcoffset, action.actiondescription, action.actionfilelink)
+
         action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
                                             isactionlead=action.isactionlead, roledescription=action.roledescription)
-        action_by_row = await create_action_by(conn, action_by)
+        action_by_row = await insert_pydantic_object(conn, 'actionby', action_by, schemas.ActionsBy)
 
         for equipmentid in action.equipmentids:
-            await create_equipment_used(conn, schemas.EquipmentUsedCreate(
-                actionid=action_row['actionid'], equipmentid=equipmentid))
+            equipment_used_create = schemas.EquipmentUsedCreate(actionid=action_row['actionid'],
+                                                                equipmentid=equipmentid)
+            await insert_pydantic_object(conn, 'equipmentused', equipment_used_create, schemas.EquipmentUsed)
 
         for action_id, relation_ship_type in action.relatedactions:
-            await create_related_action(conn, schemas.RelatedActionCreate(
-                actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id))
+            related_action_create = schemas.RelatedActionCreate(
+                actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id)
+            await insert_pydantic_object(conn, 'relatedactions', related_action_create, schemas.RelatedAction)
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
     return schemas.Action(equipmentids=action.equipmentids, **{**action_row, **dict(action_by_row)})
-
-
-async def create_related_sampling_feature(conn: asyncpg.connection,
-                                          related_feature: schemas.RelatedSamplingFeatureCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO niva_odm2.odm2.relatedfeatures (samplingfeatureid, relationshiptypecv, relatedfeatureid,"
-        "spatialoffsetid) VALUES ($1, $2, $3, $4) returning *",
-        related_feature.samplingfeatureid, related_feature.relationshiptypecv, related_feature.relatedfeatureid,
-        related_feature.spatialoffsetid
-    )
-    return schemas.RelatedSamplingFeature(**row)
 
 
 async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
@@ -194,45 +82,13 @@ async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: sc
             sampling_feature.elevation_m, sampling_feature.elevationdatumcv
         )
         for sampling_feature_id, relation_ship_type in sampling_feature.relatedsamplingfeatures:
-            await create_related_sampling_feature(conn, schemas.RelatedSamplingFeatureCreate(
+            related_sampling_feature_create = schemas.RelatedSamplingFeatureCreate(
                 samplingfeatureid=sampling_row['samplingfeatureid'], relationshiptypecv=relation_ship_type,
                 relatedfeatureid=sampling_feature_id,
-            ))
+            )
+            await insert_pydantic_object(conn, 'relatedfeatures', related_sampling_feature_create,
+                                         schemas.RelatedSamplingFeature)
     return schemas.SamplingFeatures(**sampling_row)
-
-
-async def create_processing_level(conn: asyncpg.connection, processing_level: schemas.ProcessingLevelsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO processinglevels (processinglevelcode, definition, explanation) "
-        "VALUES ($1, $2, $3) returning *",
-        processing_level.processinglevelcode, processing_level.definition, processing_level.explanation)
-    return schemas.ProcessingLevels(**row)
-
-
-async def create_spatial_reference(conn: asyncpg.connection, spatial_reference: schemas.SpatialReferencesCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO spatialreferences (srscode, srsname, srsdescription, srslink) "
-        "VALUES ($1, $2, $3, $4) returning *",
-        spatial_reference.srscode, spatial_reference.srsname,
-        spatial_reference.srsdescription, spatial_reference.srslink)
-    return schemas.SpatialReferences(**row)
-
-
-async def create_site(conn: asyncpg.connection, site: schemas.Sites):
-    row = await conn.fetchrow(
-        "INSERT INTO sites (samplingfeatureid, sitetypecv, latitude, longitude, spatialreferenceid) "
-        "VALUES ($1, $2, $3, $4, $5) returning *",
-        site.samplingfeatureid, site.sitetypecv, site.latitude, site.longitude, site.spatialreferenceid)
-    return schemas.Sites(**row)
-
-
-async def create_data_quality(conn: asyncpg.connection, data_quality: schemas.DataQualityCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO dataquality (dataqualitytypecv, dataqualitycode, dataqualityvalue, dataqualityvalueunitsid,"
-        "dataqualitydescription, dataqualitylink) VALUES ($1, $2, $3, $4, $5, $6) returning *",
-        data_quality.dataqualitytypecv, data_quality.dataqualitycode, data_quality.dataqualityvalue,
-        data_quality.dataqualityvalueunitsid, data_quality.dataqualitydescription, data_quality.dataqualitylink)
-    return schemas.DataQuality(**row)
 
 
 async def create_result_data_quality(conn: asyncpg.connection, result_data_quality: schemas.ResultsDataQualityCreate):
