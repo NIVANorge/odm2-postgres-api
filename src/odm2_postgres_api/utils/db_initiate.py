@@ -24,7 +24,11 @@ async def create_database_if_not_exists(conn, quoted_db_name: str):
         logging.info("Database exists, doing nothing", extra={'database': quoted_db_name})
 
 
-async def create_user_if_not_exists(conn, user: str, password: str):
+async def create_user_if_not_exists(conn, credentials: dict):
+    # password cannot be run through qouter because it is unpredictable if it gets qouted or not...
+    user = quoter(credentials['user_name'])
+    password = credentials['password']
+
     if await conn.fetchval(f"SELECT count(*) FROM pg_catalog.pg_roles WHERE rolname = $1", user) != 0:
         logging.info(f"User/role exists, doing nothing", extra={'db_user': user})
     else:
@@ -44,28 +48,45 @@ async def grant_all_on_db_to_role(conn, quoted_schema: str, quoted_mighty_user: 
         logging.info(await conn.execute(command))
 
 
-async def postgres_user_on_postgres_db(connection_string, new_db: str, db_mighty_user: str, db_mighty_pwd: str):
+async def grant_read_only(conn, quoted_schema, db_name, read_only_user, granting_user):
+    commands = [
+        f"REVOKE ALL ON DATABASE {db_name} FROM {read_only_user}",
+        f"GRANT CONNECT ON DATABASE {db_name} TO {read_only_user}",
+        f"GRANT USAGE ON SCHEMA {quoted_schema} TO {read_only_user}",
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {quoted_schema}  TO {read_only_user}",
+        f"ALTER DEFAULT PRIVILEGES FOR ROLE {granting_user} IN SCHEMA {quoted_schema} "
+        f"GRANT SELECT ON TABLES TO {read_only_user}",
+    ]
+    for command in commands:
+        logging.info(await conn.execute(command))
+
+
+async def postgres_user_on_postgres_db(connection_string, new_db: str, db_users: dict):
     conn = await asyncpg.connect(connection_string)
     try:
         await create_database_if_not_exists(conn, quoter(new_db))
         async with conn.transaction():
-            # password cannot be run through qouter because it is unpredictable if it gets qouted or not...
-            await create_user_if_not_exists(conn, quoter(db_mighty_user), db_mighty_pwd)
-
+            await create_user_if_not_exists(conn, db_users['odm2_owner'])
+            await create_user_if_not_exists(conn, db_users['read_only_user'])
     finally:
         await conn.close()
 
 
-async def postgres_user_on_odm_db(connection_string, odm2_schema_name: str, db_mighty_user: str):
+async def postgres_user_on_odm_db(connection_string, db_name: str, odm2_schema_name: str, users: dict):
     quoted_schema = quoter(odm2_schema_name)
-    quoted_mighty_user = quoter(db_mighty_user)
+    quoted_mighty_user = quoter(users['odm2_owner']['user_name'])
+    quoted_read_only_user = quoter(users['read_only_user']['user_name'])
     conn = await asyncpg.connect(connection_string)
     try:
         async with conn.transaction():
             if await conn.fetchval(f"SELECT count(*) FROM pg_namespace where nspname like '{quoted_schema}'") != 1:
                 logging.info(await conn.execute(f"CREATE SCHEMA {quoted_schema} AUTHORIZATION {quoted_mighty_user}"))
-            command = f"ALTER ROLE {quoted_mighty_user} IN DATABASE niva_odm2 SET search_path = {quoted_schema},public"
-            logging.info(await conn.execute(command))
+            commands = [
+                f"ALTER ROLE {quoted_mighty_user} IN DATABASE {db_name} SET search_path = {quoted_schema},public",
+                f"ALTER ROLE {quoted_read_only_user} IN DATABASE {db_name} SET search_path = {quoted_schema},public",
+            ]
+            for command in commands:
+                logging.info(await conn.execute(command))
             extensions = ['timescaledb', 'postgis', 'postgis_topology', 'fuzzystrmatch', 'postgis_tiger_geoCoder']
             for extension in extensions:
                 res = await conn.execute(f'CREATE EXTENSION IF NOT EXISTS {extension} CASCADE')
@@ -84,7 +105,7 @@ async def postgres_user_on_odm_db(connection_string, odm2_schema_name: str, db_m
         await run_create_hypertable_commands(connection_string)
         async with conn.transaction():
             await grant_all_on_db_to_role(conn, quoted_schema, quoted_mighty_user)
-
+            await grant_read_only(conn, quoted_schema, db_name, quoted_read_only_user, quoted_mighty_user)
     finally:
         await conn.close()
 
@@ -119,19 +140,23 @@ def main():
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
     db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]
-    db_mighty_user = os.environ["ODM2_DB_USER"]
-    db_mighty_pwd = os.environ["ODM2_DB_PASSWORD"]
-    odm2_schema_name = os.environ["ODM2_SCHEMA_NAME"]
-    db_name = os.environ["ODM2_DB"]
-    pg_user = os.environ["POSTGRES_USER"]
-    pg_pwd = os.environ["POSTGRES_PASSWORD"]
+    db_users = {'postgres_owner': {'user_name': os.environ["POSTGRES_USER"],
+                                   'password': os.environ["POSTGRES_PASSWORD"]},
+                'odm2_owner': {'user_name': os.environ["ODM2_DB_USER"],
+                               'password': os.environ["ODM2_DB_PASSWORD"]},
+                'read_only_user': {'user_name': os.environ["ODM2_DB_READ_ONLY_USER"],
+                                   'password': os.environ["ODM2_DB_READ_ONLY_PASSWORD"]}}
 
-    connection_string = f'postgresql://{pg_user}:{pg_pwd}@{db_host}:{db_port}'
-    asyncio.run(postgres_user_on_postgres_db(connection_string, db_name, db_mighty_user, db_mighty_pwd))
+    db_name = os.environ["ODM2_DB"]
+    odm2_schema_name = os.environ["ODM2_SCHEMA_NAME"]
+
+    pg_credentials = f"{db_users['postgres_owner']['user_name']}:{db_users['postgres_owner']['password']}"
+    connection_string = f'postgresql://{pg_credentials}@{db_host}:{db_port}'
+    asyncio.run(postgres_user_on_postgres_db(connection_string, db_name, db_users))
 
     # Run commands on new database
-    connection_string = f'postgresql://{pg_user}:{pg_pwd}@{db_host}:{db_port}/{db_name}'
-    asyncio.run(postgres_user_on_odm_db(connection_string, odm2_schema_name, db_mighty_user))
+    connection_string = f'postgresql://{pg_credentials}@{db_host}:{db_port}/{db_name}'
+    asyncio.run(postgres_user_on_odm_db(connection_string, db_name, odm2_schema_name, db_users))
 
     logging.info("Database tables for odm2 created")
 
