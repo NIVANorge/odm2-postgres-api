@@ -62,14 +62,14 @@ spec:
             - containerPort: 5000
           livenessProbe:
             httpGet:
-              path: /
+              path: /graphiql
               port: 5000
             initialDelaySeconds: 3
             periodSeconds: 10
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /
+              path: /graphiql
               port: 5000
             initialDelaySeconds: 0
             periodSeconds: 10
