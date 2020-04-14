@@ -27,8 +27,6 @@ spec:
       app: odm2-postgraphile-api
   template:
     metadata:
-      annotations:
-        prometheus.io/scrape: 'true'
       labels:
         app: odm2-postgraphile-api
     spec:
