@@ -38,9 +38,9 @@ odm2-postgres-api_timescale_odm2_1      docker-entrypoint.sh postgres    Up     
 After all services are running ok, we need to populate with some data.
 
 #### download controlled vocabularies
-Go to http://localhost:5000/#/default/patch_controlled_vocabularies_controlled_vocabularies_patch and perform the request. Alternatively, copy paste the following in your terminal:
+Go to http://localhost:8701/#/default/patch_controlled_vocabularies_controlled_vocabularies_patch and perform the request. Alternatively, copy paste the following in your terminal:
 ```
-curl -X PATCH "http://localhost:5000/controlled_vocabularies" -H "accept: application/json"
+curl -X PATCH "http://localhost:8701/controlled_vocabularies" -H "accept: application/json"
 ```
 
 #### Add metadata
