@@ -1,22 +1,29 @@
 import logging
+from uuid import uuid4
 
 import requests
 
 from nivacloud_logging.log_utils import setup_logging
 
-
-sampling_features = {'sampling_features': {
-    "samplingfeatureuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "samplingfeaturetypecv": "Ships track",
-    "samplingfeaturecode": "some_cool_code",
-    "elevation_m": 0,
-    "samplingfeaturename": "Oslo-Kiel shiptrack",
-    "samplingfeaturedescription": "A line string representing a ships track between Oslo and Kiel",
-    "samplingfeaturegeotypecv": "Line string",
-    "featuregeometrywkt": "LINESTRING (59.916667 10.733333, 54.323333 10.139444)",
-    "elevationdatumcv": "MSL"
-}}
-
+sampling_features = {
+    'datasets': {
+        "datasetuuid": "b5924516-809f-11ea-9dd8-5f4b2a184c9b",
+        "datasettypecv": "Single time series",
+        "datasetcode": "FA/ferrybox/CTD/SALINITY",
+        "datasettitle": "Salinity CTD sensor onboard Color Fantasy",
+        "datasetabstract": "blabla",
+    },
+    'sampling_features': {
+        "samplingfeatureuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "samplingfeaturetypecv": "Ships track",
+        "samplingfeaturecode": "some_cool_code",
+        "elevation_m": 0,
+        "samplingfeaturename": "Oslo-Kiel shiptrack",
+        "samplingfeaturedescription": "A line string representing a ships track between Oslo and Kiel",
+        "samplingfeaturegeotypecv": "Line string",
+        "featuregeometrywkt": "LINESTRING (59.916667 10.733333, 54.323333 10.139444)",
+        "elevationdatumcv": "MSL"
+    }}
 
 initial_data = {'actions': {
     "affiliationid": 1,
@@ -46,6 +53,7 @@ initial_data = {'actions': {
     "resultuuid": "314cd400-14a7-489a-ab97-bce6b11ad068",
     "resulttypecv": "Track series coverage",
     "variableid": 1,
+    "datasetuuids": ["b5924516-809f-11ea-9dd8-5f4b2a184c9b"],
     "unitsid": 1,
     "processinglevelid": 2,
     "valuecount": 0,

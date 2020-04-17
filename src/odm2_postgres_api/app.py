@@ -95,6 +95,11 @@ async def post_variables(variable: schemas.VariablesCreate, connection=Depends(a
     return await insert_pydantic_object(connection, 'variables', variable, schemas.Variables)
 
 
+@app.post("/datasets", response_model=schemas.Dataset)
+async def post_dataset(dataset: schemas.DatasetCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await insert_pydantic_object(connection, "datasets", dataset, schemas.Dataset)
+
+
 @app.post("/equipment_model", response_model=schemas.EquipmentModelCreate)
 async def post_equipment_model(equipment_model: schemas.EquipmentModelCreate,
                                connection=Depends(api_pool_manager.get_conn)):

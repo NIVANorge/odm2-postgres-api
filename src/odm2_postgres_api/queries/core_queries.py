@@ -1,13 +1,16 @@
+import uuid
+
 import asyncpg
 import shapely.wkt
 
 from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.schemas.schemas import ResultsDatasetCreate
 from odm2_postgres_api.utils import shapely_postgres_adapter
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def argument_placeholder(arguments: dict):
-    return ', '.join(f'${n+1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
+    return ', '.join(f'${n + 1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
 
 
 def make_sql_query(table: str, data: dict):
@@ -16,8 +19,11 @@ def make_sql_query(table: str, data: dict):
 
 async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pydantic_object, response_model):
     pydantic_dict = pydantic_object.dict()
-    row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
-    return response_model(**row)
+    try:
+        row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
+        return response_model(**row)
+    except asyncpg.exceptions.UniqueViolationError:
+        return None
 
 
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
@@ -99,6 +105,23 @@ async def create_result_data_quality(conn: asyncpg.connection, result_data_quali
     return schemas.ResultsDataQuality(dataqualitycode=result_data_quality.dataqualitycode, **row)
 
 
+async def create_datasets_results(conn: asyncpg.connection, bridge: schemas.ResultsDatasetCreate):
+    # TODO: not creating any transactions here. Do we just assume that we have one?
+    # ideally we already have one as we would want to create both datasets and results within the same transaction..?
+    async def insert(resultuuid: uuid.UUID, dataset_uuid: uuid.UUID) -> schemas.ResultsDataset:
+        row = await conn.fetchrow(
+            "INSERT INTO datasetsresults (resultid, datasetid) "
+            "VALUES ("
+            "(SELECT datasetid FROM datasets where datasetuuid = $2), "
+            "(SELECT datasetid FROM datasets where datasetuuid = $2)"
+            ") "
+            "ON CONFLICT (resultid, datasetid) DO UPDATE SET resultid = EXCLUDED.resultid returning *",
+            resultuuid, dataset_uuid)
+        return schemas.ResultsDataset(**row)
+
+    return [insert(resultuuid=bridge.results_uuid, dataset_uuid=du) for du in bridge.dataset_uuids]
+
+
 async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
     row = await conn.fetchrow(
         "INSERT INTO featureactions (samplingfeatureid, actionid) "
@@ -121,11 +144,15 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
             result.unitsid, result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
             result.resultdatetimeutcoffset, result.validdatetime, result.validdatetimeutcoffset, result.statuscv,
             result.sampledmediumcv, result.valuecount)
+
+        results_dataset_row = await create_datasets_results(conn, ResultsDatasetCreate(
+            results_uuid=result.resultuuid, dataset_uuids=result.datasetuuids, ))
         for data_quality_code in result.dataqualitycodes:
             await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
                 resultid=result_row['resultid'], dataqualitycode=data_quality_code))
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
-    return schemas.Results(dataqualitycodes=result.dataqualitycodes, **{**result_row, **dict(feature_action_row)})
+    return schemas.Results(dataqualitycodes=result.dataqualitycodes, datasetuuids=result.datasetuuids,
+                           **{**result_row, **dict(feature_action_row)})
 
 
 async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):

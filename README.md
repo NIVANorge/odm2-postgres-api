@@ -34,6 +34,9 @@ odm2-postgres-api_odm2_postgres_api_1   python /app/src/odm2_postg ...   Up     
 odm2-postgres-api_timescale_odm2_1      docker-entrypoint.sh postgres    Up       0.0.0.0:8700->5432/tcp  
 ```
 
+Writing API is available at http://localhost:8701
+Reading GraphQL API is available at http://localhost:8702/graphiql
+
 ### Populate data
 
 After all services are running ok, we need to populate with some data.

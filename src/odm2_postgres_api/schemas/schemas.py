@@ -82,6 +82,18 @@ class Variables(VariablesCreate):
     variableid: int
 
 
+class DatasetCreate(BaseModel):
+    datasetuuid: uuid.UUID
+    datasettypecv: constr(max_length=255)
+    datasetcode: constr(max_length=50)
+    datasettitle: constr(max_length=255)
+    datasetabstract: constr(max_length=5000)
+
+
+class Dataset(DatasetCreate):
+    datasetid: int
+
+
 class EquipmentModelCreate(BaseModel):
     modelmanufacturerid: int
     modelpartnumber: constr(max_length=50) = None  # type: ignore
@@ -268,6 +280,17 @@ class DataQuality(DataQualityCreate):
     dataqualityid: int
 
 
+class ResultsDatasetCreate(BaseModel):
+    dataset_uuids: List[uuid.UUID]
+    results_uuid: uuid.UUID
+
+
+class ResultsDataset(BaseModel):
+    bridgeid: int
+    datasetid: int
+    resultsid: int
+
+
 class ResultsDataQualityCreate(BaseModel):
     resultid: int
     dataqualitycode: str
@@ -313,6 +336,7 @@ class ResultsCreate(FeatureActionsCreate):
     statuscv: constr(max_length=255) = None  # type: ignore
     sampledmediumcv: constr(max_length=5000) = None  # type: ignore
     valuecount: int
+    datasetuuids: List[uuid.UUID]
 
 
 class Results(ResultsCreate):
