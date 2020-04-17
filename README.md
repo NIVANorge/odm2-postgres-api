@@ -1,5 +1,6 @@
 A lightweight and fast api for interacting with odm2
 
+Have a look at [ODM2 entity documentation](https://github.com/ODM2/ODM2/wiki/documentation#odm2core-entities) for a description of the datamodel.
 ## Development
 
 ### Requirements
