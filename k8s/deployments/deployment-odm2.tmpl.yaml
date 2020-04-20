@@ -48,7 +48,7 @@ spec:
       containers:
       - name: timescale-odm2
         # Remember to change the image version in both nivacloud/docker-compose.yml and the odm2/docker-compose.yml
-        image: timescale/timescaledb-postgis:1.4.2-pg11
+        image: timescale/timescaledb-postgis:1.7.0-pg12
         imagePullPolicy: Always
         lifecycle:
           preStop:
