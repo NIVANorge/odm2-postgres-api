@@ -28,6 +28,10 @@ workflows:
               ignore:
                 - dev
                 - master
+      - niva-orb/build_containers_and_run_pytest_on_machine:
+          context: nivacloud secrets
+          requires:
+            - determine_changed_containers
       - niva-orb/build_containers:
           context: nivacloud secrets
           requires:
@@ -38,6 +42,10 @@ workflows:
           filters:
             branches:
               only: dev
+      - niva-orb/build_containers_and_run_pytest_on_machine:
+          context: nivacloud secrets
+          requires:
+            - determine_changed_containers
       - niva-orb/build_and_push_to_nivatest:
           context: nivacloud secrets
           requires:

@@ -111,15 +111,7 @@ async def run_create_hypertable_commands(connection_string):
         await conn.close()
 
 
-def main():
-    setup_logging(plaintext=True)
-    if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:
-        if Path.cwd() == Path('/app'):
-            env_file = Path(__file__).parent / '..' / 'config' / 'localdocker.env'
-        else:
-            env_file = Path(__file__).parent / '..' / 'config' / 'localdev.env'
-        load_dotenv(dotenv_path=env_file, verbose=True)
-
+def db_init():
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
     db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]
@@ -145,4 +137,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    setup_logging(plaintext=True)
+    if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:
+        if Path.cwd() == Path('/app'):
+            env_file = Path(__file__).parent / '..' / 'config' / 'localdocker.env'
+        else:
+            env_file = Path(__file__).parent / '..' / 'config' / 'localdev.env'
+        load_dotenv(dotenv_path=env_file, verbose=True)
+    db_init()
