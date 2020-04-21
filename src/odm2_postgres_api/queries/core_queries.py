@@ -51,6 +51,11 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
                                                                 equipmentid=equipmentid)
             await insert_pydantic_object(conn, 'equipmentused', equipment_used_create, schemas.EquipmentUsed)
 
+        for directiveid in action.directiveids:
+            action_directive_create = schemas.ActionDirectivesCreate(actionid=action_row['actionid'],
+                                                                     directiveid=directiveid)
+            await insert_pydantic_object(conn, 'actiondirectives', action_directive_create, schemas.ActionDirective)
+
         for action_id, relation_ship_type in action.relatedactions:
             related_action_create = schemas.RelatedActionCreate(
                 actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id)

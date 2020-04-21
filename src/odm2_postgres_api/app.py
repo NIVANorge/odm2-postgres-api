@@ -113,6 +113,11 @@ async def post_equipment(equipment: schemas.EquipmentCreate, connection=Depends(
     return await insert_pydantic_object(connection, 'equipment', equipment, schemas.Equipment)
 
 
+@app.post("/directives", response_model=schemas.Directive)
+async def post_directive(directive: schemas.DirectivesCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await insert_pydantic_object(connection, 'directives', directive, schemas.Directive)
+
+
 @app.post("/methods", response_model=schemas.Methods)
 async def post_methods(method: schemas.MethodsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await insert_pydantic_object(connection, 'methods', method, schemas.Methods)
