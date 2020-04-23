@@ -45,7 +45,7 @@ async def init_dbpool():
                                      host=db_host, port=db_port, database=db_name)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def clear_db():
     db_pool = await init_dbpool()
     async with db_pool.acquire() as connection:
