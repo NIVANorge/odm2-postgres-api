@@ -246,31 +246,31 @@ other_stuff = {'controlled_vocabularies': {
 }, {
     "methodtypecv": "Specimen analysis",
     "methodcode": "002",
-    "methodname": "Microspcopic species abundance observation",
-    "methoddescription": "A method for observing the abundance of a species in a sample, this method is tied the unit: 'Microscopic semi quantitative abundance classifier'. The observation is conducted by looking at the sample through a microspic and classifying the abundance of an organism.",  # nopep8
+    "methodname": "Microscopic abundance",
+    "methoddescription": "A method for observing the abundance of a species in a sample, this method is tied the unit: 'Microscopic semi quantitative abundance classifier'. The observation is conducted by looking at the sample through a microscopic and classifying the abundance of an organism.",  # nopep8
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Observation",
     "methodcode": "003",
-    "methodname": "Species absence/presence observation",
+    "methodname": "absence/presence",
     "methoddescription": "A person observes if a species is present in the observed area or not.",
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Observation",
     "methodcode": "004",
-    "methodname": "Macroscopic species abundance observation",
+    "methodname": "Macroscopic abundance",
     "methoddescription": "A semi quantitative observation is made assessing the abundance of a species using the unit:'Macroscopic species coverage 1-5 scale'",  # nopep8
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Observation",
     "methodcode": "005",
-    "methodname": "Macroscopic species coverage observation",
+    "methodname": "Macroscopic coverage",
     "methoddescription": "A quantitative observation is made assessing the abundance of a species in percentage of area covered.",  # nopep8
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Observation",
     "methodcode": "006",
-    "methodname": "Kiselalger relative species abundance observation",
+    "methodname": "Kiselalger relative abundance",
     "methoddescription": "Relative abundance is the percent composition of an organism of a particular kind relative to the total number of organisms in the area. This observation has percentage as it's unit and it needs a classifying taxon in the result to make sense.",  # nopep8
     "organizationid": 1  # organization 1 is NIVA
 }]}
