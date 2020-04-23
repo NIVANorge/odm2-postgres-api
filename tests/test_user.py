@@ -1,6 +1,8 @@
 import json
 from base64 import b64encode
 
+import pytest
+
 from odm2_postgres_api.queries.user import full_name_to_split_tuple, get_nivaport_user
 
 
@@ -8,6 +10,11 @@ def test_user_fullname_splitting():
     assert full_name_to_split_tuple("Åge Olsen") == ("Åge", None, "Olsen")
     assert full_name_to_split_tuple("Åge Drillo Olsen") == ("Åge", "Drillo", "Olsen")
     assert full_name_to_split_tuple(" Can handle trailing spaces ") == ("Can", "handle trailing", "spaces")
+    very = "very " * 100
+    assert full_name_to_split_tuple(f"can handle {very} long names") == ("can", f"handle {very} long", "names")
+    with pytest.raises(ValueError):
+        full_name_to_split_tuple("CanHandleJustOneName")
+        full_name_to_split_tuple("")
 
 
 def test_should_parse_base64_encoded_user_string():

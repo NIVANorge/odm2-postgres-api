@@ -20,7 +20,10 @@ class NivaPortUser(BaseModel):
 
 
 def full_name_to_split_tuple(fullname: str) -> Tuple[str, Optional[str], str]:
-    head, *mid, tail = fullname.strip().split(" ")
+    split = fullname.strip().split(" ")
+    if len(split) < 2:
+        raise ValueError(f"Could not split name into firstname/lastname")
+    head, *mid, tail = split
     middle_name = " ".join(mid) if mid else None
     name_tuple = (head, middle_name, tail)
     if not head or not tail:
