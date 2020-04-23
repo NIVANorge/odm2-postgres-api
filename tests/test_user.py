@@ -1,3 +1,6 @@
+import json
+from base64 import b64encode
+
 from odm2_postgres_api.queries.user import full_name_to_split_tuple, get_nivaport_user
 
 
@@ -8,8 +11,16 @@ def test_user_fullname_splitting():
 
 
 def test_should_parse_base64_encoded_user_string():
-    user = get_nivaport_user(
-        "eyJpZCI6MjIxLCJ1aWQiOiIxZWQyMDBkMy1mMDlhLTQxNjQtOTExMC1hMWYyNGY4OTliYjMiLCJkaXNwbGF5TmFtZSI6IsOFZ2UgT2xzZW4iLCJlbWFpbCI6ImRldnVzZXJAc29tZWVtYWlsLmNvbSIsInByb3ZpZGVyIjoiRGV2TG9naW4iLCJjcmVhdGVUaW1lIjoiMjAyMC0wNC0yMFQxMTo0NToyMS4yNDFaIiwidXBkYXRlVGltZSI6IjIwMjAtMDQtMjBUMTE6NDU6MjEuMjQxWiIsInJvbGVzIjpbImFwcHM6YWRtaW4iLCJuaXZhIl19")
+    user_obj = {"id": 221,
+                "uid": "1ed200d3-f09a-4164-9110-a1f24f899bb3",
+                "displayName": "Åge Olsen",
+                "email": "devuser@someemail.com",
+                "provider": "DevLogin",
+                "createTime": "2020-04-20T11:45:21.241Z",
+                "updateTime": "2020-04-20T11:45:21.241Z",
+                "roles": ["apps:admin", "niva"]}
+
+    user = get_nivaport_user(b64encode(json.dumps(user_obj).encode('utf-8')))
 
     assert user.id == "221"
     assert user.email == 'devuser@someemail.com'

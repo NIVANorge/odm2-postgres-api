@@ -4,10 +4,22 @@ from pathlib import Path
 
 import asyncpg
 import pytest
+import time
 from dotenv import load_dotenv
 
 from odm2_postgres_api.utils.db_initiate import db_init
 from test_utils import truncate_all_data
+
+
+def try_db_init(tries=30):
+    try:
+        db_init()
+    except (asyncpg.exceptions.ConnectionDoesNotExistError, asyncpg.exceptions.CannotConnectNowError):
+        if tries != 0:
+            time.sleep(.5)
+            try_db_init(tries-1)
+        else:
+            raise
 
 
 @pytest.fixture(scope="module")
@@ -18,7 +30,8 @@ def wait_for_db(module_scoped_container_getter):
 
     os.environ["TIMESCALE_ODM2_SERVICE_HOST"] = db_info.hostname
     os.environ["TIMESCALE_ODM2_SERVICE_PORT"] = db_info.host_port
-    db_init()
+    try_db_init()
+
     asyncio.set_event_loop(asyncio.new_event_loop())
 
 
