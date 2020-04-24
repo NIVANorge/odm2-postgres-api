@@ -53,10 +53,10 @@ async def clear_db():
         # TODO: move into general metadata (this should be the same in all environments..)
         await connection.fetchrow("INSERT INTO odm2.cv_organizationtype "
                                   "(term, name) "
-                                  "VALUES ('institute', 'Institute');")
+                                  "VALUES ('researchInstitute', 'Research institute');")
         await connection.fetchrow("INSERT INTO odm2.organizations "
                                   "(organizationtypecv, organizationcode, organizationname) "
-                                  "VALUES ('Institute', 'niva', 'Norwegian institute for Water Research');")
+                                  "VALUES ('Research institute', 'niva', 'Norwegian institute for Water Research');")
         await connection.fetchrow("INSERT INTO odm2.externalidentifiersystems "
                                   "(identifiersystemorganizationid, externalidentifiersystemname) "
                                   "VALUES ((select organizationid from odm2.organizations where organizationcode='niva'), 'niva-port');")

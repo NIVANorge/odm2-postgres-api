@@ -4,7 +4,7 @@ from base64 import b64encode
 import pytest
 
 from odm2_postgres_api.queries.user import create_or_get_user
-from integration_test_fixtures import clear_db, wait_for_db, init_dbpool
+from integration_test_fixtures import wait_for_db, clear_db, init_dbpool
 
 
 @pytest.mark.docker
