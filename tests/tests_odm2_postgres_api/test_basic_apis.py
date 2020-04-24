@@ -1,5 +1,5 @@
-from starlette.testclient import TestClient
-from odm2_postgres_api import app
+# from starlette.testclient import TestClient
+# from odm2_postgres_api import app
 
 # client = TestClient(app.app)
 

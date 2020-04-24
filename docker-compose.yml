@@ -5,6 +5,8 @@ services:
     build: "."
     ports:
       - "127.0.0.1:8701:5000"
+    volumes:
+      - $HOME/stream-data/:/stream-data/
     depends_on:
       - timescale_odm2
       - db_init
@@ -29,8 +31,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
     # Please leave this commented volume since I use it all the time to get persistence while developing locally
-#    volumes:
-#      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
+    volumes:
+      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
 
   db_init:
     build: "."

@@ -3,6 +3,7 @@ import logging
 import asyncpg
 
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 
 from nivacloud_logging.log_utils import setup_logging
 
@@ -10,11 +11,20 @@ from odm2_postgres_api.queries.core_queries import insert_pydantic_object
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
+from odm2_postgres_api.utils import google_cloud_utils
 
 app = FastAPI(
     docs_url="/",
     title="ODM2 API",
     version="v1"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -200,3 +210,14 @@ async def post_measurement_results(measurement_result: schemas.MeasurementResult
 async def post_categorical_results(categorical_result: schemas.CategoricalResultsCreate,
                                    connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.upsert_categorical_result(connection, categorical_result)
+
+
+@app.post("/begroing_result", response_model=schemas.BegroingResult)
+async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
+                               connection=Depends(api_pool_manager.get_conn)):
+    csv_data = google_cloud_utils.generate_csv_from_form(begroing_result.form)
+    google_cloud_utils.put_csv_to_bucket(csv_data)
+    # TODO: Send email about new bucket_files
+    # TODO: Import Head to retrieve user, Insert user and new data into ODM2
+
+    return schemas.BegroingResult(personid=1, **begroing_result.dict())

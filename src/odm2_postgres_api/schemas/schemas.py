@@ -391,3 +391,11 @@ class MeasurementResultsCreate(ResultSharedBase):
 
 class MeasurementResults(MeasurementResultsCreate):
     valueid: int
+
+
+class BegroingResultCreate(BaseModel):
+    form: dict
+
+
+class BegroingResult(BegroingResultCreate):
+    personid: int
