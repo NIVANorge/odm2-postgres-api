@@ -50,6 +50,17 @@ class Organizations(OrganizationsCreate):
     organizationid: int
 
 
+class ExternalIdentifierSystemsCreate(BaseModel):
+    externalidentifiersystemname: constr(max_length=255)  # type: ignore
+    identifiersystemorganizationid: int
+    externalidentifiersystemdescription: constr(max_length=5000) = None  # type: ignore
+    externalidentifiersystemurl: constr(max_length=255) = None  # type: ignore
+
+
+class ExternalIdentifierSystems(ExternalIdentifierSystemsCreate):
+    externalidentifiersystemid: int
+
+
 class AffiliationsCreate(BaseModel):
     personid: int
     organizationid: Optional[int] = None

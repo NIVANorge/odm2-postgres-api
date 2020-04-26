@@ -47,3 +47,6 @@ async def test_create_user(wait_for_db, clear_db):
         assert external_identifier.personexternalidentifier == "221"
         # TODO: This maps to external system id created in fixtures (niva-port)
         assert external_identifier.externalidentifiersystemid is not None
+
+        fetched_person = await create_or_get_user(connection, b64encode(json.dumps(user_obj).encode('utf-8')))
+        assert created_person == fetched_person

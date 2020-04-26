@@ -42,13 +42,15 @@ class StoredPerson(BaseModel):
 
 async def create_or_get_user(conn: asyncpg.connection, user_id_header: str) -> StoredPerson:
     user = get_nivaport_user(user_id_header=user_id_header)
-    stored_user = await conn.fetchrow("SELECT p.* from odm2.people p inner join odm2.personexternalidentifiers pei "
-                                      "on p.personid=pei.personid "
-                                      "WHERE pei.personexternalidentifier = $1",
-                                      user.id)
+    people_row = await conn.fetchrow("SELECT p.* from odm2.people p inner join odm2.personexternalidentifiers pei "
+                                     "on p.personid=pei.personid WHERE pei.personexternalidentifier = $1",
+                                     user.id)
 
-    if stored_user:
-        return stored_user
+    if people_row:
+        external_identifier_row = await conn.fetchrow(
+            "SELECT * from odm2.personexternalidentifiers WHERE personexternalidentifier = $1", user.id)
+        affiliation = await conn.fetchrow(
+            "Select * from odm2.affiliations where personid=$1 ORDER BY affiliationstartdate", people_row['personid'])
     else:
         async with conn.transaction():
             name = full_name_to_split_tuple(user.displayName)
@@ -56,7 +58,6 @@ async def create_or_get_user(conn: asyncpg.connection, user_id_header: str) -> S
                 "INSERT INTO odm2.people (personfirstname, personmiddlename, personlastname) "
                 "VALUES ($1, $2, $3) "
                 "RETURNING *", *name)
-            person_created = People(**people_row)
 
             external_identifier_row = await conn.fetchrow(
                 "INSERT INTO odm2.personexternalidentifiers "
@@ -75,7 +76,6 @@ async def create_or_get_user(conn: asyncpg.connection, user_id_header: str) -> S
                 "INSERT INTO odm2.affiliations (personid, affiliationstartdate, primaryemail) "
                 "VALUES ($1, $2, $3) "
                 "RETURNING *",
-                person_created.personid, datetime.utcnow(), user.email)
+                people_row["personid"], datetime.utcnow(), user.email)
 
-            return StoredPerson(person=person_created, affiliation=affiliation,
-                                external_identifier=external_identifier_row)
+    return StoredPerson(person=people_row, affiliation=affiliation, external_identifier=external_identifier_row)

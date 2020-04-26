@@ -2,12 +2,11 @@ import os
 import logging
 import asyncpg
 
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi import FastAPI, Depends, Header
 from nivacloud_logging.log_utils import setup_logging
 
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
+from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
@@ -17,14 +16,6 @@ app = FastAPI(
     docs_url="/",
     title="ODM2 API",
     version="v1"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 
@@ -88,6 +79,13 @@ async def post_people(user: schemas.PeopleCreate, connection=Depends(api_pool_ma
 @app.post("/organizations", response_model=schemas.Organizations)
 async def post_organizations(organization: schemas.OrganizationsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await insert_pydantic_object(connection, 'organizations', organization, schemas.Organizations)
+
+
+@app.post("/external_identifier_system", response_model=schemas.ExternalIdentifierSystems)
+async def post_external_identifier_system(external_identifier_system: schemas.ExternalIdentifierSystemsCreate,
+                                          connection=Depends(api_pool_manager.get_conn)):
+    return await insert_pydantic_object(connection, 'externalidentifiersystems',
+                                        external_identifier_system, schemas.ExternalIdentifierSystems)
 
 
 @app.post("/affiliations", response_model=schemas.Affiliations)
@@ -214,10 +212,14 @@ async def post_categorical_results(categorical_result: schemas.CategoricalResult
 
 @app.post("/begroing_result", response_model=schemas.BegroingResult)
 async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
-                               connection=Depends(api_pool_manager.get_conn)):
+                               connection=Depends(api_pool_manager.get_conn),
+                               niva_user: str = Header(None)):
+    user = await create_or_get_user(connection, niva_user)
+    logging.info(user)
+
     csv_data = google_cloud_utils.generate_csv_from_form(begroing_result.form)
     google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
-    # TODO: Import Head to retrieve user, Insert user and new data into ODM2
+    # TODO: Insert user and new data into ODM2
 
     return schemas.BegroingResult(personid=1, **begroing_result.dict())

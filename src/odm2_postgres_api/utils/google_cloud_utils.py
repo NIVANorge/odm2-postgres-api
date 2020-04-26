@@ -3,14 +3,29 @@ import csv
 import datetime as dt
 from io import BytesIO, StringIO
 
-environment = os.environ.get('NIVA_ENVIRONMENT')
-if environment in ['dev', 'master']:
-    from gcloud_common_utils.blob_helper import upload_blob
-elif environment == 'localdev':
-    from gcloud_common_utils.blob_helper_local import upload_blob
-else:
-    if 'PYENV_VIRTUALENV_INIT' not in os.environ:
-        raise ValueError(f"NIVA_ENVIRONMENT set to {environment} please use: 'localdev', 'dev' or 'master'")
+
+class UploadBlobWrapper:
+    def __init__(self):
+        self._uploader = None
+
+    def __call__(self, *args, **kwargs):
+        if self._uploader is None:
+            self.set_uploader()
+        else:
+            self._uploader(*args, **kwargs)
+
+    def set_uploader(self):
+        environment = os.environ.get('NIVA_ENVIRONMENT')
+        if environment in ['dev', 'master']:
+            from gcloud_common_utils.blob_helper import upload_blob
+        elif environment == 'localdev':
+            from gcloud_common_utils.blob_helper_local import upload_blob
+        else:
+            raise ValueError(f"NIVA_ENVIRONMENT set to {environment} please use: 'localdev', 'dev' or 'master'")
+        self._uploader = upload_blob
+
+
+upload_blob_wrapper = UploadBlobWrapper()
 
 
 def generate_csv_from_form(form):
@@ -57,4 +72,4 @@ def put_csv_to_bucket(csv_data):
         content = csv_file.getvalue().encode('utf-8')
 
     with BytesIO(initial_bytes=content) as csv_file:
-        upload_blob(bucket_name, file_name, csv_file)
+        upload_blob_wrapper(bucket_name, file_name, csv_file)
