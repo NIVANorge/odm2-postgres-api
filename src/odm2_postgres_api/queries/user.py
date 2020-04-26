@@ -26,8 +26,6 @@ def full_name_to_split_tuple(fullname: str) -> Tuple[str, Optional[str], str]:
     head, *mid, tail = split
     middle_name = " ".join(mid) if mid else None
     name_tuple = (head, middle_name, tail)
-    if not head or not tail:
-        raise Exception("could not parse user fullname")
     return name_tuple
 
 

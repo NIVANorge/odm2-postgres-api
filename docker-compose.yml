@@ -5,6 +5,8 @@ services:
     build: "."
     ports:
       - "127.0.0.1:8701:5000"
+    volumes:
+      - $HOME/stream-data/:/stream-data/
     depends_on:
       - timescale_odm2
       - db_init
@@ -18,7 +20,7 @@ services:
       - timescale_odm2
       - db_init
     restart: always
-    command: --enhance-graphiql --cors --owner-connection postgres://postgres:postgres@timescale_odm2:5432/niva_odm2 --connection postgres://niva_odm2_read_only_user:1oMPPgHu5TvhAkHYRUMIdaRSKZUjh6c5@timescale_odm2:5432/niva_odm2 --schema odm2 --watch
+    command: --enhance-graphiql --cors --owner-connection postgres://postgres:postgres@timescale_odm2:5432/niva_odm2 --connection postgres://niva_odm2_read_only_user:1oMPPgHu5TvhAkHYRUMIdaRSKZUjh6c5@timescale_odm2:5432/niva_odm2 --schema odm2 --watch --no-ignore-rbac
 
   timescale_odm2:
     # this version is the current timescaledb version running in production at the time of writing
@@ -28,6 +30,9 @@ services:
       - "8700:5432"
     environment:
       - POSTGRES_PASSWORD=postgres
+    # Please leave this commented volume since I use it all the time to get persistence while developing locally
+    volumes:
+      - $HOME/PycharmProjects/odm2_stuff/odm2_volume/postgres:/var/lib/postgresql/data
 
   db_init:
     build: "."

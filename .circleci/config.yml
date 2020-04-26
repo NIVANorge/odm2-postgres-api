@@ -32,10 +32,6 @@ workflows:
           context: nivacloud secrets
           requires:
             - determine_changed_containers
-      - niva-orb/build_containers:
-          context: nivacloud secrets
-          requires:
-            - determine_changed_containers
   dev-build-test-deploy:
     jobs:
       - determine_changed_containers:

@@ -144,6 +144,24 @@ class EquipmentUsed(EquipmentUsedCreate):
     bridgeid: int
 
 
+class DirectivesCreate(BaseModel):
+    directivetypecv: constr(max_length=255)  # type: ignore
+    directivedescription: constr(max_length=5000) = None  # type: ignore
+
+
+class Directive(DirectivesCreate):
+    directiveid: int
+
+
+class ActionDirectivesCreate(BaseModel):
+    actionid: int
+    directiveid: int
+
+
+class ActionDirective(ActionDirectivesCreate):
+    bridgeid: int
+
+
 class MethodsCreate(BaseModel):
     methodtypecv: constr(max_length=255)  # type: ignore
     methodcode: constr(max_length=50)  # type: ignore
@@ -191,6 +209,7 @@ class ActionsCreate(ActionsByFields):
     actiondescription: constr(max_length=5000) = None  # type: ignore
     actionfilelink: constr(max_length=255) = None  # type: ignore
     equipmentids: List[int] = []
+    directiveids: List[int] = []
     relatedactions: List[Tuple[int, str]] = []
 
 
@@ -380,3 +399,11 @@ class MeasurementResultsCreate(ResultSharedBase):
 
 class MeasurementResults(MeasurementResultsCreate):
     valueid: int
+
+
+class BegroingResultCreate(BaseModel):
+    form: dict
+
+
+class BegroingResult(BegroingResultCreate):
+    personid: int
