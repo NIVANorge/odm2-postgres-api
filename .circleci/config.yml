@@ -2,7 +2,7 @@
 
 version: 2.1
 orbs:
-  niva-orb: nivanorge/niva-google-cloud-orb@0.0.12
+  niva-orb: nivanorge/niva-google-cloud-orb@0.0.13
 
 jobs:
   determine_changed_containers:
