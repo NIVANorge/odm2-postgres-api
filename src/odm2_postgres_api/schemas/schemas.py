@@ -29,6 +29,14 @@ class People(PeopleCreate):
     personid: int
 
 
+class PersonExternalIdentifiers(BaseModel):
+    bridgeid: int
+    personid: int
+    externalidentifiersystemid: int
+    personexternalidentifier: constr(max_length=255)  # type: ignore
+    personexternalidentifieruri: Optional[str]
+
+
 class OrganizationsCreate(BaseModel):
     organizationtypecv: constr(max_length=255)  # type: ignore
     organizationcode: constr(max_length=50)  # type: ignore
@@ -40,6 +48,17 @@ class OrganizationsCreate(BaseModel):
 
 class Organizations(OrganizationsCreate):
     organizationid: int
+
+
+class ExternalIdentifierSystemsCreate(BaseModel):
+    externalidentifiersystemname: constr(max_length=255)  # type: ignore
+    identifiersystemorganizationid: int
+    externalidentifiersystemdescription: constr(max_length=5000) = None  # type: ignore
+    externalidentifiersystemurl: constr(max_length=255) = None  # type: ignore
+
+
+class ExternalIdentifierSystems(ExternalIdentifierSystemsCreate):
+    externalidentifiersystemid: int
 
 
 class AffiliationsCreate(BaseModel):
