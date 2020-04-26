@@ -55,7 +55,8 @@ spec:
                  "postgres://$(ODM2_DB_READ_ONLY_USER):$(ODM2_DB_READ_ONLY_PASSWORD)@$(TIMESCALE_ODM2_SERVICE_HOST):$(TIMESCALE_ODM2_SERVICE_PORT)/$(ODM2_DB)",
                  "--schema",
                  "$(ODM2_SCHEMA_NAME)",
-                 "--watch"]
+                 "--watch",
+                 "--no-ignore-rbac"]
           ports:
             - containerPort: 5000
           livenessProbe:

@@ -34,6 +34,11 @@ spec:
       labels:
         app: odm2-postgres-api
     spec:
+      volumes:
+        # To get access to the data upload bucket we use a token belonging to the data-upload component
+        - name: niva-data-upload-token
+          secret:
+            secretName: niva-data-upload-token
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -58,12 +63,17 @@ spec:
         - name: odm2-postgres-api
           image: ODM2_API_IMAGENAME
           imagePullPolicy: Always
+          volumeMounts:
+            - name: niva-data-upload-token
+              mountPath: /var/secrets/google
           env:
-          - name: ODM2_DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: odm2-db-owner-password
-                key: password
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/token.json
+            - name: ODM2_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: odm2-db-owner-password
+                  key: password
           envFrom:
             - configMapRef:
                 name: odm2-config-map
