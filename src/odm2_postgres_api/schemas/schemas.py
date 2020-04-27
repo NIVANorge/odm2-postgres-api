@@ -29,6 +29,14 @@ class People(PeopleCreate):
     personid: int
 
 
+class PersonExternalIdentifiers(BaseModel):
+    bridgeid: int
+    personid: int
+    externalidentifiersystemid: int
+    personexternalidentifier: constr(max_length=255)  # type: ignore
+    personexternalidentifieruri: Optional[str]
+
+
 class OrganizationsCreate(BaseModel):
     organizationtypecv: constr(max_length=255)  # type: ignore
     organizationcode: constr(max_length=50)  # type: ignore
@@ -40,6 +48,17 @@ class OrganizationsCreate(BaseModel):
 
 class Organizations(OrganizationsCreate):
     organizationid: int
+
+
+class ExternalIdentifierSystemsCreate(BaseModel):
+    externalidentifiersystemname: constr(max_length=255)  # type: ignore
+    identifiersystemorganizationid: int
+    externalidentifiersystemdescription: constr(max_length=5000) = None  # type: ignore
+    externalidentifiersystemurl: constr(max_length=255) = None  # type: ignore
+
+
+class ExternalIdentifierSystems(ExternalIdentifierSystemsCreate):
+    externalidentifiersystemid: int
 
 
 class AffiliationsCreate(BaseModel):
@@ -136,6 +155,24 @@ class EquipmentUsed(EquipmentUsedCreate):
     bridgeid: int
 
 
+class DirectivesCreate(BaseModel):
+    directivetypecv: constr(max_length=255)  # type: ignore
+    directivedescription: constr(max_length=5000) = None  # type: ignore
+
+
+class Directive(DirectivesCreate):
+    directiveid: int
+
+
+class ActionDirectivesCreate(BaseModel):
+    actionid: int
+    directiveid: int
+
+
+class ActionDirective(ActionDirectivesCreate):
+    bridgeid: int
+
+
 class MethodsCreate(BaseModel):
     methodtypecv: constr(max_length=255)  # type: ignore
     methodcode: constr(max_length=50)  # type: ignore
@@ -147,6 +184,16 @@ class MethodsCreate(BaseModel):
 
 class Methods(MethodsCreate):
     methodid: int
+
+
+class RelatedActionCreate(BaseModel):
+    actionid: int
+    relationshiptypecv: constr(max_length=255)  # type: ignore
+    relatedactionid: int
+
+
+class RelatedAction(RelatedActionCreate):
+    relationid: int
 
 
 class ActionsByFields(BaseModel):
@@ -172,7 +219,9 @@ class ActionsCreate(ActionsByFields):
     enddatetimeutcoffset: Optional[int] = None
     actiondescription: constr(max_length=5000) = None  # type: ignore
     actionfilelink: constr(max_length=255) = None  # type: ignore
-    equipmentids: List[int]
+    equipmentids: List[int] = []
+    directiveids: List[int] = []
+    relatedactions: List[Tuple[int, str]] = []
 
 
 class Action(ActionsCreate):
@@ -189,17 +238,30 @@ class SamplingFeaturesCreate(BaseModel):
     featuregeometrywkt: constr(max_length=8000) = None  # type: ignore
     elevation_m: Optional[float]
     elevationdatumcv: constr(max_length=255) = None  # type: ignore
+    relatedsamplingfeatures: List[Tuple[int, str]] = []
 
     @validator('featuregeometrywkt')
     def featuregeometrywkt_validator(cls, wkt):
-        new_shape = shapely.wkt.loads(wkt)
-        if not new_shape.is_valid:
-            raise ValueError('well known text is not valid!')
+        if wkt:
+            new_shape = shapely.wkt.loads(wkt)
+            if not new_shape.is_valid:
+                raise ValueError('well known text is not valid!')
         return wkt
 
 
 class SamplingFeatures(SamplingFeaturesCreate):
     samplingfeatureid: int
+
+
+class RelatedSamplingFeatureCreate(BaseModel):
+    samplingfeatureid: int
+    relationshiptypecv: constr(max_length=255)  # type: ignore
+    relatedfeatureid: int
+    spatialoffsetid: Optional[int]
+
+
+class RelatedSamplingFeature(RelatedSamplingFeatureCreate):
+    relationid: int
 
 
 class SpatialReferencesCreate(BaseModel):
@@ -246,15 +308,27 @@ class DataQuality(DataQualityCreate):
 
 class ResultsDataQualityCreate(BaseModel):
     resultid: int
-    dataqualityid: int
+    dataqualitycode: str
 
 
 class ResultsDataQuality(ResultsDataQualityCreate):
     bridgeid: int
 
 
+class TaxonomicClassifierCreate(BaseModel):
+    taxonomicclassifiertypecv: constr(max_length=255)  # type: ignore
+    taxonomicclassifiername: constr(max_length=255)  # type: ignore
+    taxonomicclassifiercommonname: constr(max_length=255) = None  # type: ignore
+    taxonomicclassifierdescription: constr(max_length=5000) = None  # type: ignore
+    parenttaxonomicclassifierid: Optional[int]
+
+
+class TaxonomicClassifier(TaxonomicClassifierCreate):
+    taxonomicclassifierid: int
+
+
 class FeatureActionsCreate(BaseModel):
-    samplingfeatureid: int
+    samplingfeatureuuid: uuid.UUID
     actionid: int
 
 
@@ -263,7 +337,7 @@ class FeatureActions(FeatureActionsCreate):
 
 
 class ResultsCreate(FeatureActionsCreate):
-    dataqualityids: List[int]
+    dataqualitycodes: List[str]
     resultuuid: uuid.UUID
     resulttypecv: constr(max_length=255)  # type: ignore
     variableid: int
@@ -285,7 +359,7 @@ class Results(ResultsCreate):
 
 class TrackResultsFields(BaseModel):
     resultid: int
-    spatialreferenceid: int
+    samplingfeatureid: int
     intendedtimespacing: Optional[float]
     intendedtimespacingunitsid: Optional[int]
     aggregationstatisticcv: constr(max_length=255)  # type: ignore
@@ -299,3 +373,48 @@ class TrackResultsCreate(TrackResultsFields):
 class TrackResultsReport(TrackResultsFields):
     inserted_track_result_values: int
     inserted_track_result_locations: int
+
+
+class ResultSharedBase(BaseModel):
+    resultid: int
+    xlocation: Optional[float]
+    xlocationunitsid: Optional[int]
+    ylocation: Optional[float]
+    ylocationunitsid: Optional[int]
+    zlocation: Optional[float]
+    zlocationunitsid: Optional[int]
+    spatialreferenceid: Optional[int]
+
+
+class CategoricalResultsCreate(ResultSharedBase):
+    qualitycodecv: constr(max_length=255)  # type: ignore
+    datavalue: constr(max_length=255)  # type: ignore
+    valuedatetime: datetime.datetime
+    valuedatetimeutcoffset: int
+
+
+class CategoricalResults(CategoricalResultsCreate):
+    valueid: int
+
+
+class MeasurementResultsCreate(ResultSharedBase):
+    censorcodecv: constr(max_length=255)  # type: ignore
+    qualitycodecv: constr(max_length=255)  # type: ignore
+    aggregationstatisticcv: constr(max_length=255)  # type: ignore
+    timeaggregationinterval: float
+    timeaggregationintervalunitsid: int
+    datavalue: float
+    valuedatetime: datetime.datetime
+    valuedatetimeutcoffset: int
+
+
+class MeasurementResults(MeasurementResultsCreate):
+    valueid: int
+
+
+class BegroingResultCreate(BaseModel):
+    form: dict
+
+
+class BegroingResult(BegroingResultCreate):
+    personid: int

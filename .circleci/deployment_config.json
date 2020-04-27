@@ -1,0 +1,10 @@
+{
+  "containers": {
+    "odm2api": {
+      "image_name": "ODM2_API_IMAGENAME",
+      "docker_file_directory": ".",
+      "kubectl_deployment_directories": "k8s/deployments/",
+      "is_changed_regexp": "."
+    }
+  }
+}

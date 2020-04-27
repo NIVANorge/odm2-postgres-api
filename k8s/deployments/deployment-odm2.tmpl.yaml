@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: timescale-odm2
+  labels:
+    app: timescale-odm2
+spec:
+  serviceName: timescale-odm2
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timescale-odm2
+  template:
+    metadata:
+      labels:
+        app: timescale-odm2
+    spec:
+      tolerations:
+      - key: 'database'
+        operator: Equal
+        value: 'true'
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-preemptible
+                    operator: NotIn
+                    values:
+                      - 'true'
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: cloud.google.com/gke-nodepool
+                    operator: In
+                    values:
+                      - 'database-pool'
+      terminationGracePeriodSeconds: 120
+      # Kubernetes doesn't allow you to set shm-size like Docker does, so we're using this
+      # work-around that is possibly/maybe safe. If we don't to this, we get 64 MB shared
+      # memory, and that's too low for some queries.
+      # https://stackoverflow.com/questions/46085748/define-size-for-dev-shm-on-container-engine/46434614#46434614
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      containers:
+      - name: timescale-odm2
+        # Remember to change the image version in both nivacloud/docker-compose.yml and the odm2/docker-compose.yml
+        image: timescale/timescaledb-postgis:1.4.2-pg11
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              # This will by default do a fast (but safe) shutdown, aborting transactions
+              # and online backups in progress.
+              # See: https://www.postgresql.org/docs/11/app-pg-ctl.html
+              command:
+                - su
+                - postgres
+                - -c
+                - "pg_ctl -D /var/lib/postgresql/data/pg11 stop"
+        resources:
+          requests:
+            # If you update these, also update the TS_TUNE_* variables below.
+            # (Ideally, they would be picked up, but the tuning script needs
+            # them in a specific format, and it's clumsy to fix this here.)
+            cpu: 3.6
+            memory: 16Gi
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: odm2-postgres-password
+              key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pg11
+        - name: TS_TUNE_NUM_CPUS
+          value: "4"
+        - name: TS_TUNE_MEMORY
+          value: 16GB
+        envFrom:
+          - configMapRef:
+              name: odm2-config-map
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -h
+            - localhost
+            - -U
+            - postgres
+          initialDelaySeconds: 300
+          timeoutSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -h
+            - localhost
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+          - name: data
+            # /var/lib/postgresql/data is where PostgreSQL stores its databases
+            mountPath: "/var/lib/postgresql/data"
+          - name: dshm
+            mountPath: "/dev/shm"
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        storageClassName: ssd
+        resources:
+          requests:
+            storage: 400Gi
+        accessModes:
+          - ReadWriteOnce
+---
+# Service exposing the timescale-odm2 DB
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescale-odm2
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+  selector:
+    app: timescale-odm2

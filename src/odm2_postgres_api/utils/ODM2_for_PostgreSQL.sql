@@ -789,26 +789,23 @@ create table ODM2.ResultDerivationEquations (
 
 create table ODM2.TrackResults (
 	resultid bigint  NOT NULL primary key,
-	spatialreferenceid integer  NOT NULL,
 	intendedtimespacing double precision  NULL,
 	intendedtimespacingunitsid integer  NULL,
-	aggregationstatisticcv varchar (255) NOT NULL,
-	CONSTRAINT track_result_unique UNIQUE (ResultID, SpatialReferenceID)
+	aggregationstatisticcv varchar (255) NOT NULL
 );
 create table ODM2.TrackResultValues (
 	valuedatetime timestamp  NOT NULL,
 	datavalue double precision  NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
 	resultid bigint NOT NULL,
-	spatialreferenceid integer  NOT NULL,
 	CONSTRAINT track_result_value_unique UNIQUE (ValueDateTime, ResultID)
 );
 create table ODM2.TrackResultLocations (
 	valuedatetime timestamp  NOT NULL,
 	trackpoint geometry(POINT, 4326)  NOT NULL,
 	qualitycodecv varchar (255) NOT NULL,
-	spatialreferenceid integer  NOT NULL,
-	CONSTRAINT track_result_location_unique UNIQUE (ValueDateTime, SpatialReferenceID)
+	samplingfeatureid integer  NOT NULL,
+	CONSTRAINT track_result_location_unique UNIQUE (ValueDateTime, SamplingFeatureID)
 );
 create table ODM2.CategoricalResults (
 	resultid bigint  NOT NULL primary key,
@@ -2260,6 +2257,7 @@ on update no Action on delete RESTRICT;
 alter table ODM2.Specimens add constraint fk_Specimens_SamplingFeatures
 foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
 on update no Action on delete RESTRICT;
+COMMENT ON CONSTRAINT "fk_specimens_samplingfeatures" ON "odm2"."specimens" IS E'@foreignSingleFieldName singleSpecimenBySamplingfeatureid';
 
 alter table ODM2.SpecimenTaxonomicClassifiers add constraint fk_SpecimenTaxonomicClassifiers_Citations
 foreign key (CitationID) References ODM2.Citations (CitationID)
@@ -2297,17 +2295,17 @@ alter table ODM2.Simulations add constraint fk_Simulations_Models
 foreign key (ModelID) References ODM2.Models (ModelID)
 on update no Action on delete RESTRICT;
 
-alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_SpatialReferences
-foreign key (SpatialReferenceID) References ODM2.SpatialReferences (SpatialReferenceID)
+alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_SamplingFeatures
+foreign key (SamplingFeatureID) References ODM2.SamplingFeatures (SamplingFeatureID)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.TrackResults add constraint fk_TrackResults_Results
+foreign key (ResultID) References ODM2.Results (ResultID)
 on update no Action on delete RESTRICT;
 
 alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResults
-foreign key (ResultID, SpatialReferenceID) References ODM2.TrackResults (ResultID, SpatialReferenceID)
+foreign key (ResultID) References ODM2.TrackResults (ResultID)
 on update no Action on delete RESTRICT;
-
--- alter table ODM2.TrackResultValues add constraint fk_TrackResultValues_TrackResultLocations
--- foreign key (valuedatetime, SpatialReferenceID) References ODM2.TrackResultLocations (valuedatetime, SpatialReferenceID)
--- on update no Action on delete RESTRICT;
 
 alter table ODM2.TrackResultLocations add constraint fk_TrackResultLocations_CV_QualityCode
 foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
@@ -2318,7 +2316,7 @@ foreign key (QualityCodeCV) References ODM2.CV_QualityCode (Name)
 on update no Action on delete RESTRICT;
 
 create index TrackResultValues_resultid_time_idx
-    on trackresultvalues (resultid asc, valuedatetime desc);
+    on ODM2.TrackResultValues (resultid asc, valuedatetime desc);
 
 create index TrackResultLocations_resultid_time_idx
-    on TrackResultLocations (spatialreferenceid asc, valuedatetime desc);
+    on ODM2.TrackResultLocations (samplingfeatureid asc, valuedatetime desc);
