@@ -11,8 +11,7 @@ class UploadBlobWrapper:
     def __call__(self, *args, **kwargs):
         if self._uploader is None:
             self.set_uploader()
-        else:
-            self._uploader(*args, **kwargs)
+        self._uploader(*args, **kwargs)
 
     def set_uploader(self):
         environment = os.environ.get('NIVA_ENVIRONMENT')
