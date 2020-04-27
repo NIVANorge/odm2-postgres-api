@@ -215,7 +215,6 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                                connection=Depends(api_pool_manager.get_conn),
                                niva_user: str = Header(None)):
     user = await create_or_get_user(connection, niva_user)
-    logging.info(user)
 
     csv_data = google_cloud_utils.generate_csv_from_form(begroing_result.form)
     google_cloud_utils.put_csv_to_bucket(csv_data)
