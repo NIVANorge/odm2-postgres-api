@@ -215,10 +215,18 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                                connection=Depends(api_pool_manager.get_conn),
                                niva_user: str = Header(None)):
     user = await create_or_get_user(connection, niva_user)
+    logging.info(begroing_result)
 
     csv_data = google_cloud_utils.generate_csv_from_form(begroing_result.form)
     google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
     # TODO: Insert user and new data into ODM2
+    # sample_specimen_uuid = str(uuid.uuid4())
+    # data = {
+    #     "samplingfeatureuuid": sample_specimen_uuid,
+    #     "samplingfeaturetypecv": "Specimen",
+    #     "samplingfeaturecode": sample_specimen_uuid,
+    #     "relatedsamplingfeatures": [(sampling_feature_ids[event_key[0]], 'Was collected at')]
+    # }
 
     return schemas.BegroingResult(personid=1, **begroing_result.dict())
