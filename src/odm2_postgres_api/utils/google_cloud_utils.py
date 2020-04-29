@@ -28,19 +28,23 @@ upload_blob_wrapper = UploadBlobWrapper()
 
 
 def generate_csv_from_form(form):
+    # TODO: fix timezone
+    date_string = dt.datetime.fromisoformat(form['date'].replace('Z', '+00:00')).strftime('%d-%m-%Y %H:%M:%S')
     csv_rows = []
     for index, species in enumerate(form['taxons'][:-1]):
-        methods = [i for i, e in enumerate(form['observations'][index]) if e]
-        if len(methods) != 1:
+        used_method_indices = [i for i, e in enumerate(form['observations'][index]) if e]
+        if len(used_method_indices) != 1:
             raise ValueError('Must have one and only one method per species')
-        method = form['methods'][methods[0]]['methodname']
-        value = form['observations'][index][methods[0]]
+        used_method_index = used_method_indices[0]
+        method = form['methods'][used_method_index]['methodname']
+        value = form['observations'][index][used_method_index]
 
-        data_row = {'Prosjektnavn': None,
+        data_row = {'Prosjektnavn': '&&'.join([e['directivedescription'] for e in form['projects']]),
                     'lok_sta': form['station']['samplingfeaturename'].split(',')[0],
-                    'dato': form['date'],
+                    'dato': date_string,
                     'rubin_kode': species['taxonomicclassifiercommonname'].split(',')[0],
                     'mengderef': '% dekning'}
+
         if method == 'Microscopic abundance':
             data_row['Mengde_tall'] = ''
             data_row['Flagg'] = ''

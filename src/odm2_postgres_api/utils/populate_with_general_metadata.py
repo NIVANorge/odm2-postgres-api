@@ -5,34 +5,23 @@ import requests
 from nivacloud_logging.log_utils import setup_logging
 
 
-people_and_organizations = {"people": [{
-    "personfirstname": "Roald",
-    "personlastname": "Storm"
-}, {
-    "personfirstname": "Uknown begroing employee",
-    "personlastname": "NIVA"
-}], "organizations": {
+people_and_organizations = {"organizations": {
     "organizationtypecv": "Research institute",
     "organizationcode": "niva-no",
     "organizationname": "NIVA Norsk institut for vannforskning",
     "organizationdescription": "The Norwegian institute for water research",
     "organizationlink": "www.niva.no"
-}, "affiliations": [{
+}, "people": {
+    "personfirstname": "Uknown begroing employee",
+    "personlastname": "NIVA"
+}, "affiliations": {
     "personid": 1,
     "affiliationstartdate": "2018-12-15",
     "primaryemail": "roald.storm@niva.no",
     "organizationid": 1,
     "isprimaryorganizationcontact": "false",
     "primaryphone": "0047 413 60 753"
-}, {
-    # Todo: Add in contact information for someone relevant instead of me
-    "personid": 2,
-    "affiliationstartdate": "1958-01-01",
-    "primaryemail": "roald.storm@niva.no",
-    "organizationid": 1,
-    "isprimaryorganizationcontact": "false",
-    "primaryphone": "0047 413 60 753"
-}], "external_identifier_system": {
+}, "external_identifier_system": {
     "externalidentifiersystemname": 'niva-port',
     "identifiersystemorganizationid": 1,
     "externalidentifiersystemdescription": "",
@@ -252,7 +241,7 @@ other_stuff = {'controlled_vocabularies': {
     "methodtypecv": "Specimen analysis",
     "methodcode": "002",
     "methodname": "Microscopic abundance",
-    "methoddescription": "A method for observing the abundance of a species in a sample, this method is tied the unit: 'Microscopic semi quantitative abundance classifier'. The observation is conducted by looking at the sample through a microscopic and classifying the abundance of an organism.",  # nopep8
+    "methoddescription": "A method for observing the abundance of a species in a sample, this method is tied the unit: 'Microscopic semi quantitative abundance classifier'. The observation is conducted by looking at the sample through a microscopic and classifying the abundance of an organism. Quite often several samples are collected and the abundance of the species is aggregated. The rule is that the most abundant occurrence in any of the collected samples makes it into the aggregate.",  # nopep8
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Observation",
@@ -270,7 +259,7 @@ other_stuff = {'controlled_vocabularies': {
     "methodtypecv": "Observation",
     "methodcode": "005",
     "methodname": "Macroscopic coverage",
-    "methoddescription": "A quantitative observation is made assessing the abundance of a species in percentage of area covered.",  # nopep8
+    "methoddescription": "A quantitative observation is made assessing the abundance of a species in percentage of area covered. The area is usually a subset chosen to be representative of the larger area",  # nopep8
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Observation",
