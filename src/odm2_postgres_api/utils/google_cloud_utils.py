@@ -28,8 +28,8 @@ upload_blob_wrapper = UploadBlobWrapper()
 
 
 def generate_csv_from_form(form):
-    # TODO: fix timezone
-    date_string = dt.datetime.fromisoformat(form['date'].replace('Z', '+00:00')).strftime('%d-%m-%Y %H:%M:%S')
+    observation_date = dt.datetime.fromisoformat(form['date'].replace('Z', '+00:00'))
+    date_string = (observation_date + dt.timedelta(hours=12)).date().strftime('%d-%m-%Y %H:%M:%S')  # round date
     csv_rows = []
     for index, species in enumerate(form['taxons'][:-1]):
         used_method_indices = [i for i, e in enumerate(form['observations'][index]) if e]

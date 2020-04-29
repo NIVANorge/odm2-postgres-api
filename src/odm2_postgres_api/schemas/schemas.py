@@ -8,11 +8,11 @@ from pydantic import BaseModel, constr, validator
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
-def create_obligatory_date_time_checker(datetime_name, offset_name):
+def create_obligatory_date_time_checker(datetime_name: str, offset_name: str):
     def check_utc_offset(date_time: dt.datetime, values):
         if date_time.tzinfo:
-            if values[offset_name] != date_time.utcoffset().seconds / 3600:
-                raise ValueError(f"conflicting utcoffset on '{datetime_name}.utcoffset().seconds/3600="
+            if values[offset_name] != date_time.utcoffset().seconds / 3600:  # type: ignore
+                raise ValueError(f"conflicting utcoffset on '{datetime_name}.utcoffset().seconds/3600="  # type: ignore
                                  f"{date_time.utcoffset().seconds / 3600}' and "
                                  f"'values[{offset_name}]={values[offset_name]}'")
         else:
@@ -23,7 +23,7 @@ def create_obligatory_date_time_checker(datetime_name, offset_name):
     return check_utc_offset
 
 
-def create_optional_date_time_checker(datetime_name, offset_name):
+def create_optional_date_time_checker(datetime_name: str, offset_name: str):
     obligatory_check = create_obligatory_date_time_checker(datetime_name, offset_name)
 
     def check_utc_offset(date_time: dt.datetime, values):
