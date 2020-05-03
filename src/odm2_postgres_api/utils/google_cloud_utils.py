@@ -3,6 +3,8 @@ import csv
 import datetime as dt
 from io import BytesIO, StringIO
 
+from odm2_postgres_api.schemas import schemas
+
 
 class UploadBlobWrapper:
     def __init__(self):
@@ -27,20 +29,20 @@ class UploadBlobWrapper:
 upload_blob_wrapper = UploadBlobWrapper()
 
 
-def generate_csv_from_form(form):
-    observation_date = dt.datetime.fromisoformat(form['date'].replace('Z', '+00:00'))
-    date_string = (observation_date + dt.timedelta(hours=12)).date().strftime('%d-%m-%Y %H:%M:%S')  # round date
+def generate_csv_from_form(begroing_result: schemas.BegroingResultCreate):
+    date_string = (begroing_result.date + dt.timedelta(hours=6)).date().strftime('%d-%m-%Y %H:%M:%S')  # round date
+    # date_string = begroing_result.date.strftime('%d-%m-%Y %H:%M:%S')
     csv_rows = []
-    for index, species in enumerate(form['taxons'][:-1]):
-        used_method_indices = [i for i, e in enumerate(form['observations'][index]) if e]
+    for index, species in enumerate(begroing_result.taxons):
+        used_method_indices = [i for i, e in enumerate(begroing_result.observations[index]) if e]
         if len(used_method_indices) != 1:
             raise ValueError('Must have one and only one method per species')
         used_method_index = used_method_indices[0]
-        method = form['methods'][used_method_index]['methodname']
-        value = form['observations'][index][used_method_index]
+        method = begroing_result.methods[used_method_index].methodname
+        value = begroing_result.observations[index][used_method_index]
 
-        data_row = {'Prosjektnavn': '&&'.join([e['directivedescription'] for e in form['projects']]),
-                    'lok_sta': form['station']['samplingfeaturename'].split(',')[0],
+        data_row = {'Prosjektnavn': '&&'.join([e.directivedescription for e in begroing_result.projects]),
+                    'lok_sta': begroing_result.station['samplingfeaturename'].split(',')[0],
                     'dato': date_string,
                     'rubin_kode': species['taxonomicclassifiercommonname'].split(',')[0],
                     'mengderef': '% dekning'}
@@ -50,7 +52,7 @@ def generate_csv_from_form(form):
             data_row['Flagg'] = ''
             data_row['Mengde_tekst'] = value
         elif method == 'Macroscopic coverage':
-            # if form['observations'][index][method_index] == '<1'
+            # if begroing_result.observations[index][method_index] == '<1'
             data_row['Mengde_tall'] = 1 if value == '<1' else value
             data_row['Flagg'] = '<' if value == '<1' else ''
             data_row['Mengde_tekst'] = ''

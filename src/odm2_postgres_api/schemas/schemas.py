@@ -1,6 +1,6 @@
 import uuid
 import datetime as dt
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 import shapely.wkt
 from pydantic import BaseModel, constr, validator
@@ -472,7 +472,12 @@ class MeasurementResults(MeasurementResultsCreate):
 
 
 class BegroingResultCreate(BaseModel):
-    form: dict
+    projects: List[Directive]
+    date: dt.datetime
+    station: Dict
+    taxons: List[Dict]
+    methods: List[Methods]
+    observations: List[List[str]]
 
 
 class BegroingResult(BegroingResultCreate):

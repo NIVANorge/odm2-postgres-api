@@ -213,10 +213,17 @@ async def post_categorical_results(categorical_result: schemas.CategoricalResult
     return await core_queries.upsert_categorical_result(connection, categorical_result)
 
 
-async def upload_begroing(connection, form, affiliation_id):
+@app.post("/begroing_result", response_model=schemas.BegroingResult)
+async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
+                               connection=Depends(api_pool_manager.get_conn),
+                               niva_user: str = Header(None)):
+    user = await create_or_get_user(connection, niva_user)
+
+    csv_data = google_cloud_utils.generate_csv_from_form(begroing_result)
+
     observations_per_method = defaultdict(list)
-    for index, species in enumerate(form['taxons'][:-1]):
-        used_method_indices = [i for i, e in enumerate(form['observations'][index]) if e]
+    for index, species in enumerate(begroing_result.taxons):
+        used_method_indices = [i for i, e in enumerate(begroing_result.observations[index]) if e]
         if len(used_method_indices) != 1:
             raise ValueError('Must have one and only one method per species')
         observations_per_method[used_method_indices[0]].append(index)
@@ -228,52 +235,52 @@ async def upload_begroing(connection, form, affiliation_id):
     }
     async with connection.transaction():
         for method_index, method_observations in observations_per_method.items():
-            method = form['methods'][method_index]
+            method = begroing_result.methods[method_index]
 
-            data = schemas.ActionsCreate(
-                affiliationid=affiliation_id,
+            data_action = schemas.ActionsCreate(
+                affiliationid=user.affiliation.affiliationid,
                 isactionlead=True,
-                methodid=method['methodid'],
-                actiontypecv=method['methodtypecv'],  # This only works when the type is both an action and a method
-                begindatetime=form['date'],
+                methodid=method.methodid,
+                actiontypecv=method.methodtypecv,  # This only works when the type is both an action and a method
+                begindatetime=begroing_result.date,
                 begindatetimeutcoffset=0,
                 equipmentids=[],
-                directiveids=[e['directiveid'] for e in form['projects']]
+                directiveids=[e.directiveid for e in begroing_result.projects]
             )
-            completed_action = await post_actions(data, connection)
+            completed_action = await post_actions(data_action, connection)
             for result_index in method_observations:
-                data = schemas.ResultsCreate(
-                    samplingfeatureuuid=form['station']['samplingfeatureuuid'],
+                data_result = schemas.ResultsCreate(
+                    samplingfeatureuuid=begroing_result.station['samplingfeatureuuid'],
                     actionid=completed_action.actionid,
                     resultuuid=str(uuid.uuid4()),
-                    resulttypecv=result_type_and_unit_dict[method['methodname']][0],
+                    resulttypecv=result_type_and_unit_dict[method.methodname][0],
                     variableid=10,  # This variable indicates the abundance of the taxon of the result
-                    unitsid=result_type_and_unit_dict[method['methodname']][1],
-                    taxonomicclassifierid=form['taxons'][result_index]['taxonomicclassifierid'],
+                    unitsid=result_type_and_unit_dict[method.methodname][1],
+                    taxonomicclassifierid=begroing_result.taxons[result_index]['taxonomicclassifierid'],
                     processinglevelid=1,  # id:1, "processinglevelcode": "0", "definition": "Raw Data"
                     valuecount=0,
                     statuscv="Complete",
-                    sampledmediumcv=result_type_and_unit_dict[method['methodname']][2],
+                    sampledmediumcv=result_type_and_unit_dict[method.methodname][2],
                     dataqualitycodes=[]
                 )
-                completed_result = await post_results(data, connection)
-                if method['methodname'] == 'Microscopic abundance':
-                    data = schemas.CategoricalResultsCreate(
+                completed_result = await post_results(data_result, connection)
+                if method.methodname == 'Microscopic abundance':
+                    data_categorical_result = schemas.CategoricalResultsCreate(
                         resultid=completed_result.resultid,
                         qualitycodecv="None",
-                        datavalue=form['observations'][result_index][method_index],
-                        valuedatetime=form['date'],
+                        datavalue=begroing_result.observations[result_index][method_index],
+                        valuedatetime=begroing_result.date,
                         valuedatetimeutcoffset=0,
                     )
-                    await post_categorical_results(data, connection)
+                    await post_categorical_results(data_categorical_result, connection)
                 else:
-                    if form['observations'][result_index][method_index][0] == '<':
-                        data_value = form['observations'][result_index][method_index][1:]
+                    if begroing_result.observations[result_index][method_index][0] == '<':
+                        data_value = begroing_result.observations[result_index][method_index][1:]
                         censor_code = "Less than"
                     else:
-                        data_value = form['observations'][result_index][method_index]
+                        data_value = begroing_result.observations[result_index][method_index]
                         censor_code = "Not censored"
-                    data = schemas.MeasurementResultsCreate(
+                    data_measurement_result = schemas.MeasurementResultsCreate(
                         resultid=completed_result.resultid,
                         censorcodecv=censor_code,
                         qualitycodecv="None",
@@ -281,23 +288,11 @@ async def upload_begroing(connection, form, affiliation_id):
                         timeaggregationinterval=0,
                         timeaggregationintervalunitsid=18,  # time in seconds
                         datavalue=data_value,
-                        valuedatetime=form['date'],
+                        valuedatetime=begroing_result.date,
                         valuedatetimeutcoffset=0
                     )
-                    await post_measurement_results(data, connection)
-
-
-@app.post("/begroing_result", response_model=schemas.BegroingResult)
-async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
-                               connection=Depends(api_pool_manager.get_conn),
-                               niva_user: str = Header(None)):
-    user = await create_or_get_user(connection, niva_user)
-    logging.info(begroing_result)
-
-    csv_data = google_cloud_utils.generate_csv_from_form(begroing_result.form)
-    await upload_begroing(connection, begroing_result.form, user.affiliation.affiliationid)
-
-    google_cloud_utils.put_csv_to_bucket(csv_data)
+                    await post_measurement_results(data_measurement_result, connection)
+        google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
 
-    return schemas.BegroingResult(personid=1, **begroing_result.dict())
+    return schemas.BegroingResult(personid=user.person.personid, **begroing_result.dict())
