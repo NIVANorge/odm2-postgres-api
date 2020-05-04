@@ -1,13 +1,48 @@
 import uuid
-import datetime
-from typing import Optional, List, Tuple
+import datetime as dt
+from typing import Optional, List, Tuple, Dict
 
 import shapely.wkt
-from pydantic import BaseModel, BaseConfig, constr, validator
+from pydantic import BaseModel, constr, validator
 
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
+
+def create_obligatory_date_time_checker(datetime_name: str, offset_name: str):
+    def check_utc_offset(date_time: dt.datetime, values):
+        if date_time.tzinfo:
+            if values[offset_name] != date_time.utcoffset().seconds / 3600:  # type: ignore
+                raise ValueError(f"conflicting utcoffset on '{datetime_name}.utcoffset().seconds/3600="  # type: ignore
+                                 f"{date_time.utcoffset().seconds / 3600}' and "
+                                 f"'values[{offset_name}]={values[offset_name]}'")
+        else:
+            if values[offset_name] != 0:
+                raise ValueError(f"'{offset_name}' should be 0 when no timezone on '{datetime_name}' is supplied")
+        return date_time.replace(tzinfo=None)
+
+    return check_utc_offset
+
+
+def create_optional_date_time_checker(datetime_name: str, offset_name: str):
+    obligatory_check = create_obligatory_date_time_checker(datetime_name, offset_name)
+
+    def check_utc_offset(date_time: dt.datetime, values):
+        if not date_time:
+            return date_time
+        if values[offset_name] is None:
+            raise ValueError(f"Missing '{offset_name}', When '{datetime_name}' is "
+                             f"supplied you must supply '{offset_name}'")
+        return obligatory_check(date_time, values)
+
+    return check_utc_offset
+
+
 cv_checker = constr(regex=f'({"|".join([f"^{cv}$" for cv in CONTROLLED_VOCABULARY_TABLE_NAMES])})')
+begindatetime_checker = create_obligatory_date_time_checker('begindatetime', 'begindatetimeutcoffset')
+enddatetime_checker = create_optional_date_time_checker('enddatetime', 'enddatetimeutcoffset')
+resultdatetime_checker = create_optional_date_time_checker('resultdatetime', 'resultdatetimeutcoffset')
+validdatetime_checker = create_optional_date_time_checker('validdatetime', 'validdatetimeutcoffset')
+valuedatetime_checker = create_obligatory_date_time_checker('valuedatetime', 'valuedatetimeutcoffset')
 
 
 class ControlledVocabulary(BaseModel):
@@ -65,8 +100,8 @@ class AffiliationsCreate(BaseModel):
     personid: int
     organizationid: Optional[int] = None
     isprimaryorganizationcontact: Optional[bool] = None
-    affiliationstartdate: datetime.date
-    affiliationenddate: Optional[datetime.date] = None
+    affiliationstartdate: dt.date
+    affiliationenddate: Optional[dt.date] = None
     primaryphone: constr(max_length=50) = None  # type: ignore
     primaryemail: constr(max_length=255)  # type: ignore
     primaryaddress: constr(max_length=255) = None  # type: ignore
@@ -136,7 +171,7 @@ class EquipmentCreate(BaseModel):
     equipmentserialnumber: constr(max_length=50)  # type: ignore
     equipmentownerid: int
     equipmentvendorid: int
-    equipmentpurchasedate: datetime.datetime
+    equipmentpurchasedate: dt.datetime
     equipmentpurchaseordernumber: constr(max_length=50) = None  # type: ignore
     equipmentdescription: constr(max_length=5000) = None  # type: ignore
     equipmentdocumentationlink: constr(max_length=255) = None  # type: ignore
@@ -210,13 +245,27 @@ class ActionsBy(ActionsByCreate):
     bridgeid: int
 
 
-class ActionsCreate(ActionsByFields):
+class BeginDateTimeBase(BaseModel):
+    begindatetimeutcoffset: int
+    begindatetime: dt.datetime
+
+    @validator('begindatetime')
+    def check_utc_offset(cls, begindatetime: dt.datetime, values):
+        return begindatetime_checker(begindatetime, values)
+
+
+class EndDateTimeBase(BaseModel):
+    enddatetimeutcoffset: Optional[int] = None
+    enddatetime: Optional[dt.datetime] = None
+
+    @validator('enddatetime')
+    def check_utc_offset(cls, enddatetime: dt.datetime, values):
+        return enddatetime_checker(enddatetime, values)
+
+
+class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
     actiontypecv: constr(max_length=255)  # type: ignore
     methodid: int
-    begindatetime: datetime.datetime
-    begindatetimeutcoffset: int
-    enddatetime: Optional[datetime.datetime] = None
-    enddatetimeutcoffset: Optional[int] = None
     actiondescription: constr(max_length=5000) = None  # type: ignore
     actionfilelink: constr(max_length=255) = None  # type: ignore
     equipmentids: List[int] = []
@@ -344,13 +393,21 @@ class ResultsCreate(FeatureActionsCreate):
     unitsid: int
     taxonomicclassifierid: Optional[int] = None
     processinglevelid: int
-    resultdatetime: Optional[datetime.datetime] = None
     resultdatetimeutcoffset: Optional[int] = None
-    validdatetime: Optional[datetime.datetime] = None
+    resultdatetime: Optional[dt.datetime] = None
     validdatetimeutcoffset: Optional[int] = None
+    validdatetime: Optional[dt.datetime] = None
     statuscv: constr(max_length=255) = None  # type: ignore
     sampledmediumcv: constr(max_length=5000) = None  # type: ignore
     valuecount: int
+
+    @validator('resultdatetime')
+    def check_resultdatetime_utc_offset(cls, enddatetime: dt.datetime, values):
+        return resultdatetime_checker(enddatetime, values)
+
+    @validator('validdatetime')
+    def check_validdatetime_utc_offset(cls, enddatetime: dt.datetime, values):
+        return validdatetime_checker(enddatetime, values)
 
 
 class Results(ResultsCreate):
@@ -366,8 +423,8 @@ class TrackResultsFields(BaseModel):
 
 
 class TrackResultsCreate(TrackResultsFields):
-    track_result_values: List[Tuple[datetime.datetime, float, str]]
-    track_result_locations: List[Tuple[datetime.datetime, float, float, str]]
+    track_result_values: List[Tuple[dt.datetime, float, str]]
+    track_result_locations: List[Tuple[dt.datetime, float, float, str]]
 
 
 class TrackResultsReport(TrackResultsFields):
@@ -384,13 +441,17 @@ class ResultSharedBase(BaseModel):
     zlocation: Optional[float]
     zlocationunitsid: Optional[int]
     spatialreferenceid: Optional[int]
+    valuedatetimeutcoffset: int
+    valuedatetime: dt.datetime
+
+    @validator('valuedatetime')
+    def check_utc_offset(cls, enddatetime: dt.datetime, values):
+        return valuedatetime_checker(enddatetime, values)
 
 
 class CategoricalResultsCreate(ResultSharedBase):
     qualitycodecv: constr(max_length=255)  # type: ignore
     datavalue: constr(max_length=255)  # type: ignore
-    valuedatetime: datetime.datetime
-    valuedatetimeutcoffset: int
 
 
 class CategoricalResults(CategoricalResultsCreate):
@@ -404,8 +465,6 @@ class MeasurementResultsCreate(ResultSharedBase):
     timeaggregationinterval: float
     timeaggregationintervalunitsid: int
     datavalue: float
-    valuedatetime: datetime.datetime
-    valuedatetimeutcoffset: int
 
 
 class MeasurementResults(MeasurementResultsCreate):
@@ -413,8 +472,30 @@ class MeasurementResults(MeasurementResultsCreate):
 
 
 class BegroingResultCreate(BaseModel):
-    form: dict
+    projects: List[Directive]
+    date: dt.datetime
+    station: Dict
+    taxons: List[Dict]
+    methods: List[Methods]
+    observations: List[List[str]]
 
 
 class BegroingResult(BegroingResultCreate):
     personid: int
+
+
+if __name__ == '__main__':
+    BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), begindatetimeutcoffset=1)
+    # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'))  # Error!
+    BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), begindatetimeutcoffset=0)
+    # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), begindatetimeutcoffset=1)
+    BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00'), begindatetimeutcoffset=0)
+    # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00'), begindatetimeutcoffset=1)
+
+    EndDateTimeBase(enddatetime=None)
+    EndDateTimeBase(enddatetime=None, enddatetimeutcoffset=None)
+    # EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00'))  # Error!
+    # EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'))  # Error!
+    # EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), enddatetimeutcoffset=2) #Err
+    EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), enddatetimeutcoffset=0)
+    EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), enddatetimeutcoffset=1)
