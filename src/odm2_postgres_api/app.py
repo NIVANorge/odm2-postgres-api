@@ -6,6 +6,12 @@ from collections import defaultdict
 import asyncpg
 
 from fastapi import FastAPI, Depends, Header
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
 from nivacloud_logging.log_utils import setup_logging
 
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
@@ -20,6 +26,16 @@ app = FastAPI(
     title="ODM2 API",
     version="v1"
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # Log the error that is send to the client
+    logging.info('Error thrown on request', extra={'url': request.url, 'error_detail': jsonable_encoder(exc.errors())})
+    return JSONResponse(
+        status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": jsonable_encoder(exc.errors())},
+    )
 
 
 class ApiPoolManager:
