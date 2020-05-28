@@ -1,21 +1,78 @@
+import json
 import logging
 
 import requests
 
 from nivacloud_logging.log_utils import setup_logging
 
-sampling_features = {'sampling_features': {
+metadata = {'sampling_features': {
     "samplingfeatureuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "samplingfeaturetypecv": "Specimen",
-    "samplingfeaturecode": "another_cool_code",
-}}
+    "samplingfeaturecode": "MS01",
+}, 'methods': [{
+    "methodtypecv": "Specimen analysis",
+    "methodcode": "niva_ms_sample",
+    "methodname": "ms scan",
+    "methoddescription": "",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Derivation",
+    "methodcode": "niva_ms_convert",
+    "methodname": "ms convert",
+    "methoddescription": "",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Derivation",
+    "methodcode": "niva_ms_analysis_wild_west",
+    "methodname": "ms data analysis",
+    "methoddescription": "variant 'free' has no json describing parameters on the method. The parameters are instead stored on as a json annotation on the 'result'",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}, {
+    "methodtypecv": "Derivation",
+    "methodcode": "niva_ms_analysis_1",
+    "methodname": "ms data analysis",
+    "methoddescription": "variant 1 is a specific method for using the masspec. The parameters are stored in a json annotation linked to the 'method'",  # nopep8
+    "organizationid": 1,  # organization 1 is NIVA
+    "annotations": [{
+        "annotationtypecv": "Method annotation",
+        "annotationtext": "The json field holds the parameters with which this method should be executed",
+        "annotationjson": json.dumps({
+            "mz_range": [0, 0],
+            "n_iter": 15000,
+            "n_scan": 30,
+            "mz_res": 20000,
+            "mz_win": 0.02,
+            "adj_r2": 0.85,
+            "min_int": 2000,
+            "int_var": 5,
+            "s2n": 2,
+            "min_nscan": 3,
+            "peak_interp": 1,
+            "id_massbank_version": "16032020",
+            "id_corr_tresh": 0.9,
+            "id_min_int": 500,
+            "id_mz_win_pc": 0.8,
+            "id_rt_win_pc": 0.25,
+            "id_mode": "NEGATIVE",
+            "id_source": "ESI",
+            "id_parent": 0,
+            "id_feature_wgts": [1, 1, 1, 1, 1, 1, 1]
+        })
+    }]
+}, {
+    "methodtypecv": "Derivation",
+    "methodcode": "niva_ms_analysis_2",
+    "methodname": "ms data analysis",
+    "methoddescription": "variant 2 functions like such and so (positive reversed flux capicatiors charged to 3.7GWH!!!)",  # nopep8
+    "organizationid": 1  # organization 1 is NIVA
+}]}
 
 initial_data = {'actions': {
     "affiliationid": 1,
     "isactionlead": True,
     "roledescription": "Operated mass spectrometer",
     "actiontypecv": "Specimen analysis",
-    "methodid": 1,
+    "methodcode": "niva_ms_sample",
     "begindatetime": "2020-04-23T07:00:00",
     "begindatetimeutcoffset": 0
 }, 'results': {
@@ -25,7 +82,7 @@ initial_data = {'actions': {
     "resulttypecv": "Measurement",
     "variableid": 1,
     "unitsid": 1,
-    "processinglevelid": 0,
+    "processinglevelid": 1,
     "valuecount": 0,
     "statuscv": "Complete",
     "sampledmediumcv": "Liquid aqueous"
@@ -41,7 +98,7 @@ def post_to_odm2_api(endpoint, data):
 
 def main():
     setup_logging(plaintext=True)
-    data_sets = [sampling_features]
+    data_sets = [metadata, initial_data]
     for data_set in data_sets:
         for endpoint, data in data_set.items():
             if type(data) == list:

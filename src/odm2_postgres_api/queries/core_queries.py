@@ -33,6 +33,17 @@ async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
     return schemas.ControlledVocabulary(**{**dict(controlled_vocabulary), **row})
 
 
+async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
+    method_data = {k: v for k, v in method if k is not "annotations"}
+    async with conn.transaction():
+        method_row = await conn.fetchrow(make_sql_query('methods', method_data), *method_data.values())
+        for annotation in method.annotations:
+            inserted_annotation = await insert_pydantic_object(conn, 'annotations', annotation, schemas.Annotations)
+            await conn.fetchrow('INSERT INTO methodannotations (methodid, annotationid) Values ($1, $2) returning *',
+                                method_row['methodid'], inserted_annotation.annotationid)
+    return schemas.Methods(annotations=method.annotations, **method_row)
+
+
 async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
     async with conn.transaction():
         method_row = await conn.fetchrow("SELECT methodid FROM methods WHERE methodcode = $1", action.methodcode)

@@ -90,6 +90,11 @@ async def post_controlled_vocabularies(controlled_vocabulary: schemas.Controlled
     return await core_queries.create_new_controlled_vocabulary_item(connection, controlled_vocabulary)
 
 
+@app.post("/annotations", response_model=schemas.Annotations)
+async def post_annotations(annotation: schemas.AnnotationsCreate, connection=Depends(api_pool_manager.get_conn)):
+    return await insert_pydantic_object(connection, 'annotations', annotation, schemas.Annotations)
+
+
 @app.post("/people", response_model=schemas.People)
 async def post_people(user: schemas.PeopleCreate, connection=Depends(api_pool_manager.get_conn)):
     return await insert_pydantic_object(connection, 'people', user, schemas.People)
@@ -147,7 +152,7 @@ async def post_directive(directive: schemas.DirectivesCreate, connection=Depends
 
 @app.post("/methods", response_model=schemas.Methods)
 async def post_methods(method: schemas.MethodsCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'methods', method, schemas.Methods)
+    return await core_queries.insert_method(connection, method)
 
 
 @app.post("/action_by", response_model=schemas.ActionsBy)

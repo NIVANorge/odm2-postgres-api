@@ -2320,3 +2320,5 @@ create index TrackResultValues_resultid_time_idx
 
 create index TrackResultLocations_resultid_time_idx
     on ODM2.TrackResultLocations (samplingfeatureid asc, valuedatetime desc);
+
+ALTER TABLE ODM2.Annotations ADD COLUMN annotationjson json;

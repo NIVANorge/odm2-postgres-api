@@ -79,10 +79,12 @@ async def postgres_user_on_odm_db(connection_string, db_name: str, schema_name: 
             postgres_odm2_code = my_file.read()
         for command in postgres_odm2_code.split(';'):
             async with conn.transaction():
-                if command and '--' not in command:
+                if command and '--' not in command and command is not '\n':
                     try:
                         logging.info(await conn.execute(command))
-                    except (asyncpg.exceptions.DuplicateObjectError, asyncpg.exceptions.DuplicateTableError):
+                    except (asyncpg.exceptions.DuplicateObjectError,
+                            asyncpg.exceptions.DuplicateTableError,
+                            asyncpg.exceptions.DuplicateColumnError):
                         failed_commands += 1
         logging.info(f'Duplicate commands from ODM2_for_PostgreSQL.sql: {failed_commands}')
         await run_create_hypertable_commands(connection_string)

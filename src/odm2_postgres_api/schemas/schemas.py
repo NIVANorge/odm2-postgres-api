@@ -38,6 +38,7 @@ def create_optional_date_time_checker(datetime_name: str, offset_name: str):
 
 
 cv_checker = constr(regex=f'({"|".join([f"^{cv}$" for cv in CONTROLLED_VOCABULARY_TABLE_NAMES])})')
+annotation_datetime_checker = create_optional_date_time_checker('annotationdatetime', 'annotationutcoffset')
 begindatetime_checker = create_obligatory_date_time_checker('begindatetime', 'begindatetimeutcoffset')
 enddatetime_checker = create_optional_date_time_checker('enddatetime', 'enddatetimeutcoffset')
 resultdatetime_checker = create_optional_date_time_checker('resultdatetime', 'resultdatetimeutcoffset')
@@ -52,6 +53,26 @@ class ControlledVocabulary(BaseModel):
     category: constr(max_length=255) = None  # type: ignore
     # sourcevocabularyuri: constr(max_length=255) = None  # type: ignore
     controlled_vocabulary_table_name: cv_checker  # type: ignore
+
+
+class AnnotationsCreate(BaseModel):
+    annotationtypecv: constr(max_length=255)  # type: ignore
+    annotationcode: constr(max_length=50) = None  # type: ignore
+    annotationtext: constr(max_length=500)  # type: ignore
+    annotationjson: str  # This means the json value here has to be string encoded, not sure if this is right
+    annotationutcoffset: Optional[int] = None
+    annotationdatetime: Optional[dt.datetime] = None
+    annotationlink: constr(max_length=255) = None  # type: ignore
+    annotatorid: Optional[int] = None
+    citationid: Optional[int] = None
+
+    @validator('annotationdatetime')
+    def check_utc_offset(cls, annotationdatetime: dt.datetime, values):
+        return annotation_datetime_checker(annotationdatetime, values)
+
+
+class Annotations(AnnotationsCreate):
+    annotationid: int
 
 
 class PeopleCreate(BaseModel):
@@ -215,6 +236,8 @@ class MethodsCreate(BaseModel):
     methoddescription: constr(max_length=5000) = None  # type: ignore
     methodlink: constr(max_length=255) = None  # type: ignore
     organizationid: Optional[int] = None
+    # annotation_id_list: List[int] = []  # This requires some thought, are both this field and annotation allowed?
+    annotations: List[AnnotationsCreate] = []
 
 
 class Methods(MethodsCreate):
