@@ -256,7 +256,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
             data_action = schemas.ActionsCreate(
                 affiliationid=user.affiliation.affiliationid,
                 isactionlead=True,
-                methodid=method.methodid,
+                methodcode=method.methodcode,
                 actiontypecv=method.methodtypecv,  # This only works when the type is both an action and a method
                 begindatetime=begroing_result.date,
                 begindatetimeutcoffset=0,

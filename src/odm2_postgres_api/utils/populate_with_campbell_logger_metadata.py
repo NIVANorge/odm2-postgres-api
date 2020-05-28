@@ -103,7 +103,7 @@ def create_result(new_result):
         "isactionlead": True,
         "roledescription": "Deployed a specific instrument",
         "actiontypecv": "Instrument deployment",
-        "methodid": 1,
+        "methodcode": "000",
         "begindatetime": new_result["begin_datetime"],
         "begindatetimeutcoffset": 0
     })

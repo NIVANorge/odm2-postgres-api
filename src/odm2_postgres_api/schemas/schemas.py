@@ -265,7 +265,7 @@ class EndDateTimeBase(BaseModel):
 
 class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
     actiontypecv: constr(max_length=255)  # type: ignore
-    methodid: int
+    methodcode: str
     actiondescription: constr(max_length=5000) = None  # type: ignore
     actionfilelink: constr(max_length=255) = None  # type: ignore
     equipmentids: List[int] = []
@@ -386,7 +386,7 @@ class FeatureActions(FeatureActionsCreate):
 
 
 class ResultsCreate(FeatureActionsCreate):
-    dataqualitycodes: List[str]
+    dataqualitycodes: List[str] = []
     resultuuid: uuid.UUID
     resulttypecv: constr(max_length=255)  # type: ignore
     variableid: int

@@ -23,7 +23,7 @@ initial_data = {'actions': {
     "isactionlead": True,
     "roledescription": "Deployed a specific instrument",
     "actiontypecv": "Instrument deployment",
-    "methodid": 1,
+    "methodcode": "000",
     "begindatetime": "2019-11-18T09:55:05",
     "begindatetimeutcoffset": 0
 }, 'data_quality': [{
@@ -167,7 +167,7 @@ def create_new_fantasy_track_result(new_track_result: dict):
             "isactionlead": True,
             "roledescription": "Derived a dataset",
             "actiontypecv": "Derivation",
-            "methodid": 2,  # methodid = 2: "A method from NIVA for deriving a result from another result"
+            "methodcode": "001",  # methodcode = 001: "A method from NIVA for deriving a result from another result"
             "begindatetime": new_track_result["begin_datetime"],
             "begindatetimeutcoffset": 0,
             "equipmentids": [],
@@ -179,7 +179,7 @@ def create_new_fantasy_track_result(new_track_result: dict):
             "isactionlead": True,
             "roledescription": "Deployed a specific instrument",
             "actiontypecv": "Instrument deployment",
-            "methodid": 1,  # methodid = 1: "A method from NIVA for deploying instruments"
+            "methodcode": "000",  # methodcode = 000: "A method from NIVA for deploying instruments"
             "begindatetime": new_track_result["begin_datetime"],
             "begindatetimeutcoffset": 0,
             "equipmentids": []
@@ -195,8 +195,7 @@ def create_new_fantasy_track_result(new_track_result: dict):
         "processinglevelid": 2,  # processinglevelid = 2: "processinglevelcode": "0.05", "definition": "Automated QC"
         "valuecount": 0,
         "statuscv": "Ongoing",
-        "sampledmediumcv": "Liquid aqueous",
-        "dataqualitycodes": []
+        "sampledmediumcv": "Liquid aqueous"
     })
 
     track_result_response = post_to_odm2_api('track_results', {
