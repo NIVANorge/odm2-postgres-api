@@ -65,7 +65,6 @@ def generate_csv_from_form(begroing_result: schemas.BegroingResultCreate):
 def put_csv_to_bucket(csv_data):
     bucket_name = os.environ['DATA_UPLOAD_BUCKET']
     file_name = f'begroing/{dt.datetime.now().isoformat()}_data.csv'
-
     with StringIO() as csv_file:
         fieldnames = list(csv_data[0].keys())
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)

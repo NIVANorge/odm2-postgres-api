@@ -241,7 +241,8 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
     user = await create_or_get_user(connection, niva_user)
 
     csv_data = google_cloud_utils.generate_csv_from_form(begroing_result)
-
+    if not csv_data:
+        return schemas.BegroingResult(personid=user.person.personid, **begroing_result.dict())
     observations_per_method = defaultdict(list)
     for index, species in enumerate(begroing_result.taxons):
         used_method_indices = [i for i, e in enumerate(begroing_result.observations[index]) if e]
