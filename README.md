@@ -54,3 +54,6 @@ python src/odm2_postgres_api/utils/populate_with_ferrybox_metadata.py
 ```
 
 TODO: These scripts are not idempotent and can only be ran once. Causes both duplicates and in some cases unique errors.
+
+#### Hint
+postgres runs on 127.0.0.1:8700, username = niva_odm2_read_only_user; db = niva_odm2
