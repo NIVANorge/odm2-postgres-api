@@ -12,8 +12,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from nivacloud_logging.log_utils import setup_logging
-
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
@@ -52,7 +50,6 @@ api_pool_manager = ApiPoolManager()
 
 @app.on_event("startup")
 async def startup_event():
-    setup_logging()
     # TODO: This can run before the database is ready, it should actually be lazily tried on the first connection
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]

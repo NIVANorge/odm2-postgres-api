@@ -34,7 +34,7 @@ async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
 
 
 async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
-    method_data = {k: v for k, v in method if k is not "annotations"}
+    method_data = {k: v for k, v in method if k != "annotations"}
     async with conn.transaction():
         method_row = await conn.fetchrow(make_sql_query('methods', method_data), *method_data.values())
         for annotation in method.annotations:
