@@ -77,6 +77,12 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
             related_action_create = schemas.RelatedActionCreate(
                 actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id)
             await insert_pydantic_object(conn, 'relatedactions', related_action_create, schemas.RelatedAction)
+
+        for sampling_feature in action.sampling_features:
+            inserted_sampling_feature = await create_sampling_feature(conn, sampling_feature)
+            feature_action = schemas.FeatureActionsCreate(
+                samplingfeatureuuid=inserted_sampling_feature.samplingfeatureuuid, actionid=action_row['actionid'])
+            await create_feature_action(conn, feature_action)
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
     return schemas.Action(equipmentids=action.equipmentids, methodcode=action.methodcode,
                           **{**action_row, **dict(action_by_row)})

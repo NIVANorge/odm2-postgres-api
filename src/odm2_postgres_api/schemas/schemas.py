@@ -286,20 +286,6 @@ class EndDateTimeBase(BaseModel):
         return enddatetime_checker(enddatetime, values)
 
 
-class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
-    actiontypecv: constr(max_length=255)  # type: ignore
-    methodcode: str
-    actiondescription: constr(max_length=5000) = None  # type: ignore
-    actionfilelink: constr(max_length=255) = None  # type: ignore
-    equipmentids: List[int] = []
-    directiveids: List[int] = []
-    relatedactions: List[Tuple[int, str]] = []
-
-
-class Action(ActionsCreate):
-    actionid: int
-
-
 class SamplingFeaturesCreate(BaseModel):
     samplingfeatureuuid: uuid.UUID
     samplingfeaturetypecv: constr(max_length=255)  # type: ignore
@@ -334,6 +320,21 @@ class RelatedSamplingFeatureCreate(BaseModel):
 
 class RelatedSamplingFeature(RelatedSamplingFeatureCreate):
     relationid: int
+
+
+class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
+    actiontypecv: constr(max_length=255)  # type: ignore
+    methodcode: str
+    actiondescription: constr(max_length=5000) = None  # type: ignore
+    actionfilelink: constr(max_length=255) = None  # type: ignore
+    equipmentids: List[int] = []
+    directiveids: List[int] = []
+    relatedactions: List[Tuple[int, str]] = []
+    sampling_features: List[SamplingFeaturesCreate] = []
+
+
+class Action(ActionsCreate):
+    actionid: int
 
 
 class SpatialReferencesCreate(BaseModel):

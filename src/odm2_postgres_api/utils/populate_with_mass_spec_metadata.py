@@ -85,7 +85,23 @@ metadata = {'sampling_features': {
     "organizationid": 1  # organization 1 is NIVA
 }]}
 
-initial_data = {'actions': {
+example_action1 = {'actions': {
+    "affiliationid": 1,
+    "isactionlead": True,
+    "roledescription": "Collected water sample",
+    "actiontypecv": "Specimen collection",
+    "methodcode": "collect_ms_sample",
+    "begindatetime": "2020-04-23T07:00:00",
+    "begindatetimeutcoffset": 0,
+    'sampling_features': [{
+        "samplingfeatureuuid": "2727c572-1731-4295-9b41-74481855b7cc",
+        "samplingfeaturetypecv": "Specimen",
+        "samplingfeaturecode": "MS01",
+        "relatedsamplingfeatures": [(1, "Was collected at")]
+    }]
+}}
+
+example_action2 = {'actions': {
     "affiliationid": 1,
     "isactionlead": True,
     "roledescription": "Operated mass spectrometer",
@@ -95,7 +111,7 @@ initial_data = {'actions': {
     "begindatetimeutcoffset": 0
 }, 'results': {
     "samplingfeatureuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "actionid": 1,
+    "actionid": 2,
     "resultuuid": "314cd400-14a7-489a-ab97-bce6b11ad068",
     "resulttypecv": "Measurement",
     "variableid": 1,
@@ -116,7 +132,7 @@ def post_to_odm2_api(endpoint, data):
 
 def main():
     setup_logging(plaintext=True)
-    data_sets = [metadata, initial_data]
+    data_sets = [metadata, example_action1]
     for data_set in data_sets:
         for endpoint, data in data_set.items():
             if type(data) == list:
