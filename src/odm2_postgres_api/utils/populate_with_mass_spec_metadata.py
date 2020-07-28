@@ -7,13 +7,31 @@ from nivacloud_logging.log_utils import setup_logging
 
 metadata = {'sampling_features': {
     "samplingfeatureuuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "samplingfeaturetypecv": "Specimen",
-    "samplingfeaturecode": "MS01",
+    "samplingfeaturetypecv": "Site",
+    "samplingfeaturecode": "901-3-8",
+    "samplingfeaturename": "Dalsvatnet",
+    "samplingfeaturedescription": "Station ID: 3275"
 }, 'methods': [{
+    "methodtypecv": "Specimen collection",
+    "methodcode": "collect_ms_sample",
+    "methodname": "collect_ms_sample",
+    "methoddescription": "Collecting sample in the field",  # nopep8
+    # Placing metadata in the corresponding tables in the ODM2
+    "organizationid": 1  # organization 1 is NIVA
+},  {
+    "methodtypecv": "Specimen fractionation",
+    "methodcode": "fractionate_ms_sample",
+    "methodname": "fractionate_ms_sample",
+    "methoddescription": "Create a set of sub-samples",  # nopep8
+    # Placing metadata in the corresponding tables in the ODM2
+    "organizationid": 1  # organization 1 is NIVA
+},
+    {
     "methodtypecv": "Specimen analysis",
     "methodcode": "niva_ms_sample",
     "methodname": "ms scan",
     "methoddescription": "",  # nopep8
+    # Placing metadata in the corresponding tables in the ODM2
     "organizationid": 1  # organization 1 is NIVA
 }, {
     "methodtypecv": "Derivation",
