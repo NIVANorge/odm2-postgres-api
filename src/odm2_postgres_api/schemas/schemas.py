@@ -1,6 +1,6 @@
 import uuid
 import datetime as dt
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
 from pydantic import BaseModel, constr, validator
@@ -59,7 +59,7 @@ class AnnotationsCreate(BaseModel):
     annotationtypecv: constr(max_length=255)  # type: ignore
     annotationcode: constr(max_length=50) = None  # type: ignore
     annotationtext: constr(max_length=500)  # type: ignore
-    annotationjson: str  # This means the json value here has to be string encoded, not sure if this is right
+    annotationjson: Optional[str] = None  # This means the json value here has to be string encoded, not sure about it
     annotationutcoffset: Optional[int] = None
     annotationdatetime: Optional[dt.datetime] = None
     annotationlink: constr(max_length=255) = None  # type: ignore
@@ -237,7 +237,7 @@ class MethodsCreate(BaseModel):
     methodlink: constr(max_length=255) = None  # type: ignore
     organizationid: Optional[int] = None
     # annotation_id_list: List[int] = []  # This requires some thought, are both this field and annotation allowed?
-    annotations: List[AnnotationsCreate] = []
+    annotations: List[Union[AnnotationsCreate, int]] = []
 
 
 class Methods(MethodsCreate):
