@@ -1,13 +1,19 @@
+import logging
+from datetime import datetime, date
+from typing import Optional
+
 import asyncpg
 import shapely.wkt
+from fastapi import HTTPException
 
 from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.schemas.schemas import PersonExtended
 from odm2_postgres_api.utils import shapely_postgres_adapter
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def argument_placeholder(arguments: dict):
-    return ', '.join(f'${n+1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
+    return ', '.join(f'${n + 1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
 
 
 def make_sql_query(table: str, data: dict):
@@ -18,6 +24,24 @@ async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pyda
     pydantic_dict = pydantic_object.dict()
     row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
     return response_model(**row)
+
+
+# TODO: we may want to extend this further by including organization ++
+async def find_person_by_external_id(conn: asyncpg.connection, external_system, ext_id: str) -> PersonExtended:
+    row = await conn.fetchrow("SELECT p.*, a.affiliationid, a.primaryemail, "
+                              "pe.externalidentifiersystemid, eis.externalidentifiersystemname FROM people p "
+                              "inner join affiliations a on p.personid=a.personid "
+                              "inner join personexternalidentifiers pe on p.personid = pe.personid "
+                              "inner join externalidentifiersystems eis on "
+                              "eis.externalidentifiersystemid=pe.externalidentifiersystemid "
+                              "where eis.externalidentifiersystemname = $1 "
+                              "AND LOWER(pe.personexternalidentifier)=LOWER($2)",
+                              external_system, ext_id)
+
+    if row:
+        return PersonExtended(**row)
+    raise HTTPException(status_code=404, detail=f"Person with active directory username "
+                                                f"'{ext_id}' not found.")
 
 
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,

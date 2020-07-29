@@ -2,6 +2,7 @@ import os
 import logging
 import uuid
 from collections import defaultdict
+from typing import Optional
 
 import asyncpg
 
@@ -12,11 +13,12 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from odm2_postgres_api.queries.core_queries import insert_pydantic_object
+from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
+from odm2_postgres_api.schemas.schemas import PersonExtended
 from odm2_postgres_api.utils import google_cloud_utils
 
 app = FastAPI(
@@ -95,6 +97,12 @@ async def post_annotations(annotation: schemas.AnnotationsCreate, connection=Dep
 @app.post("/people", response_model=schemas.People)
 async def post_people(user: schemas.PeopleCreate, connection=Depends(api_pool_manager.get_conn)):
     return await insert_pydantic_object(connection, 'people', user, schemas.People)
+
+
+@app.get("/people/active-directory/{sam_account_name}", response_model=PersonExtended)
+async def get_person_by_ad_sam_acc_name(sam_account_name: str, connection=Depends(api_pool_manager.get_conn)):
+    """Retrieves users based on their Active Directory 3-letter username (SamAccountName)"""
+    return await find_person_by_external_id(connection, "onprem-active-directory", sam_account_name)
 
 
 @app.post("/organizations", response_model=schemas.Organizations)

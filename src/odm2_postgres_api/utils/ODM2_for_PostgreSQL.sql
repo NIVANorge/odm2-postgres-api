@@ -2322,3 +2322,6 @@ create index TrackResultLocations_resultid_time_idx
     on ODM2.TrackResultLocations (samplingfeatureid asc, valuedatetime desc);
 
 ALTER TABLE ODM2.Annotations ADD COLUMN annotationjson json;
+
+ALTER TABLE ODM2.personexternalidentifiers
+    ADD UNIQUE (personexternalidentifier, externalidentifiersystemid);

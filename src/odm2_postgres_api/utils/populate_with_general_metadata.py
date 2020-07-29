@@ -21,12 +21,20 @@ people_and_organizations = {"organizations": {
     "organizationid": 1,
     "isprimaryorganizationcontact": "false",
     "primaryphone": "0047 413 60 753"
-}, "external_identifier_system": {
-    "externalidentifiersystemname": 'niva-port',
-    "identifiersystemorganizationid": 1,
-    "externalidentifiersystemdescription": "",
-    "externalidentifiersystemurl": ""
-}}
+}, "external_identifier_system": [
+    {
+        "externalidentifiersystemname": 'niva-port',
+        "identifiersystemorganizationid": 1,
+        "externalidentifiersystemdescription": "",
+        "externalidentifiersystemurl": ""
+    }, {
+        "externalidentifiersystemname": 'onprem-active-directory',
+        "identifiersystemorganizationid": 1,
+        "externalidentifiersystemdescription": "reference to old 3-letter active directory usernames (SamAccountName)",
+        "externalidentifiersystemurl": ""
+    }
+]
+}
 
 
 # processing levels copied from : https://github.com/ODM2/ODM2/blob/master/doc/ODM2Docs/core_processinglevels.md
