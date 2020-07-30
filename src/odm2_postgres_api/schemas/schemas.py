@@ -322,7 +322,7 @@ class RelatedSamplingFeature(RelatedSamplingFeatureCreate):
     relationid: int
 
 
-class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
+class ActionsBase(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
     actiontypecv: constr(max_length=255)  # type: ignore
     methodcode: str
     actiondescription: constr(max_length=5000) = None  # type: ignore
@@ -330,11 +330,15 @@ class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
     equipmentids: List[int] = []
     directiveids: List[int] = []
     relatedactions: List[Tuple[int, str]] = []
+
+
+class ActionsCreate(ActionsBase):
     sampling_features: List[SamplingFeaturesCreate] = []
 
 
-class Action(ActionsCreate):
+class Action(ActionsBase):
     actionid: int
+    sampling_features: List[SamplingFeatures] = []
 
 
 class SpatialReferencesCreate(BaseModel):

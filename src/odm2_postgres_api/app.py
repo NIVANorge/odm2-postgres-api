@@ -32,7 +32,7 @@ async def request_validation_exception_handler(request: Request, exc: RequestVal
     logging.info('Error thrown on request', extra={'url': request.url, 'error_detail': jsonable_encoder(exc.errors())})
     return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": jsonable_encoder(exc.errors())},
+        content={"detail": jsonable_encoder(exc.errors()), "body": exc.body},
     )
 
 
