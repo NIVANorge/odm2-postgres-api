@@ -8,7 +8,7 @@ from nivacloud_logging.log_utils import setup_logging
 people_and_organizations = {"organizations": {
     "organizationtypecv": "Research institute",
     "organizationcode": "niva-no",
-    "organizationname": "NIVA Norsk institut for vannforskning",
+    "organizationname": "NIVA Norsk institutt for vannforskning",
     "organizationdescription": "The Norwegian institute for water research",
     "organizationlink": "www.niva.no"
 }, "people": {
