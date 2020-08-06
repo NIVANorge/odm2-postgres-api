@@ -13,6 +13,9 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
+from odm2_postgres_api.queries.mass_spec_select_queries import get_sample_uuid_through_result_annotation_link, \
+    get_sample_annotations_through_sample_uuid, get_parent_feature_uuid, \
+    get_result_annotationlink_through_sample_uuid, get_method_annotation_through_method_code
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
@@ -315,3 +318,28 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
     # TODO: Send email about new bucket_files
 
     return schemas.BegroingResult(personid=user.person.personid, **begroing_result.dict())
+
+
+@app.get("/samplingfeature_uuid_through_result_annotation_link{annotationlink}")
+async def get_uuid(annotationlink: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_sample_uuid_through_result_annotation_link(connection, annotationlink)
+
+
+@app.get("/sample_annotations_through_sample_uuid{uuid}")
+async def get_processing_parameters(uuid: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_sample_annotations_through_sample_uuid(connection, uuid)
+
+
+@app.get("/parent_feature_uuid{uuid}")
+async def get_parent_uuid(uuid: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_parent_feature_uuid(connection, uuid)
+
+
+@app.get("/result_annotationlink_through_sample_uuid_and_code{uuid}/{code}")
+async def get_file_location(uuid: str, code: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_result_annotationlink_through_sample_uuid(connection, uuid, code)
+
+
+@app.get("/method_annotation_through_method_code{code}")
+async def get_method_parameters(code: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_method_annotation_through_method_code(connection, code)

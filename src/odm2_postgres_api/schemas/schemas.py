@@ -297,6 +297,7 @@ class SamplingFeaturesCreate(BaseModel):
     elevation_m: Optional[float]
     elevationdatumcv: constr(max_length=255) = None  # type: ignore
     relatedsamplingfeatures: List[Tuple[int, str]] = []
+    annotations: List[Union[AnnotationsCreate, int]] = []
 
     @validator('featuregeometrywkt')
     def featuregeometrywkt_validator(cls, wkt):
@@ -428,6 +429,7 @@ class ResultsCreate(FeatureActionsCreate):
     statuscv: constr(max_length=255) = None  # type: ignore
     sampledmediumcv: constr(max_length=5000) = None  # type: ignore
     valuecount: int
+    annotations: List[Union[AnnotationsCreate, int]] = []
 
     @validator('resultdatetime')
     def check_resultdatetime_utc_offset(cls, enddatetime: dt.datetime, values):

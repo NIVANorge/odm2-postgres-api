@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from urllib.parse import urljoin
 
 import requests
 
@@ -36,33 +37,30 @@ metadata = {'sampling_features': {
         "organizationid": 1  # organization 1 is NIVA
     }, {
         "methodtypecv": "Derivation",
-        "methodcode": "convert_ms_convert",
+        "methodcode": "convert_ms_data",
         "methodname": "ms convert",
         "methoddescription": "",  # nopep8
         "organizationid": 1  # organization 1 is NIVA
     }, {
         "methodtypecv": "Derivation",
-        "methodcode": "niva_ms_analysis_wild_west",
-        "methodname": "ms data analysis",
-        "methoddescription": "variant 'free' has no json describing parameters on the method."
-                             " The parameters are instead stored on as a json annotation on the 'result'",
-        # nopep8
+        "methodcode": "fd_full_flex",
+        "methodname": "feature detection",
+        "methoddescription": "Detects features in raw data. Variant 'full_flex' has no json describing parameters "
+                             "on the method. All parameters needs to be specified at input and will be stored as "
+                             "json annotation to the result.",
         "organizationid": 1  # organization 1 is NIVA
     }, {
         "methodtypecv": "Derivation",
-        "methodcode": "niva_ms_analysis_1",
-        "methodname": "ms data analysis",
-        "methoddescription": "variant 1 is a specific method for using the masspec. "
-                             "The parameters are stored in a json annotation linked to the 'method'",
-        # nopep8
+        "methodcode": "fd_no_interpolation",
+        "methodname": "feature detection",
+        "methoddescription": "Detects features in raw data. Most of feature detection parameters are "
+                             "predefined and stores as json annotation on this method. In particular no"
+                             "interpolation is perfomred prior to fitting the data. ",
         "organizationid": 1,  # organization 1 is NIVA
         "annotations": [{
             "annotationtypecv": "Method annotation",
-            "annotationtext": "The json field holds the parameters with which this method should be executed",
+            "annotationtext": "The json field holds the parameters with which this method will be executed",
             "annotationjson": json.dumps({
-                "mz_range": [0, 0],
-                "n_iter": 15000,
-                "n_scan": 30,
                 "mz_res": 20000,
                 "mz_win": 0.02,
                 "adj_r2": 0.85,
@@ -70,27 +68,37 @@ metadata = {'sampling_features': {
                 "int_var": 5,
                 "s2n": 2,
                 "min_nscan": 3,
-                "peak_interp": 1,
-                "id_massbank_version": "16032020",
-                "id_corr_tresh": 0.9,
-                "id_min_int": 500,
-                "id_mz_win_pc": 0.8,
-                "id_rt_win_pc": 0.25,
-                "id_mode": "NEGATIVE",
-                "id_source": "ESI",
-                "id_parent": 0,
-                "id_feature_wgts": [1, 1, 1, 1, 1, 1, 1]
+                "peak_interp": 0,
             })
         }]
     }, {
         "methodtypecv": "Derivation",
-        "methodcode": "niva_ms_analysis_2",
-        "methodname": "ms data analysis",
-        "methoddescription": "variant 2 functions like such and so "
-                             "(positive reversed flux capicatiors charged to 3.7GWH!!!)",
-        # nopep8
-        "organizationid": 1  # organization 1 is NIVA
+        "methodcode": "fid_positive_16032020",
+        "methodname": "feature identification",
+        "methoddescription": "Identifies features previously detected using fd_* method. Raw data were obtained "
+                             "with positive ESI. Mass bank version 16032020 is used for identification."
+                             "Additional parameters are stored stored as annotation to this method,",
+        "organizationid": 1,  # organization 1 is NIVA
+        "annotations": [{
+            "annotationtypecv": "Method annotation",
+            "annotationtext": "The json field holds the parameters with which this method will be executed",
+            "annotationjson": json.dumps({
+                "id_massbank_version": "16032020",
+                "mz_range": [0, 0],
+                "id_corr_tresh": 0.9,
+                "id_min_int": 500,
+                "id_mz_win_pc": 0.8,
+                "id_rt_win_pc": 0.25,
+                "id_mode": "POSITIVE",
+                "id_source": "ESI",
+                "id_parent": 0,
+                "id_massbank": "MassBankJulia.jld",
+                "id_feature_wgts": [1, 1, 1, 1, 1, 1, 1],
+            })
+        }]
     }]}
+
+
 #
 # do_collect_sample = {'actions': {
 #     "affiliationid": 1,
@@ -182,6 +190,21 @@ def post_to_odm2_api(endpoint, data):
     return response.json()
 
 
+def get_from_odm2_api(endpoint):
+    response = requests.get('http://localhost:8701/' + endpoint)
+    response.raise_for_status()
+    logging.info(f"Succesfully got data")
+    return response
+
+
+def try_get():
+    # "http://localhost:8701/samplingfeature_uuid_through_result_annotation_link/%252020_02_21_JBA_1000Lakes_HLB_POS_079.rawtar.bz2"
+    # link = "%25"+
+    link = "2020_02_21_JBA_1000Lakes_HLB_POS_079.raw.tar.bz2"
+    data = get_from_odm2_api(f"samplingfeature_uuid_through_result_annotation_link" + link)
+    print(data.json())
+
+
 def main():
     setup_logging(plaintext=True)
     data_sets = [metadata]
@@ -197,3 +220,4 @@ def main():
 if __name__ == '__main__':
     main()
     # try_insert()
+    # try_get()

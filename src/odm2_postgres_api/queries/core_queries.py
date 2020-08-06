@@ -1,3 +1,5 @@
+from typing import List, Union
+
 import asyncpg
 import shapely.wkt
 
@@ -28,22 +30,29 @@ async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
         raise RuntimeError(f"table_name: '{table_name}' is invalid")
     value_keys = ['term', 'name', 'definition', 'category']
     controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
+    controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
     row = await conn.fetchrow(make_sql_query(table_name, controlled_vocabulary_data),
                               *controlled_vocabulary_data.values())
     return schemas.ControlledVocabulary(**{**dict(controlled_vocabulary), **row})
+
+
+async def create_or_parse_annotations(conn: asyncpg.connection,
+                                      annotations: List[Union[schemas.AnnotationsCreate, int]]):
+    annotation_ids = []
+    for annotation in annotations:
+        if type(annotation) == schemas.AnnotationsCreate:
+            annotation_row = await insert_pydantic_object(conn, 'annotations', annotation, schemas.Annotations)
+            annotation_ids.append(annotation_row.annotationid)
+        elif type(annotation) == int:  # No need for 'else' clause with TypeError since fastapi already checked
+            annotation_ids.append(annotation)
+    return annotation_ids
 
 
 async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
     method_data = {k: v for k, v in method if k != "annotations"}
     async with conn.transaction():
         method_row = await conn.fetchrow(make_sql_query('methods', method_data), *method_data.values())
-        for annotation in method.annotations:
-            if type(annotation) == schemas.AnnotationsCreate:
-                annotation_row = await insert_pydantic_object(conn, 'annotations', annotation, schemas.Annotations)
-                annotation_id = annotation_row.annotationid
-            elif type(annotation) == int:  # No need for 'else' clause with TypeError since fastapi already checked
-                annotation_id = annotation
-
+        for annotation_id in await create_or_parse_annotations(conn, method.annotations):
             await conn.fetchrow('INSERT INTO methodannotations (methodid, annotationid) Values ($1, $2) returning *',
                                 method_row['methodid'], annotation_id)
     return schemas.Methods(annotations=method.annotations, **method_row)
@@ -118,6 +127,9 @@ async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: sc
             )
             await insert_pydantic_object(conn, 'relatedfeatures', related_sampling_feature_create,
                                          schemas.RelatedSamplingFeature)
+        for annotation_id in await create_or_parse_annotations(conn, sampling_feature.annotations):
+            await conn.fetchrow('INSERT INTO samplingfeatureannotations (samplingfeatureid, annotationid) '
+                                'Values ($1, $2) returning *', sampling_row['samplingfeatureid'], annotation_id)
     return schemas.SamplingFeatures(**sampling_row)
 
 
@@ -155,6 +167,10 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
         for data_quality_code in result.dataqualitycodes:
             await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
                 resultid=result_row['resultid'], dataqualitycode=data_quality_code))
+        for annotation_id in await create_or_parse_annotations(conn, result.annotations):
+            await conn.fetchrow('INSERT INTO resultannotations (resultid, annotationid, begindatetime, enddatetime) '
+                                'Values ($1, $2, $3, $4) returning *',
+                                result_row["resultid"], annotation_id, result.resultdatetime, result.validdatetime)
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
     return schemas.Results(dataqualitycodes=result.dataqualitycodes, **{**result_row, **dict(feature_action_row)})
 
