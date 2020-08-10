@@ -49,6 +49,7 @@ workflows:
       - niva-orb/deploy_to_nivatest:
           context: nivacloud secrets
           requires:
+            - niva-orb/build_containers_and_run_pytest_on_machine
             - niva-orb/build_and_push_to_nivatest
   master-copy-deploy:
     jobs:
