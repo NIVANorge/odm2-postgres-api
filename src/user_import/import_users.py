@@ -11,6 +11,7 @@ from nivacloud_logging.log_utils import setup_logging
 from pydantic import BaseModel, ValidationError
 
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
+from odm2_postgres_api.queries.user import StoredPerson
 from odm2_postgres_api.schemas.schemas import People, PeopleCreate, PersonExternalIdentifiers, AffiliationsCreate, \
     Affiliations, PersonExternalIdentifiersCreate
 
@@ -53,14 +54,24 @@ async def import_users_from_legacy_AD(conn: Connection, ext_identifier_sys_id, u
 
             row = await conn.fetchrow("SELECT * FROM odm2.affiliations WHERE primaryemail=$1", user.UserPrincipalName)
 
+            people = PeopleCreate(personfirstname=name[0], personmiddlename=middle, personlastname=user.Surname)
+
             if not row:
-                people = PeopleCreate(personfirstname=name[0], personmiddlename=middle, personlastname=user.Surname)
                 stored_person = await insert_pydantic_object(conn, "odm2.people", people, People)
                 await create_affiliations(conn, stored_person, user),
                 await create_external_identifier(conn, stored_person,
                                                  ext_identifier_sys_id, user)
             else:
                 logging.info(f"User already exists in db", extra={"user": user})
+                ad_reference = await conn.fetchrow(
+                    "SELECT * FROM odm2.personexternalidentifiers where personexternalidentifier=$1",
+                    user.SamAccountName)
+                if not ad_reference:
+                    person = People(**{**row, **people.dict()})
+                    logging.info(f"Storing SamAccountName for existing user without reference",
+                                 extra={"person": person, "sam_account_name": user.SamAccountName})
+                    await create_external_identifier(conn, person,
+                                                     ext_identifier_sys_id, user)
 
 
 # TODO: check if affiliation exists for user?
