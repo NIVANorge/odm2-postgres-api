@@ -23,11 +23,6 @@ people_and_organizations = {"organizations": {
     "primaryphone": "0047 413 60 753"
 }, "external_identifier_system": [
     {
-        "externalidentifiersystemname": 'niva-port',
-        "identifiersystemorganizationid": 1,
-        "externalidentifiersystemdescription": "",
-        "externalidentifiersystemurl": ""
-    }, {
         "externalidentifiersystemname": 'onprem-active-directory',
         "identifiersystemorganizationid": 1,
         "externalidentifiersystemdescription": "reference to old 3-letter active directory usernames (SamAccountName)",

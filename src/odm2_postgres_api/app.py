@@ -247,7 +247,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
 
     csv_data = google_cloud_utils.generate_csv_from_form(begroing_result)
     if not csv_data:
-        return schemas.BegroingResult(personid=user.person.personid, **begroing_result.dict())
+        return schemas.BegroingResult(personid=user.personid, **begroing_result.dict())
     observations_per_method = defaultdict(list)
     for index, species in enumerate(begroing_result.taxons):
         used_method_indices = [i for i, e in enumerate(begroing_result.observations[index]) if e]
@@ -265,7 +265,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
             method = begroing_result.methods[method_index]
 
             data_action = schemas.ActionsCreate(
-                affiliationid=user.affiliation.affiliationid,
+                affiliationid=user.affiliationid,
                 isactionlead=True,
                 methodcode=method.methodcode,
                 actiontypecv=method.methodtypecv,  # This only works when the type is both an action and a method
@@ -322,4 +322,4 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
         google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
 
-    return schemas.BegroingResult(personid=user.person.personid, **begroing_result.dict())
+    return schemas.BegroingResult(personid=user.personid, **begroing_result.dict())
