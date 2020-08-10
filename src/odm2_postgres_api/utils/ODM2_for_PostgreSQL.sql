@@ -2325,3 +2325,5 @@ ALTER TABLE ODM2.Annotations ADD COLUMN annotationjson json;
 
 ALTER TABLE ODM2.personexternalidentifiers
     ADD UNIQUE (personexternalidentifier, externalidentifiersystemid);
+
+ALTER TABLE ODM2.affiliations ADD UNIQUE (primaryemail);
