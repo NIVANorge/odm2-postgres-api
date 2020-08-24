@@ -15,7 +15,9 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
 from odm2_postgres_api.queries.mass_spec_select_queries import get_sample_uuid_through_result_annotation_link, \
     get_sample_annotations_through_sample_uuid, get_parent_feature_uuid, \
-    get_result_annotationlink_through_sample_uuid, get_method_annotation_through_method_code
+    get_result_annotationlink_through_sample_uuid, get_method_annotation_through_method_code, \
+    get_annotationlink_through_sample_and_method, get_replicas_uuid_from_samplingfeaturecode, \
+    get_annotationlink_through_sample_and_methods
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
@@ -343,3 +345,21 @@ async def get_file_location(uuid: str, code: str, connection=Depends(api_pool_ma
 @app.get("/method_annotation_through_method_code{code}")
 async def get_method_parameters(code: str, connection=Depends(api_pool_manager.get_conn)):
     return await get_method_annotation_through_method_code(connection, code)
+
+
+@app.get("/get_location_via_method{uuid}/{methodcode}/{annotationcode}")
+async def get_file_location_via_method(uuid: str, methodcode: str, annotationcode: str,
+                                       connection=Depends(api_pool_manager.get_conn)):
+    return await get_annotationlink_through_sample_and_method(connection, uuid, methodcode, annotationcode)
+
+
+@app.get("/get_location_via_methods{uuid}/{methodcode}/{fd_methodcode}/{annotationcode}")
+async def get_file_location_via_methods(uuid: str, methodcode: str, fd_methodcode: str, annotationcode: str,
+                                        connection=Depends(api_pool_manager.get_conn)):
+    return await get_annotationlink_through_sample_and_methods(connection, uuid, methodcode, fd_methodcode,
+                                                               annotationcode)
+
+
+@app.get("/get_replicas_of_sample{samplingfeaturecode}")
+async def get_replicas_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_replicas_uuid_from_samplingfeaturecode(connection, samplingfeaturecode)

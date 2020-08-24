@@ -43,24 +43,47 @@ metadata = {'sampling_features': {
         "organizationid": 1  # organization 1 is NIVA
     }, {
         "methodtypecv": "Derivation",
-        "methodcode": "fd_full_flex",
+        "methodcode": "fd_nointerp_nscan40_allmz",
         "methodname": "feature detection",
-        "methoddescription": "Detects features in raw data. Variant 'full_flex' has no json describing parameters "
-                             "on the method. All parameters needs to be specified at input and will be stored as "
-                             "json annotation to the result.",
-        "organizationid": 1  # organization 1 is NIVA
-    }, {
-        "methodtypecv": "Derivation",
-        "methodcode": "fd_no_interpolation",
-        "methodname": "feature detection",
-        "methoddescription": "Detects features in raw data. Most of feature detection parameters are "
-                             "predefined and stores as json annotation on this method. In particular no"
-                             "interpolation is perfomred prior to fitting the data. ",
+        "methoddescription": "Detects features in raw data.  Parameters are "
+                             "stored as json annotation on this method. In particular no"
+                             "interpolation is perfomred prior to fitting the data, retention "
+                             "window is set to 40 and full mass range is used.",
         "organizationid": 1,  # organization 1 is NIVA
         "annotations": [{
             "annotationtypecv": "Method annotation",
             "annotationtext": "The json field holds the parameters with which this method will be executed",
             "annotationjson": json.dumps({
+                "mz_range": [0, 0],
+                "n_iter": 15000,
+                "n_scan": 40,
+                "mz_res": 20000,
+                "mz_win": 0.02,
+                "adj_r2": 0.85,
+                "min_int": 2000,
+                "int_var": 5,
+                "s2n": 2,
+                "min_nscan": 3,
+                "peak_interp": 0,
+            })
+        }]
+    }, {
+        "methodtypecv": "Derivation",
+        "methodcode": "fd_nointerp_nscan40_allmz_test",
+        "methodname": "feature detection",
+        "methoddescription": "Detects features in raw data. This is a test version of method fd_nointerp_nscan40_allmz"
+                             "where number of iteration is limited to 25. Parameters are "
+                             "stored as json annotation on this method. In particular no"
+                             "interpolation is perfomred prior to fitting the data, retention "
+                             "window is set to 40 and full mass range is used.",
+        "organizationid": 1,  # organization 1 is NIVA
+        "annotations": [{
+            "annotationtypecv": "Method annotation",
+            "annotationtext": "The json field holds the parameters with which this method will be executed",
+            "annotationjson": json.dumps({
+                "mz_range": [0, 0],
+                "n_iter": 25,
+                "n_scan": 40,
                 "mz_res": 20000,
                 "mz_win": 0.02,
                 "adj_r2": 0.85,
@@ -75,8 +98,9 @@ metadata = {'sampling_features': {
         "methodtypecv": "Derivation",
         "methodcode": "fid_positive_16032020",
         "methodname": "feature identification",
-        "methoddescription": "Identifies features previously detected using fd_* method. Raw data were obtained "
-                             "with positive ESI. Mass bank version 16032020 is used for identification."
+        "methoddescription": "Identifies features previously detected using a fd_* and fdc methods. "
+                             "Raw data were obtained with positive ESI. Mass bank version 16032020 is "
+                             "used for identification."
                              "Additional parameters are stored stored as annotation to this method,",
         "organizationid": 1,  # organization 1 is NIVA
         "annotations": [{
@@ -84,21 +108,33 @@ metadata = {'sampling_features': {
             "annotationtext": "The json field holds the parameters with which this method will be executed",
             "annotationjson": json.dumps({
                 "id_massbank_version": "16032020",
-                "mz_range": [0, 0],
-                "id_corr_tresh": 0.9,
-                "id_min_int": 500,
-                "id_mz_win_pc": 0.8,
-                "id_rt_win_pc": 0.25,
                 "id_mode": "POSITIVE",
                 "id_source": "ESI",
                 "id_parent": 0,
                 "id_massbank": "MassBankJulia.jld",
-                "id_feature_wgts": [1, 1, 1, 1, 1, 1, 1],
+                "id_feature_wgts": [1, 1, 1, 1, 1, 1, 1]
             })
         }]
-    }]}
-
-
+    }, {
+        "methodtypecv": "Derivation",
+        "methodcode": "fdc",
+        "methodname": "feature deconvolution",
+        "methoddescription": "Find fragments for peaks detected with fd_* method."
+                             "Parameters are stored stored as annotation to this method,",
+        "organizationid": 1,  # organization 1 is NIVA
+        "annotations": [{
+            "annotationtypecv": "Method annotation",
+            "annotationtext": "The json field holds the parameters with which this method will be executed",
+            "annotationjson": json.dumps({
+                "mz_range": [0, 0],
+                "id_corr_tresh": 0.9,
+                "id_min_int": 500,
+                "id_mz_win_pc": 0.8,
+                "id_rt_win_pc": 0.25
+            })
+        }]
+    },
+]}
 #
 # do_collect_sample = {'actions': {
 #     "affiliationid": 1,
