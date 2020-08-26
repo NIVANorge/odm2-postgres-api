@@ -2,7 +2,7 @@ import uuid
 from collections import defaultdict
 
 from fastapi import Depends, Header, APIRouter
-from odm2_postgres_api.routes.shared.shared_routes import post_actions, post_results, post_categorical_results, \
+from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
