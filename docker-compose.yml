@@ -10,7 +10,6 @@ services:
     depends_on:
       - timescale_odm2
       - db_init
-    restart: always
 
   graphql:
     image: graphile/postgraphile
@@ -19,7 +18,6 @@ services:
     depends_on:
       - timescale_odm2
       - db_init
-    restart: always
     command: --enhance-graphiql --owner-connection postgres://postgres:postgres@timescale_odm2:5432/niva_odm2 --connection postgres://niva_odm2_read_only_user:1oMPPgHu5TvhAkHYRUMIdaRSKZUjh6c5@timescale_odm2:5432/niva_odm2 --schema odm2 --watch --no-ignore-rbac
 
   timescale_odm2:
@@ -37,6 +35,5 @@ services:
   db_init:
     build: "."
     command: python src/odm2_postgres_api/utils/db_initiate.py
-    restart: on-failure
     depends_on:
       - timescale_odm2
