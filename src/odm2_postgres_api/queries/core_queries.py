@@ -1,13 +1,15 @@
 import logging
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 
 import asyncpg
 import shapely.wkt
 from fastapi import HTTPException
+from pydantic import BaseModel
 
 from odm2_postgres_api.schemas import schemas
-from odm2_postgres_api.schemas.schemas import PersonExtended
+from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
+    ControlledVocabularyCreate, UnitsCreate, Units
 from odm2_postgres_api.utils import shapely_postgres_adapter
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
@@ -21,9 +23,28 @@ def make_sql_query(table: str, data: dict):
 
 
 async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pydantic_object, response_model):
+    logging.info(f"Inserting row", extra={"table": table_name})
     pydantic_dict = pydantic_object.dict()
     row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
     return response_model(**row)
+
+
+async def find_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Optional[Units]:
+    row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
+                              unit.unitsabbreviation)
+    return Units(**row) if row else None
+
+
+async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model):
+    row = await conn.fetchrow(f"SELECT * FROM {table} WHERE {id_column}=$1", identifier)
+    return model(**row) if row else None
+
+
+async def find_organization(conn: asyncpg.connection, org_code: str) -> Optional[Organizations]:
+    row = await conn.fetchrow("SELECT * from organizations where organizationcode=$1", org_code)
+    if row:
+        return Organizations(**row)
+    return None
 
 
 # TODO: we may want to extend this further by including organization ++
@@ -45,16 +66,21 @@ async def find_person_by_external_id(conn: asyncpg.connection, external_system, 
 
 
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
-                                                controlled_vocabulary: schemas.ControlledVocabulary):
+                                                controlled_vocabulary: ControlledVocabularyCreate) \
+        -> ControlledVocabulary:
     table_name = controlled_vocabulary.controlled_vocabulary_table_name
     # Check against hardcoded table names otherwise this could be an SQL injection
     if table_name not in CONTROLLED_VOCABULARY_TABLE_NAMES:
         raise RuntimeError(f"table_name: '{table_name}' is invalid")
     value_keys = ['term', 'name', 'definition', 'category']
     controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
+    existing = await find_row(conn, table_name, "term", controlled_vocabulary.term, ControlledVocabulary)
+    if existing:
+        return existing
+
     row = await conn.fetchrow(make_sql_query(table_name, controlled_vocabulary_data),
                               *controlled_vocabulary_data.values())
-    return schemas.ControlledVocabulary(**{**dict(controlled_vocabulary), **row})
+    return schemas.ControlledVocabulary(**row)
 
 
 async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):

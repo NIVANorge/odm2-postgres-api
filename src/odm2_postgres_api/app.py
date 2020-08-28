@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from odm2_postgres_api.metadata_init.populate_metadata import populate_metadata
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
 from odm2_postgres_api.routes.begroing_routes import begroing_routes
@@ -44,8 +45,11 @@ async def startup_event():
 
     logging.info("Creating connection pool")
     api_pool_manager.pool = await asyncpg.create_pool(user=db_mighty_user, password=db_mighty_pwd,
+                                                      server_settings={"search_path": "odm2"},
                                                       host=db_host, port=db_port, database=db_name)
     logging.info("Successfully created connection pool")
+
+    await populate_metadata(api_pool_manager.pool)
 
 
 @app.on_event("shutdown")

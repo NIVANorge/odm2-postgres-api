@@ -1,11 +1,13 @@
-from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id
+from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id, find_row, \
+    find_unit
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
-from odm2_postgres_api.schemas.schemas import PersonExtended
-from fastapi import Depends, APIRouter
+from odm2_postgres_api.schemas.schemas import PersonExtended, Affiliations, Organizations, PeopleCreate, \
+    AffiliationsCreate, PeopleAffiliation, PeopleAffiliationCreate, People, ProcessingLevels, ControlledVocabulary, \
+    ControlledVocabularyCreate, Variables, Methods, ExternalIdentifierSystems
+from fastapi import Depends, APIRouter, Response
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
-
 
 router = APIRouter()
 
@@ -20,53 +22,15 @@ async def patch_single_controlled_vocabulary(controlled_vocabulary: schemas.cv_c
     return await synchronize_cv_tables(api_pool_manager.pool, [controlled_vocabulary])
 
 
-@router.post("/controlled_vocabularies", summary="api 101 testing")
-async def post_controlled_vocabularies(controlled_vocabulary: schemas.ControlledVocabulary,
-                                       connection=Depends(api_pool_manager.get_conn)):  # type: ignore
-    return await core_queries.create_new_controlled_vocabulary_item(connection, controlled_vocabulary)
-
-
 @router.post("/annotations", response_model=schemas.Annotations)
 async def post_annotations(annotation: schemas.AnnotationsCreate, connection=Depends(api_pool_manager.get_conn)):
     return await insert_pydantic_object(connection, 'annotations', annotation, schemas.Annotations)
-
-
-@router.post("/people", response_model=schemas.People)
-async def post_people(user: schemas.PeopleCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'people', user, schemas.People)
 
 
 @router.get("/people/active-directory/{sam_account_name}", response_model=PersonExtended)
 async def get_person_by_ad_sam_acc_name(sam_account_name: str, connection=Depends(api_pool_manager.get_conn)):
     """Retrieves users based on their Active Directory 3-letter username (SamAccountName)"""
     return await find_person_by_external_id(connection, "onprem-active-directory", sam_account_name)
-
-
-@router.post("/organizations", response_model=schemas.Organizations)
-async def post_organizations(organization: schemas.OrganizationsCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'organizations', organization, schemas.Organizations)
-
-
-@router.post("/external_identifier_system", response_model=schemas.ExternalIdentifierSystems)
-async def post_external_identifier_system(external_identifier_system: schemas.ExternalIdentifierSystemsCreate,
-                                          connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'externalidentifiersystems',
-                                        external_identifier_system, schemas.ExternalIdentifierSystems)
-
-
-@router.post("/affiliations", response_model=schemas.Affiliations)
-async def post_affiliations(affiliation: schemas.AffiliationsCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'affiliations', affiliation, schemas.Affiliations)
-
-
-@router.post("/units", response_model=schemas.Units)
-async def post_units(unit: schemas.UnitsCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'units', unit, schemas.Units)
-
-
-@router.post("/variables", response_model=schemas.Variables)
-async def post_variables(variable: schemas.VariablesCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'variables', variable, schemas.Variables)
 
 
 @router.post("/equipment_model", response_model=schemas.EquipmentModelCreate)
@@ -92,11 +56,6 @@ async def post_directive(directive: schemas.DirectivesCreate, connection=Depends
     return await insert_pydantic_object(connection, 'directives', directive, schemas.Directive)
 
 
-@router.post("/methods", response_model=schemas.Methods)
-async def post_methods(method: schemas.MethodsCreate, connection=Depends(api_pool_manager.get_conn)):
-    return await core_queries.insert_method(connection, method)
-
-
 @router.post("/action_by", response_model=schemas.ActionsBy)
 async def post_action_by(action_by: schemas.ActionsByCreate, connection=Depends(api_pool_manager.get_conn)):
     return await insert_pydantic_object(connection, 'actionby', action_by, schemas.ActionsBy)
@@ -111,12 +70,6 @@ async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(
 async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreate,
                                  connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_sampling_feature(connection, sampling_feature)
-
-
-@router.post("/processing_levels", response_model=schemas.ProcessingLevels)
-async def post_processing_levels(processing_level: schemas.ProcessingLevelsCreate,
-                                 connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'processinglevels', processing_level, schemas.ProcessingLevels)
 
 
 @router.post("/spatial_references", response_model=schemas.SpatialReferences)

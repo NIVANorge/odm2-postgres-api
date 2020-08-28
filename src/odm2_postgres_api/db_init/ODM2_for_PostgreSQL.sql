@@ -2327,3 +2327,6 @@ ALTER TABLE ODM2.personexternalidentifiers
     ADD UNIQUE (personexternalidentifier, externalidentifiersystemid);
 
 ALTER TABLE ODM2.affiliations ADD UNIQUE (primaryemail);
+
+ALTER TABLE ODM2.externalidentifiersystems ADD UNIQUE (externalidentifiersystemname);
+ALTER TABLE ODM2.units ADD UNIQUE (unitstypecv, unitsabbreviation);
