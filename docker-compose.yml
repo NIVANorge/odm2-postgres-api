@@ -34,6 +34,6 @@ services:
 
   db_init:
     build: "."
-    command: python src/odm2_postgres_api/utils/db_initiate.py
+    command: python src/db_init/db_initiate.py
     depends_on:
       - timescale_odm2

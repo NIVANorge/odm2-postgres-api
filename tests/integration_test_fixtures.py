@@ -7,7 +7,7 @@ import pytest
 import time
 from dotenv import load_dotenv
 
-from odm2_postgres_api.utils.db_initiate import db_init
+from db_init.db_initiate import db_init
 from test_utils import truncate_all_data
 
 

@@ -13,9 +13,9 @@ if __name__ == "__main__":
     port = 5000
     if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:
         if Path.cwd() == Path('/app'):
-            env_file = Path(__file__).parent / 'config' / 'localdocker.env'
+            env_file = Path(__file__).parent.parent / 'config' / 'localdocker.env'
         else:
-            env_file = Path(__file__).parent / 'config' / 'localdev.env'
+            env_file = Path(__file__).parent.parent / 'config' / 'localdev.env'
             port = 8701
         load_dotenv(dotenv_path=env_file, verbose=True)
 

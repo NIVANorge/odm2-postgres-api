@@ -52,6 +52,9 @@ class ControlledVocabulary(BaseModel):
     definition: constr(max_length=255) = None  # type: ignore
     category: constr(max_length=255) = None  # type: ignore
     # sourcevocabularyuri: constr(max_length=255) = None  # type: ignore
+
+
+class ControlledVocabularyCreate(ControlledVocabulary):
     controlled_vocabulary_table_name: cv_checker  # type: ignore
 
 
@@ -83,6 +86,25 @@ class PeopleCreate(BaseModel):
 
 class People(PeopleCreate):
     personid: int
+
+
+class PeopleAffiliationCreate(BaseModel):
+    personfirstname: constr(max_length=255)  # type: ignore
+    personmiddlename: constr(max_length=255) = None  # type: ignore
+    personlastname: constr(max_length=255)  # type: ignore
+    affiliationstartdate: dt.date
+    affiliationenddate: Optional[dt.date] = None
+    organizationid: Optional[str] = None
+    isprimaryorganizationcontact: Optional[bool] = None
+    primaryphone: constr(max_length=50) = None  # type: ignore
+    primaryemail: constr(max_length=255)  # type: ignore
+    primaryaddress: constr(max_length=255) = None  # type: ignore
+    personlink: constr(max_length=255) = None  # type: ignore
+
+
+class PeopleAffiliation(PeopleAffiliationCreate):
+    personid: int
+    affiliationid: int
 
 
 class PersonExternalIdentifiersCreate(BaseModel):
