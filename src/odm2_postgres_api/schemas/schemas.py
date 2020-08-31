@@ -510,6 +510,23 @@ class BegroingResult(BegroingResultCreate):
     personid: int
 
 
+class IndicesInfo(BaseModel):
+    indexType: str
+    indexValue: float
+
+
+class BegroingIndicesCreate(BaseModel):
+    indexcv: int
+    projects: List[Directive]
+    date: dt.datetime
+    station: Dict
+    indices: List[IndicesInfo]
+
+
+class BegroingIndices(BegroingIndicesCreate):
+    indexid: int
+
+
 class PersonExtended(People):
     affiliationid: int
     primaryemail: str

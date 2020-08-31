@@ -11,6 +11,20 @@ from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.utils import google_cloud_utils
 
+INDEX_NAME_TO_VARIABLE_ID = {
+    "PIT": 11,
+    "AIP": 12,
+    "HBI": 13,
+    "HBI2": 14,
+    "PIT EQR": 15,
+    "AIP EQR": 16,
+    "HBI EQR": 17,
+    "HBI2 EQR": 18,
+    "PIT nEQR": 19,
+    "AIP nEQR": 20,
+    "HBI nEQR": 21,
+    "HBI2 nEQR": 22,
+}
 
 router = APIRouter()
 
@@ -99,3 +113,42 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
     # TODO: Send email about new bucket_files
 
     return schemas.BegroingResult(personid=user.personid, **begroing_result.dict())
+
+
+@router.post("/indices", response_model=schemas.BegroingIndices)
+async def post_indices(index_info: schemas.BegroingIndicesCreate,
+                       connection=Depends(api_pool_manager.get_conn),
+                       niva_user: str = Header(None)):
+    print("IN API", index_info)
+
+    # TODO: generate csv data?
+
+    user = await create_or_get_user(connection, niva_user)
+
+    data_action = schemas.ActionsCreate(
+        affiliationid=user.affiliationid,
+        isactionlead=True,
+        methodcode="begroing_6",  # code begroing_6 = Begroing Index Calculation
+        actiontypecv="Derivation",
+        begindatetime=index_info.date,
+        begindatetimeutcoffset=0,
+        equipmentids=[],
+        directiveids=[e.directiveid for e in index_info.projects]
+    )
+    completed_action = await post_actions(data_action, connection)
+
+    data_result = schemas.ResultsCreate(
+        samplingfeatureuuid=index_info.station['samplingfeatureuuid'],
+        actionid=completed_action.actionid,
+        resultuuid=str(uuid.uuid4()),
+        resulttypecv="Measurement",
+        variableid=INDEX_NAME_TO_VARIABLE_ID[index_info.indices[0].indexType],
+        unitsid=19,  # Dimensionless,-,Dimensionless
+        processinglevelid=1,  # id:1, "processinglevelcode": "0", "definition": "Raw Data"
+        valuecount=1,
+        statuscv="Complete",
+        sampledmediumcv="Organism",
+        dataqualitycodes=[]
+    )
+    completed_result = await post_results(data_result, connection)
+    return schemas.BegroingIndices(personid=user.personid, **index_info.dict())

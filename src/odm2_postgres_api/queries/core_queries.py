@@ -240,3 +240,14 @@ async def upsert_categorical_result(conn: asyncpg.connection, categorical_result
                             *categoricalresults_data.values())
         await conn.fetchrow(make_sql_query('categoricalresultvalues', categoricalresultvalues_data),
                             *categoricalresultvalues_data.values())
+
+
+async def get_index_names(conn: asyncpg.connection):
+    async with conn.transaction():
+        # value_keys = []
+
+        # await conn.fetchrow(make_sql_query('categoricalresults', categoricalresults_data),
+        #                     *categoricalresults_data.values())
+        # await conn.fetchrow(make_sql_query('categoricalresultvalues', categoricalresultvalues_data),
+        #                     *categoricalresultvalues_data.values())
+        return
