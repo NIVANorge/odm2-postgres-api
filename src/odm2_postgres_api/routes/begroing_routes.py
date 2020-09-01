@@ -116,13 +116,9 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
 
 
 @router.post("/indices", response_model=schemas.BegroingIndices)
-async def post_indices(index_info: schemas.BegroingIndicesCreate,
+async def post_indices(new_index: schemas.BegroingIndicesCreate,
                        connection=Depends(api_pool_manager.get_conn),
                        niva_user: str = Header(None)):
-    print("IN API", index_info)
-
-    # TODO: generate csv data?
-
     user = await create_or_get_user(connection, niva_user)
 
     data_action = schemas.ActionsCreate(
@@ -130,25 +126,43 @@ async def post_indices(index_info: schemas.BegroingIndicesCreate,
         isactionlead=True,
         methodcode="begroing_6",  # code begroing_6 = Begroing Index Calculation
         actiontypecv="Derivation",
-        begindatetime=index_info.date,
+        begindatetime=new_index.date,
         begindatetimeutcoffset=0,
         equipmentids=[],
-        directiveids=[e.directiveid for e in index_info.projects]
+        directiveids=[e.directiveid for e in new_index.projects]
     )
+
     completed_action = await post_actions(data_action, connection)
 
-    data_result = schemas.ResultsCreate(
-        samplingfeatureuuid=index_info.station['samplingfeatureuuid'],
-        actionid=completed_action.actionid,
-        resultuuid=str(uuid.uuid4()),
-        resulttypecv="Measurement",
-        variableid=INDEX_NAME_TO_VARIABLE_ID[index_info.indices[0].indexType],
-        unitsid=19,  # Dimensionless,-,Dimensionless
-        processinglevelid=1,  # id:1, "processinglevelcode": "0", "definition": "Raw Data"
-        valuecount=1,
-        statuscv="Complete",
-        sampledmediumcv="Organism",
-        dataqualitycodes=[]
-    )
-    completed_result = await post_results(data_result, connection)
-    return schemas.BegroingIndices(personid=user.personid, **index_info.dict())
+    for index_instance in new_index.indices:
+        data_result = schemas.ResultsCreate(
+            samplingfeatureuuid=new_index.station['samplingfeatureuuid'],
+            actionid=completed_action.actionid,
+            resultuuid=str(uuid.uuid4()),
+            resulttypecv="Measurement",
+            variableid=INDEX_NAME_TO_VARIABLE_ID[index_instance.indexType],
+            unitsid=19,  # Dimensionless,-,Dimensionless
+            processinglevelid=1,  # id:1, "processinglevelcode": "0", "definition": "Raw Data"
+            valuecount=1,
+            statuscv="Complete",
+            sampledmediumcv="Organism",
+            dataqualitycodes=[]
+        )
+
+        completed_result = await post_results(data_result, connection)
+
+        data_measurement_result = schemas.MeasurementResultsCreate(
+            resultid=completed_result.resultid,
+            censorcodecv="Not censored",
+            qualitycodecv="None",
+            aggregationstatisticcv="Unknown",
+            timeaggregationinterval=0,
+            timeaggregationintervalunitsid=18,  # time in seconds
+            datavalue=index_instance.indexValue,
+            valuedatetime=new_index.date,
+            valuedatetimeutcoffset=0
+        )
+
+        await post_measurement_results(data_measurement_result, connection)
+
+    return schemas.BegroingIndices(personid=user.personid, **new_index.dict())

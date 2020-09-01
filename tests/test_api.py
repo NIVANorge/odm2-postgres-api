@@ -58,3 +58,26 @@ def test_create_units(wait_for_db, clear_db):
             assert body["unitsid"] is not None
             for key, val in unit.items():
                 assert body[key] == val
+
+
+@pytest.mark.docker
+async def test_post_new_indices(wait_for_db, clear_db):
+    index_data = {
+        "projects":[{"directiveid":20,"directivedescription":"BEGLOS","directivetypecv":"Project"}],
+        "station":{
+            "samplingfeatureuuid":"75ef7a47-78b5-4596-9935-62072797357a",
+            "samplingfeaturename":"AAL ALN1, Elveovervåking, Alna, St.1 (RID)",
+            "samplingfeaturedescription":"Station from begroingsdatabase,\noriginal projection: 32632",
+            "featuregeometrywkt":"POINT (10.791888159215542 59.90455564858938)"
+        },
+        "date":"2020-09-01T00:00:00.000Z",
+        "indices":[{"indexType":"PIT EQR","indexValue":"11"}]
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Niva-User": "eyJpZCI6IjEiLCJlbWFpbCI6ImJlZ3JvaW5nQGRldnVzZXIuY2…kaXNwbGF5TmFtZSI6IkFsZnJlZCBCZWdyb2luZyBPbHNlbiJ9"
+    }
+
+    with TestClient(app) as client:
+        response = client.post(url="/indices", data=json.dumps(index_data), headers=headers)
+        assert response.status_code == 200

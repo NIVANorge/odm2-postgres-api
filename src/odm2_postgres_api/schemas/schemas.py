@@ -516,7 +516,6 @@ class IndicesInfo(BaseModel):
 
 
 class BegroingIndicesCreate(BaseModel):
-    indexcv: int
     projects: List[Directive]
     date: dt.datetime
     station: Dict
@@ -524,7 +523,7 @@ class BegroingIndicesCreate(BaseModel):
 
 
 class BegroingIndices(BegroingIndicesCreate):
-    indexid: int
+    personid: int
 
 
 class PersonExtended(People):
