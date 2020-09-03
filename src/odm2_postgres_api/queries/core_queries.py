@@ -1,15 +1,19 @@
-from typing import List, Union
+import logging
+from datetime import datetime, date
+from typing import Optional, List, Union
 
 import asyncpg
 import shapely.wkt
+from fastapi import HTTPException
 
 from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.schemas.schemas import PersonExtended
 from odm2_postgres_api.utils import shapely_postgres_adapter
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def argument_placeholder(arguments: dict):
-    return ', '.join(f'${n+1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
+    return ', '.join(f'${n + 1}' for n in range(len(arguments)))  # for example: '$1, $2, $3, $4, $5'
 
 
 def make_sql_query(table: str, data: dict):
@@ -22,6 +26,24 @@ async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pyda
     return response_model(**row)
 
 
+# TODO: we may want to extend this further by including organization ++
+async def find_person_by_external_id(conn: asyncpg.connection, external_system, ext_id: str) -> PersonExtended:
+    row = await conn.fetchrow("SELECT p.*, a.affiliationid, a.primaryemail, "
+                              "pe.externalidentifiersystemid, eis.externalidentifiersystemname FROM people p "
+                              "inner join affiliations a on p.personid=a.personid "
+                              "inner join personexternalidentifiers pe on p.personid = pe.personid "
+                              "inner join externalidentifiersystems eis on "
+                              "eis.externalidentifiersystemid=pe.externalidentifiersystemid "
+                              "where eis.externalidentifiersystemname = $1 "
+                              "AND LOWER(pe.personexternalidentifier)=LOWER($2)",
+                              external_system, ext_id)
+
+    if row:
+        return PersonExtended(**row)
+    raise HTTPException(status_code=404, detail=f"Person with active directory username "
+                                                f"'{ext_id}' not found.")
+
+
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
                                                 controlled_vocabulary: schemas.ControlledVocabulary):
     table_name = controlled_vocabulary.controlled_vocabulary_table_name
@@ -29,7 +51,6 @@ async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
     if table_name not in CONTROLLED_VOCABULARY_TABLE_NAMES:
         raise RuntimeError(f"table_name: '{table_name}' is invalid")
     value_keys = ['term', 'name', 'definition', 'category']
-    controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
     controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
     row = await conn.fetchrow(make_sql_query(table_name, controlled_vocabulary_data),
                               *controlled_vocabulary_data.values())

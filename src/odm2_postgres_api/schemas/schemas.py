@@ -85,12 +85,15 @@ class People(PeopleCreate):
     personid: int
 
 
-class PersonExternalIdentifiers(BaseModel):
-    bridgeid: int
+class PersonExternalIdentifiersCreate(BaseModel):
     personid: int
     externalidentifiersystemid: int
     personexternalidentifier: constr(max_length=255)  # type: ignore
     personexternalidentifieruri: Optional[str]
+
+
+class PersonExternalIdentifiers(PersonExternalIdentifiersCreate):
+    bridgeid: int
 
 
 class OrganizationsCreate(BaseModel):
@@ -512,6 +515,13 @@ class BegroingResultCreate(BaseModel):
 
 class BegroingResult(BegroingResultCreate):
     personid: int
+
+
+class PersonExtended(People):
+    affiliationid: int
+    primaryemail: str
+    externalidentifiersystemid: str
+    externalidentifiersystemname: str
 
 
 if __name__ == '__main__':
