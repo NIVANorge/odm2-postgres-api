@@ -17,7 +17,7 @@ from odm2_postgres_api.queries.mass_spec_select_queries import get_sample_uuid_t
     get_sample_annotations_through_sample_uuid, get_parent_feature_uuid, \
     get_result_annotationlink_through_sample_uuid, get_method_annotation_through_method_code, \
     get_annotationlink_through_sample_and_method, get_replicas_uuid_from_samplingfeaturecode, \
-    get_annotationlink_through_sample_and_methods
+    get_annotationlink_through_sample_and_methods, get_samplingfeatureuuid_from_samplingfeaturecode
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.queries import core_queries
@@ -363,3 +363,8 @@ async def get_file_location_via_methods(uuid: str, methodcode: str, fd_methodcod
 @app.get("/get_replicas_of_sample{samplingfeaturecode}")
 async def get_replicas_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
     return await get_replicas_uuid_from_samplingfeaturecode(connection, samplingfeaturecode)
+
+
+@app.get("/get_samplingfeatureuuid_from_samplingfeaturecode{samplingfeaturecode}")
+async def get_uuid_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_samplingfeatureuuid_from_samplingfeaturecode(connection, samplingfeaturecode)

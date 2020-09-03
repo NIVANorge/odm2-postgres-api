@@ -81,3 +81,9 @@ async def get_replicas_uuid_from_samplingfeaturecode(conn: asyncpg.connection, s
                               'where r.relationshiptypecv = \'Is child of\' and sf2.samplingfeaturecode=$1 ',
                               samplingfeaturecode)
     return [record['samplingfeatureuuid'] for record in result]
+
+
+async def get_samplingfeatureuuid_from_samplingfeaturecode(conn: asyncpg.connection, samplingfeaturecode: str):
+    result = await conn.fetchrow('select samplingfeatureuuid from samplingfeatures '
+                                 'where samplingfeaturecode=$1 ', samplingfeaturecode)
+    return result['samplingfeatureuuid'] if result is not None else None
