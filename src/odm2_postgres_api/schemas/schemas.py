@@ -5,7 +5,7 @@ from typing import Optional, List, Tuple, Dict, Union
 import shapely.wkt
 from pydantic import BaseModel, constr, validator
 
-from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
+from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def create_obligatory_date_time_checker(datetime_name: str, offset_name: str):
@@ -49,7 +49,7 @@ valuedatetime_checker = create_obligatory_date_time_checker('valuedatetime', 'va
 class ControlledVocabulary(BaseModel):
     term: constr(max_length=255)  # type: ignore
     name: constr(max_length=255) = None  # type: ignore
-    definition: constr(max_length=255) = None  # type: ignore
+    definition: constr(max_length=5000) = None  # type: ignore
     category: constr(max_length=255) = None  # type: ignore
     # sourcevocabularyuri: constr(max_length=255) = None  # type: ignore
 

@@ -34,26 +34,22 @@ odm2-postgres-api_odm2_postgres_api_1   python /app/src/odm2_postg ...   Up     
 odm2-postgres-api_timescale_odm2_1      docker-entrypoint.sh postgres    Up       0.0.0.0:8700->5432/tcp  
 ```
 
-### Populate data
+odm2_postgres_api initialize some metadata on startup. First time setting up this might take some seconds before all metadata is populated.
 
-After all services are running ok, we need to populate with some data.
+## Controlled vocabularies
 
-#### download controlled vocabularies
-Go to http://localhost:8701/#/default/patch_controlled_vocabularies_controlled_vocabularies_patch and perform the request. Alternatively, copy paste the following in your terminal:
-```
-curl -X PATCH "http://localhost:8701/controlled_vocabularies" -H "accept: application/json"
-```
+ODM2 relies on community-defined vocabularies, further explained at http://vocabulary.odm2.org/. In order to streamline environment setup we have downloaded a local copy of vocabularies at [controlled_vocabularies](./src/odm2_postgres_api/controlled_vocabularies/cv_definitions).
 
-#### Add metadata
+These are manually downloaded using the following script:
 
 ```
-python src/odm2_postgres_api/utils/populate_with_general_metadata.py
-
-# In addition, other ferrybox can be added:
-python src/odm2_postgres_api/utils/populate_with_ferrybox_metadata.py
+python src/odm2_postgres_api/controlled_vocabularies/download_cvs.py
 ```
 
-TODO: These scripts are not idempotent and can only be ran once. Causes both duplicates and in some cases unique errors.
+This will download vocabularies, and if there are any new definitions, check these into git. This way the controlled vocabularies will be automatically be populated in all environments.
 
-#### Hint
+#### Troubleshooting
+
+- how do I access the postgres database?
+
 postgres runs on 127.0.0.1:8700, username = niva_odm2_read_only_user; db = niva_odm2

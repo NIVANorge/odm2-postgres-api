@@ -1,25 +1,12 @@
-from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id, find_row, \
-    find_unit
-from odm2_postgres_api.schemas import schemas
+from fastapi import Depends, APIRouter
+
 from odm2_postgres_api.queries import core_queries
-from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
-from odm2_postgres_api.schemas.schemas import PersonExtended, Affiliations, Organizations, PeopleCreate, \
-    AffiliationsCreate, PeopleAffiliation, PeopleAffiliationCreate, People, ProcessingLevels, ControlledVocabulary, \
-    ControlledVocabularyCreate, Variables, Methods, ExternalIdentifierSystems
-from fastapi import Depends, APIRouter, Response
+from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id
+from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.schemas.schemas import PersonExtended
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
 router = APIRouter()
-
-
-@router.patch("/controlled_vocabularies", summary="api 101 testing")
-async def patch_controlled_vocabularies():
-    return await synchronize_cv_tables(api_pool_manager.pool)
-
-
-@router.patch("/controlled_vocabularies/{controlled_vocabulary}", summary="api 101 testing")
-async def patch_single_controlled_vocabulary(controlled_vocabulary: schemas.cv_checker):  # type: ignore
-    return await synchronize_cv_tables(api_pool_manager.pool, [controlled_vocabulary])
 
 
 @router.post("/annotations", response_model=schemas.Annotations)
