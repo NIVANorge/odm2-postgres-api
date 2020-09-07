@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 5
+  },
+  "objects": [
+    {
+      "category": "",
+      "definition": "A quality assessment has been made and enough of the data quality objectives have not been met that the observation has been assessed to be of bad quality.",
+      "name": "Bad",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/qualitycode/bad/",
+      "term": "bad",
+      "vocabulary_id": 1,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A quality assessment has been made and all data quality objectives have been met.",
+      "name": "Good",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/qualitycode/good/",
+      "term": "good",
+      "vocabulary_id": 2,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A quality assessment has been made and one or more data quality objectives has not been met. The observation may be suspect and has been assessed to be of marginal quality.",
+      "name": "Marginal",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/qualitycode/marginal/",
+      "term": "marginal",
+      "vocabulary_id": 3,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "No data quality assessment has been made.",
+      "name": "None",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/qualitycode/none/",
+      "term": "none",
+      "vocabulary_id": 4,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The quality of the observation is unknown.",
+      "name": "Unknown",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/qualitycode/unknown/",
+      "term": "unknown",
+      "vocabulary_id": 5,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

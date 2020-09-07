@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 12
+  },
+  "objects": [
+    {
+      "category": "Measurement",
+      "definition": "A single ResultValue for a single Variable, measured on or at a single SamplingFeature, using a single Method.",
+      "name": "Category observation",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/categoryObservation/",
+      "term": "categoryObservation",
+      "vocabulary_id": 19,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Measurement",
+      "definition": "A single ResultValue for a single Variable, counted on or at a single SamplingFeature, using a single Method, and having a specific ProcessingLevel.",
+      "name": "Count observation",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/countObservation/",
+      "term": "countObservation",
+      "vocabulary_id": 20,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Measurement",
+      "definition": "A single ResultValue for a single Variable, measured on or at a SamplingFeature, using a single Method, with specific Units, and having a specific ProcessingLevel.",
+      "name": "Measurement",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/measurement/",
+      "term": "measurement",
+      "vocabulary_id": 21,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on or at a single SamplingFeature, using a single Method, with specific Units, having a specific ProcessingLevel, with a fixed ValueDateTime, but measured over varying X,Y locations, where X and Y are horizontal coordinates.",
+      "name": "Point coverage",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/pointCoverage/",
+      "term": "pointCoverage",
+      "vocabulary_id": 22,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on or at a single SamplingFeature, using a single Method, with specific Units, having a specific ProcessingLevel, but measured over multiple locations along a depth profile with only one varying location dimension (e.g., Z, where Z is depth). ValueDateTime may be fixed or controlled.",
+      "name": "Profile coverage",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/profileCoverage/",
+      "term": "profileCoverage",
+      "vocabulary_id": 23,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on or at a single SamplingFeature, using a single Method, with specific Units, having a specific ProcessingLevel, but measured over varying X (horizontal) and Z (depth) coordinates. ValueDateTime may be fixed or controlled.",
+      "name": "Section coverage",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/sectionCoverage/",
+      "term": "sectionCoverage",
+      "vocabulary_id": 24,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on or at a single SamplingFeature, using a single Method, with specific Units, having a specific ProcessingLevel, but measured over multiple wavelengths of light. ValueDateTime may be fixed or controlled.",
+      "name": "Spectra coverage",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/spectraCoverage/",
+      "term": "spectraCoverage",
+      "vocabulary_id": 25,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Measurement",
+      "definition": "A single ResultValue for a single Variable, measured on or at a SamplingFeature, using a single Method, with specific Units, and having a specific ProcessingLevel.",
+      "name": "Temporal observation",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/temporalObservation/",
+      "term": "temporalObservation",
+      "vocabulary_id": 26,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on or at a single SamplingFeature of fixed location, using a single Method, with specific Units, having a specific ProcessingLevel, but measured over time.",
+      "name": "Time series coverage",
+      "note": "",
+      "provenance": "Adapted from WaterML 2.0",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/timeSeriesCoverage/",
+      "term": "timeSeriesCoverage",
+      "vocabulary_id": 27,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on a single SamplingFeature, using a single Method, with specific Units, having a specific ProcessingLevel, but measured over varying X,Y, Z, and D locations, where X and Y are horizontal coordinates, Z is a vertical coordinate, and D is the distance along the trajectory. ValueDateTime may be fixed (DTS Temperature) or controlled (glider).",
+      "name": "Trajectory coverage",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/trajectoryCoverage/",
+      "term": "trajectoryCoverage",
+      "vocabulary_id": 28,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Coverage",
+      "definition": "A series of ResultValues for a single Variable, measured on or at a single SamplingFeature, using a single Method, with specific Units, having a specific ProcessingLevel, but measured over multiple locations along a transect having varying location dimensions (e.g.,  X and/or Y, where X and Y are horizontal coordintes). ValueDateTime may be fixed or controlled.",
+      "name": "Transect coverage",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/transectCoverage/",
+      "term": "transectCoverage",
+      "vocabulary_id": 29,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Measurement",
+      "definition": "A single ResultValue for a single Variable, measured on or at a single SamplingFeature, using a single Method.",
+      "name": "Truth observation",
+      "note": "",
+      "provenance": "Adapted from OGC O&M",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/resulttype/truthObservation/",
+      "term": "truthObservation",
+      "vocabulary_id": 30,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

@@ -7,11 +7,11 @@ import shapely.wkt
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
     ControlledVocabularyCreate, UnitsCreate, Units
 from odm2_postgres_api.utils import shapely_postgres_adapter
-from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def argument_placeholder(arguments: dict):

@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 8
+  },
+  "objects": [
+    {
+      "category": "2D",
+      "definition": "A subclass of a Curve using linear interpolation between points. A Curve is a 1-dimensional geometric object usually stored as a sequence of Points. Represented in 2D coordinates by FeatureGeometry.",
+      "name": "Line string",
+      "note": "Simple Features OGC document (pdf): http://portal.opengeospatial.org/files/?artifact_id=25355  See also this more accessible description of Simple Features Well-Known Text terms: http://en.wikipedia.org/wiki/Well-known_text",
+      "provenance": "OGC Simple Features",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/lineString/",
+      "term": "lineString",
+      "vocabulary_id": 6,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "2D",
+      "definition": "A collection of individual lines, used as a single feature. Represented in 2D coordinates by FeatureGeometry.",
+      "name": "Multi line string",
+      "note": "Simple Features OGC document (pdf): http://portal.opengeospatial.org/files/?artifact_id=25355  See also this more accessible description of Simple Features Well-Known Text terms: http://en.wikipedia.org/wiki/Well-known_text",
+      "provenance": "OGC Simple Features",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/multiLineString/",
+      "term": "multiLineString",
+      "vocabulary_id": 7,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "2D",
+      "definition": "A collection of individual points, used as a single feature. Represented in 2D coordinates by FeatureGeometry.",
+      "name": "Multi point",
+      "note": "Simple Features OGC document (pdf): http://portal.opengeospatial.org/files/?artifact_id=25355  See also this more accessible description of Simple Features Well-Known Text terms: http://en.wikipedia.org/wiki/Well-known_text",
+      "provenance": "OGC Simple Features",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/multiPoint/",
+      "term": "multiPoint",
+      "vocabulary_id": 8,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "2D",
+      "definition": "A collection of individual polygons, used as a single feature. Represented in 2D coordinates by FeatureGeometry.",
+      "name": "Multi polygon",
+      "note": "Simple Features OGC document (pdf): http://portal.opengeospatial.org/files/?artifact_id=25355  See also this more accessible description of Simple Features Well-Known Text terms: http://en.wikipedia.org/wiki/Well-known_text",
+      "provenance": "OGC Simple Features",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/multiPolygon/",
+      "term": "multiPolygon",
+      "vocabulary_id": 9,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Non-spatial",
+      "definition": "The sampling feature has no applicable geospatial feature type",
+      "name": "Not applicable",
+      "note": "Used with SamplingFeatures that don't have a directly specified geospatial geometry, such as a specimen whose geospatial location is inherited from its parent SamplingFeature.",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/notApplicable/",
+      "term": "notApplicable",
+      "vocabulary_id": 10,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "2D",
+      "definition": "Topological 0-dimensional geometric primitive representing a position. Represented in 2D coordinates by FeatureGeometry.",
+      "name": "Point",
+      "note": "Simple Features OGC document (pdf): http://portal.opengeospatial.org/files/?artifact_id=25355  See also this more accessible description of Simple Features Well-Known Text terms: http://en.wikipedia.org/wiki/Well-known_text",
+      "provenance": "OGC Simple Features",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/point/",
+      "term": "point",
+      "vocabulary_id": 11,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "2D",
+      "definition": "A planar Surface defined by 1 exterior boundary and 0 or more interior boundaries. Each interior boundary defines a hole in the Polygon. Polygons are topologically closed. Polygons are a subclass of Surface that is planar. A Surface is a 2-dimensonal geometric object. Represented in 2D coordinates by FeatureGeometry.",
+      "name": "Polygon",
+      "note": "Simple Features OGC document (pdf): http://portal.opengeospatial.org/files/?artifact_id=25355  See also this more accessible description of Simple Features Well-Known Text terms: http://en.wikipedia.org/wiki/Well-known_text",
+      "provenance": "OGC Simple Features",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/polygon/",
+      "term": "polygon",
+      "vocabulary_id": 12,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "3D",
+      "definition": "A three dimensional space enclosed by some closed boundary.",
+      "name": "Volume",
+      "note": "Definition adapted from wikipedia",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/samplingfeaturegeotype/volume/",
+      "term": "volume",
+      "vocabulary_id": 13,
+      "vocabulary_status": "Current"
+    }
+  ]
+}
