@@ -94,6 +94,10 @@ def begroing_variables() -> List[VariablesCreate]:
 
 
 def begroing_methods(org_id: int) -> List[MethodsCreate]:
+    annotations = [{
+        "annotationtypecv": "Method annotation",
+        "annotationtext": "Method is part of 'begroing' workflows",
+    }]
     methods = [
         {
             "methodtypecv": "Specimen analysis",
@@ -101,46 +105,42 @@ def begroing_methods(org_id: int) -> List[MethodsCreate]:
             "methodname": "Microscopic abundance",
             "methoddescription": "A method for observing the abundance of a species in a sample, this method is tied to the unit: 'Microscopic semi quantitative abundance classifier'. The observation is conducted by looking at the sample through a microscopic and classifying the abundance of an organism. Quite often several samples are collected and the abundance of the species is aggregated. The rule is that the most abundant occurrence in any of the collected samples is the observed value.",  # nopep8
             "organizationid": org_id,
-            "annotations": [{
-                "annotationtypecv": "Method annotation",
-                "annotationtext": "Method is part of 'begroing' workflows",
-            }]
+            "annotations": annotations
         }, {
             "methodtypecv": "Observation",
             "methodcode": "begroing_2",
             "methodname": "absence/presence",
             "methoddescription": "A person observes if a species is present in the observed area or not.",
             "organizationid": org_id,
-            # TODO: what does [1] mean? should it be like the annotations in method[0] ?
-            "annotations": [1]
+            "annotations": annotations
         }, {
             "methodtypecv": "Observation",
             "methodcode": "begroing_3",
             "methodname": "Macroscopic abundance",
             "methoddescription": "A semi quantitative observation is made assessing the abundance of a species using the unit:'Macroscopic species coverage 1-5 scale'",  # nopep8
             "organizationid": org_id,
-            "annotations": [1]
+            "annotations": annotations
         }, {
             "methodtypecv": "Observation",
             "methodcode": "begroing_4",
             "methodname": "Macroscopic coverage",
             "methoddescription": "A quantitative observation is made assessing the abundance of a species in percentage of area covered. The area is usually a subset chosen to be representative of the larger area that is assesed.",  # nopep8
             "organizationid": org_id,
-            "annotations": [1]
+            "annotations": annotations
         }, {
             "methodtypecv": "Observation",
             "methodcode": "begroing_5",
             "methodname": "Kiselalger relative abundance",
             "methoddescription": "Relative abundance is the percent composition of an organism of a particular kind relative to the total number of organisms in the area. This observation has percentage as it's unit and it needs a classifying taxon in the result to make sense.",  # nopep8
             "organizationid": org_id,
-            "annotations": [1]
+            "annotations": annotations
         }, {
             "methodtypecv": "Derivation",
             "methodcode": "begroing_6",
             "methodname": "Begroing Index Calculation",
             "methoddescription": "Calculate an index value according to it's variable description, supported variable now are PIT, AIP, HBI, HBI2 and their normalized variants",  # nopep8
             "organizationid": org_id,
-            "annotations": [1]
+            "annotations": annotations
         }
     ]
 
