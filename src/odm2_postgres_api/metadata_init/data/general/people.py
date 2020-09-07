@@ -1,4 +1,4 @@
-from odm2_postgres_api.schemas.schemas import PeopleCreate, AffiliationsCreate, PeopleAffiliationCreate
+from odm2_postgres_api.schemas.schemas import PeopleAffiliationCreate
 
 
 def unknown_person(org_id: int) -> PeopleAffiliationCreate:

@@ -1,4 +1,6 @@
 # processing levels copied from : https://github.com/ODM2/ODM2/blob/master/doc/ODM2Docs/core_processinglevels.md
+from typing import List
+
 from odm2_postgres_api.schemas.schemas import ProcessingLevelsCreate
 
 processing_levels = [{
@@ -53,5 +55,5 @@ processing_levels = [{
 }]
 
 
-def general_processing_levels() -> ProcessingLevelsCreate:
+def general_processing_levels() -> List[ProcessingLevelsCreate]:
     return [ProcessingLevelsCreate(**p) for p in processing_levels]

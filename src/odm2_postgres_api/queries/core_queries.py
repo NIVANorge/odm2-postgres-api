@@ -23,6 +23,7 @@ def make_sql_query(table: str, data: dict):
 
 
 async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pydantic_object, response_model):
+    logging.info(f"Inserting row", extra={"table": table_name})
     pydantic_dict = pydantic_object.dict()
     row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
     return response_model(**row)

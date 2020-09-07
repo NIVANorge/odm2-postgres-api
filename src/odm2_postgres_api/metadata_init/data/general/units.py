@@ -1,3 +1,5 @@
+from typing import List
+
 from odm2_postgres_api.schemas.schemas import UnitsCreate
 
 general_units = [
@@ -83,5 +85,5 @@ general_units = [
 ]
 
 
-def units() -> UnitsCreate:
+def units() -> List[UnitsCreate]:
     return [UnitsCreate(**u) for u in general_units]

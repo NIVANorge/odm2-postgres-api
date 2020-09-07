@@ -1,7 +1,9 @@
+from typing import List
+
 from odm2_postgres_api.schemas.schemas import MethodsCreate
 
 
-def methods(org_id: int) -> MethodsCreate:
+def methods(org_id: int) -> List[MethodsCreate]:
     niva_methods = [
         {
             "methodtypecv": "Instrument deployment",
