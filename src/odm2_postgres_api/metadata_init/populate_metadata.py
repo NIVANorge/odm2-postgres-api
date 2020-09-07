@@ -1,5 +1,6 @@
 import logging
 
+from odm2_postgres_api.controlled_vocabularies.load_cvs import load_controlled_vocabularies
 from odm2_postgres_api.metadata_init.data.begroing.begroing_metadata import begroing_controlled_vocabularies, \
     begroing_variables, \
     begroing_methods
@@ -13,13 +14,11 @@ from odm2_postgres_api.metadata_init.data.general.units import units
 from odm2_postgres_api.metadata_init.data.general.variables import variables
 from odm2_postgres_api.queries.storage import save_organization, save_external_identifier_system, \
     save_person, post_processing_levels, save_controlled_vocab, save_units, save_variables, save_methods
-from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_cv_tables
 
 
 async def populate_metadata(db_pool):
     logging.info("Populating ODM2 metadata")
-    # TODO: this takes about ~30 secs, which is a bit slow. May want to do this in another way
-    await synchronize_cv_tables(db_pool)
+    await load_controlled_vocabularies(db_pool)
 
     async with db_pool.acquire() as conn:
         niva_org_created = await save_organization(conn, niva_org())
