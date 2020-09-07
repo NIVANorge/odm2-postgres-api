@@ -1,3 +1,5 @@
+from typing import List
+
 from odm2_postgres_api.schemas.schemas import ControlledVocabularyCreate
 
 cvs = [{
@@ -12,5 +14,5 @@ cvs = [{
 ]
 
 
-def controlled_vocabularies() -> ControlledVocabularyCreate:
+def controlled_vocabularies() -> List[ControlledVocabularyCreate]:
     return [ControlledVocabularyCreate(**cv) for cv in cvs]

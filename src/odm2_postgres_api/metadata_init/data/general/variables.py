@@ -1,3 +1,5 @@
+from typing import List
+
 from odm2_postgres_api.schemas.schemas import VariablesCreate
 
 general_variables = [
@@ -65,5 +67,5 @@ general_variables = [
 ]
 
 
-def variables() -> VariablesCreate:
+def variables() -> List[VariablesCreate]:
     return [VariablesCreate(**v) for v in general_variables]
