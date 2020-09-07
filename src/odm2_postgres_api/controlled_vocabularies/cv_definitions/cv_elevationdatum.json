@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 6
+  },
+  "objects": [
+    {
+      "category": "",
+      "definition": "Australian Height Datum. Height datum used for standardised elevations across Australia. The datum surface is defined as that which passes through mean sea level at the 30 specified tide gauges and through points at zero AHD height vertically below the other basic junction points.",
+      "name": "AHD",
+      "note": "",
+      "provenance": "See http://www.ga.gov.au/scientific-topics/positioning-navigation/geodesy/geodetic-datums/australian-height-datum-ahd",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/elevationdatum/AHD/",
+      "term": "AHD",
+      "vocabulary_id": 1533,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "EGM96 (Earth Gravitational Model 1996) is a geopotential model of the Earth consisting of spherical harmonic coefficients complete to degree and order 360.",
+      "name": "EGM96",
+      "note": "",
+      "provenance": "See https://en.wikipedia.org/wiki/EGM96",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/elevationdatum/EGM96/",
+      "term": "EGM96",
+      "vocabulary_id": 14,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "Mean Sea Level",
+      "name": "MSL",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS ODM CV. See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=VerticalDatumCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/elevationdatum/MSL/",
+      "term": "MSL",
+      "vocabulary_id": 15,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "North American Vertical Datum of 1988",
+      "name": "NAVD88",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS ODM CV. See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=VerticalDatumCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/elevationdatum/NAVD88/",
+      "term": "NAVD88",
+      "vocabulary_id": 16,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "National Geodetic Vertical Datum of 1929",
+      "name": "NGVD29",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS ODM CV. See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=VerticalDatumCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/elevationdatum/NGVD29/",
+      "term": "NGVD29",
+      "vocabulary_id": 17,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The vertical datum is unknown",
+      "name": "Unknown",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS ODM CV. See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=VerticalDatumCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/elevationdatum/Unknown/",
+      "term": "Unknown",
+      "vocabulary_id": 18,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

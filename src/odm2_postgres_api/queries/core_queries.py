@@ -7,11 +7,11 @@ import shapely.wkt
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
     ControlledVocabularyCreate, UnitsCreate, Units
 from odm2_postgres_api.utils import shapely_postgres_adapter
-from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def argument_placeholder(arguments: dict):
@@ -23,7 +23,7 @@ def make_sql_query(table: str, data: dict):
 
 
 async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pydantic_object, response_model):
-    logging.info(f"Inserting row", extra={"table": table_name})
+    logging.debug(f"Inserting row", extra={"table": table_name})
     pydantic_dict = pydantic_object.dict()
     row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
     return response_model(**row)
@@ -38,13 +38,6 @@ async def find_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Optional[Uni
 async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model):
     row = await conn.fetchrow(f"SELECT * FROM {table} WHERE {id_column}=$1", identifier)
     return model(**row) if row else None
-
-
-async def find_organization(conn: asyncpg.connection, org_code: str) -> Optional[Organizations]:
-    row = await conn.fetchrow("SELECT * from organizations where organizationcode=$1", org_code)
-    if row:
-        return Organizations(**row)
-    return None
 
 
 # TODO: we may want to extend this further by including organization ++
