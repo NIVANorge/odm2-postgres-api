@@ -1,5 +1,5 @@
 from odm2_postgres_api.queries import core_queries
-from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_row, find_unit
+from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_row, find_unit, create_sampling_feature
 from odm2_postgres_api.schemas.schemas import OrganizationsCreate, Organizations, ExternalIdentifierSystemsCreate, \
     ExternalIdentifierSystems, PeopleAffiliation, PeopleAffiliationCreate, AffiliationsCreate, People, PeopleCreate, \
     Affiliations, ProcessingLevelsCreate, ProcessingLevels, ControlledVocabularyCreate, ControlledVocabulary, \

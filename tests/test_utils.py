@@ -1,4 +1,9 @@
+import json
 import logging
+from base64 import b64encode
+from typing import Dict
+
+from odm2_postgres_api.queries.user import get_nivaport_user, NivaPortUser
 
 
 async def truncate_all_data(connection, schema: str):
@@ -34,3 +39,18 @@ def test_pool_mamager_uses_same_instance():
 
     assert shared_routes.api_pool_manager is begroing_routes.api_pool_manager
     assert api_pool_manager is begroing_routes.api_pool_manager
+
+
+def user_header(email="devuser@someemail.com") -> Dict:
+    user_obj = {"id": 1,
+                "uid": "1ed200d3-f09a-4164-9110-a1f24f899bb3",
+                "displayName": "Åge Olsen",
+                "email": email,
+                "provider": "DevLogin",
+                "createTime": "2020-04-20T11:45:21.241Z",
+                "updateTime": "2020-04-20T11:45:21.241Z",
+                "roles": ["apps:admin", "niva"]}
+
+    return {
+        "Niva-User": str(b64encode(json.dumps(user_obj).encode("utf-8")), "utf-8")
+    }

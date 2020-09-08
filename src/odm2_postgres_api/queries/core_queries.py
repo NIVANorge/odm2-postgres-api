@@ -1,16 +1,15 @@
 import logging
-from datetime import datetime, date
 from typing import Optional, List, Union
+from uuid import uuid4
 
 import asyncpg
 import shapely.wkt
 from fastapi import HTTPException
-from pydantic import BaseModel
 
 from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
-from odm2_postgres_api.schemas.schemas import PersonExtended, ControlledVocabulary, ControlledVocabularyCreate,\
-    UnitsCreate, Units
+from odm2_postgres_api.schemas.schemas import PersonExtended, ControlledVocabulary, ControlledVocabularyCreate, \
+    UnitsCreate, Units, SamplingFeatures, SamplingFeaturesCreate
 from odm2_postgres_api.utils import shapely_postgres_adapter
 
 
@@ -106,7 +105,7 @@ async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate)
     return schemas.Methods(annotations=method.annotations, **method_row)
 
 
-async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
+async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate) -> schemas.Action:
     async with conn.transaction():
         method_row = await conn.fetchrow("SELECT methodid FROM methods WHERE methodcode = $1", action.methodcode)
         if method_row is None:
@@ -121,7 +120,6 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
         action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
                                             isactionlead=action.isactionlead, roledescription=action.roledescription)
         action_by_row = await insert_pydantic_object(conn, 'actionby', action_by, schemas.ActionsBy)
-
         for equipmentid in action.equipmentids:
             equipment_used_create = schemas.EquipmentUsedCreate(actionid=action_row['actionid'],
                                                                 equipmentid=equipmentid)
@@ -320,12 +318,23 @@ async def upsert_categorical_result(conn: asyncpg.connection, categorical_result
                             *categoricalresultvalues_data.values())
 
 
-async def get_index_names(conn: asyncpg.connection):
-    async with conn.transaction():
-        # value_keys = []
+async def find_or_create_sampling_feature(conn, code: str, sf_type: str, wkt: str = None) -> SamplingFeatures:
+    existing = await find_row(
+        conn,
+        "samplingfeatures",
+        "samplingfeaturecode",
+        code,
+        SamplingFeatures,
+    )
 
-        # await conn.fetchrow(make_sql_query('categoricalresults', categoricalresults_data),
-        #                     *categoricalresults_data.values())
-        # await conn.fetchrow(make_sql_query('categoricalresultvalues', categoricalresultvalues_data),
-        #                     *categoricalresultvalues_data.values())
-        return
+    if existing:
+        return existing
+
+    new_sf = SamplingFeaturesCreate(
+        samplingfeatureuuid=uuid4(),
+        samplingfeaturetypecv=sf_type,
+        samplingfeaturecode=code,
+        featuregeometrywkt=wkt
+    )
+
+    return await create_sampling_feature(conn, sampling_feature=new_sf)

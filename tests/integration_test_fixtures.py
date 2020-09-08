@@ -40,6 +40,7 @@ def wait_for_db(module_scoped_container_getter):
 
     asyncio.set_event_loop(asyncio.new_event_loop())
 
+
 async def init_dbpool():
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
     db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]
