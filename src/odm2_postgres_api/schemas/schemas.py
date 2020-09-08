@@ -311,7 +311,8 @@ class EndDateTimeBase(BaseModel):
         return enddatetime_checker(enddatetime, values)
 
 
-class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
+class ActionsCreate(BeginDateTimeBase, EndDateTimeBase):
+    action_by: List[ActionsByFields] = []
     actiontypecv: constr(max_length=255)  # type: ignore
     methodcode: str
     actiondescription: constr(max_length=5000) = None  # type: ignore
@@ -335,7 +336,7 @@ class SamplingFeaturesCreate(BaseModel):
     featuregeometrywkt: constr(max_length=8000) = None  # type: ignore
     elevation_m: Optional[float]
     elevationdatumcv: constr(max_length=255) = None  # type: ignore
-    relatedsamplingfeatures: List[Tuple[int, str]] = []
+    # relatedsamplingfeatures: List[Tuple[int, str]] = []
 
     @validator('featuregeometrywkt')
     def featuregeometrywkt_validator(cls, wkt):

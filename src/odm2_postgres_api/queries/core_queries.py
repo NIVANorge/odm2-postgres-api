@@ -109,9 +109,12 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
             action.actiontypecv, method_row['methodid'], action.begindatetime, action.begindatetimeutcoffset,
             action.enddatetime, action.enddatetimeutcoffset, action.actiondescription, action.actionfilelink)
 
-        action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
-                                            isactionlead=action.isactionlead, roledescription=action.roledescription)
-        action_by_row = await insert_pydantic_object(conn, 'actionby', action_by, schemas.ActionsBy)
+        action_by_rows = []
+        for ab in action.action_by:
+            action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=ab.affiliationid,
+                                                isactionlead=ab.isactionlead, roledescription=ab.roledescription)
+            action_by_row = await insert_pydantic_object(conn, 'actionby', action_by, schemas.ActionsBy)
+            action_by_rows.append(action_by_row)
 
         for equipmentid in action.equipmentids:
             equipment_used_create = schemas.EquipmentUsedCreate(actionid=action_row['actionid'],
@@ -129,7 +132,7 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
             await insert_pydantic_object(conn, 'relatedactions', related_action_create, schemas.RelatedAction)
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
     return schemas.Action(equipmentids=action.equipmentids, methodcode=action.methodcode,
-                          **{**action_row, **dict(action_by_row)})
+                          **{**action_row, "action_by": action_by_rows})
 
 
 async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
