@@ -217,6 +217,7 @@ create table ODM2.SamplingFeatures (
 	featuregeometrywkt varchar (8000) NULL,
 	elevation_m double precision  NULL,
 	elevationdatumcv varchar (255) NULL,
+	UNIQUE (samplingfeatureuuid),
 	UNIQUE (SamplingFeatureCode)
 );
 create table ODM2.TaxonomicClassifiers (

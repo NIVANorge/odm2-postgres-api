@@ -524,6 +524,22 @@ class PersonExtended(People):
     externalidentifiersystemname: str
 
 
+class MsMethods(BaseModel):
+    fd_methodcode: Optional[str] = None
+    fdc_methodcode: Optional[str] = None
+    convt_methodcode: Optional[str] = None
+    fid_methodcode: Optional[str] = None
+
+    class Config:
+        extra = 'forbid'
+
+
+class MsResultAnnotationLinkQuery(BaseModel):
+    samplingfeaturecode: str
+    annotationcode: str
+    Methods: MsMethods
+
+
 if __name__ == '__main__':
     BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), begindatetimeutcoffset=1)
     # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'))  # Error!

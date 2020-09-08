@@ -1,71 +1,36 @@
 from fastapi import Depends, APIRouter
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
+from odm2_postgres_api.schemas import schemas
 
-from odm2_postgres_api.queries.mass_spec_select_queries import get_sample_uuid_through_result_annotation_link, \
-    get_sample_annotations_through_sample_uuid, get_parent_feature_uuid, \
-    get_result_annotationlink_through_sample_uuid, get_method_annotation_through_method_code, \
-    get_annotationlink_through_sample_and_method, get_replicas_from_samplingfeaturecode, \
-    get_annotationlink_through_sample_and_methods, get_samplingfeatureid_from_samplingfeaturecode, \
-    get_samplingfeatureuuid_from_samplingfeaturecode, get_result_annotationlink_through_sample_uuid_and_methodcode
-
+from odm2_postgres_api.queries.mass_spec_select_queries import find_result_annotationlink, \
+    get_samplingfeatureid_from_samplingfeaturecode, get_samplingfeaturecodes_of_replicas, \
+    get_method_annotationjson, get_samplingfeature_annotationjson
 
 router = APIRouter()
 
 
-@router.get("/samplingfeature_uuid_through_result_annotation_link{annotationlink}")
-async def get_uuid(annotationlink: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_sample_uuid_through_result_annotation_link(connection, annotationlink)
-
-
-@router.get("/sample_annotations_through_sample_uuid{uuid}")
-async def get_processing_parameters(uuid: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_sample_annotations_through_sample_uuid(connection, uuid)
-
-
-@router.get("/parent_feature_uuid{uuid}")
-async def get_parent_uuid(uuid: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_parent_feature_uuid(connection, uuid)
-
-
-@router.get("/result_annotationlink_through_sample_uuid_and_code{uuid}/{code}")
-async def get_file_location(uuid: str, code: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_result_annotationlink_through_sample_uuid(connection, uuid, code)
-
-
-@router.get("/method_annotation_through_method_code{code}")
-async def get_method_parameters(code: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_method_annotation_through_method_code(connection, code)
-
-
-@router.get("/get_location_via_method{uuid}/{methodcode}/{annotationcode}")
-async def get_file_location_via_method(uuid: str, methodcode: str, annotationcode: str,
-                                       connection=Depends(api_pool_manager.get_conn)):
-    return await get_annotationlink_through_sample_and_method(connection, uuid, methodcode, annotationcode)
-
-
-@router.get("/get_location_via_methods{uuid}/{methodcode}/{fd_methodcode}/{annotationcode}")
-async def get_file_location_via_methods(uuid: str, methodcode: str, fd_methodcode: str, annotationcode: str,
-                                        connection=Depends(api_pool_manager.get_conn)):
-    return await get_annotationlink_through_sample_and_methods(connection, uuid, methodcode, fd_methodcode,
-                                                               annotationcode)
-
-
-@router.get("/get_replicas_of_sample{samplingfeaturecode}")
-async def get_replicas_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_replicas_from_samplingfeaturecode(connection, samplingfeaturecode)
+@router.post("/find_result_annotationlink/")
+async def post_result_annotationlink(data: schemas.MsResultAnnotationLinkQuery,
+                                     connection=Depends(api_pool_manager.get_conn)):
+    return await find_result_annotationlink(connection, data)
 
 
 @router.get("/get_samplingfeatureid_from_samplingfeaturecode{samplingfeaturecode}")
-async def get_id_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
+async def samplingfeatureid_from_samplingfeaturecode(samplingfeaturecode: str,
+                                                     connection=Depends(api_pool_manager.get_conn)):
     return await get_samplingfeatureid_from_samplingfeaturecode(connection, samplingfeaturecode)
 
 
-@router.get("/get_samplingfeatureuuid_from_samplingfeaturecode{samplingfeaturecode}")
-async def get_uuid_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_samplingfeatureuuid_from_samplingfeaturecode(connection, samplingfeaturecode)
+@router.get("/get_samplingfeaturecodes_of_replicas{samplingfeaturecode}")
+async def samplingfeaturecodes_of_replicas(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_samplingfeaturecodes_of_replicas(connection, samplingfeaturecode)
 
 
-@router.get("/get_result_annotationlink_through_sample_uuid_and_methodcode{uuid}/{methodcode}")
-async def get_file_location_via_sampleuuid_and_methodcode(uuid: str, methodcode: str,
-                                                          connection=Depends(api_pool_manager.get_conn)):
-    return await get_result_annotationlink_through_sample_uuid_and_methodcode(connection, uuid, methodcode)
+@router.get("/get_method_annotationjson{methodcode}")
+async def method_annotationjson(methodcode: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_method_annotationjson(connection, methodcode)
+
+
+@router.get("/get_samplingfeature_annotationjson{samplingfeaturecode}")
+async def samplingfeature_annotationjson(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_samplingfeature_annotationjson(connection, samplingfeaturecode)

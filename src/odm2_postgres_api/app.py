@@ -58,4 +58,4 @@ async def shutdown_event():
 
 app.include_router(shared_routes.router)
 app.include_router(begroing_routes.router)
-app.include_router(mass_spectrometry_routes.router)
+app.include_router(mass_spectrometry_routes.router, prefix="/mass_spec")
