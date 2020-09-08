@@ -48,7 +48,7 @@ async def get_method_annotationjson(conn: asyncpg.connection, methodcode: str):
                                  'left join methodannotations ma on ma.annotationid = a.annotationid '
                                  'left join methods m on ma.methodid = m.methodid '
                                  'where m.methodcode = $1', methodcode)
-    return result['annotationjson']
+    return result['annotationjson'] if result is not None else None
 
 
 async def get_samplingfeature_annotationjson(conn: asyncpg.connection, samplingfeaturecode: str):
@@ -56,7 +56,7 @@ async def get_samplingfeature_annotationjson(conn: asyncpg.connection, samplingf
                                  'left join samplingfeatureannotations sa on a.annotationid = sa.annotationid '
                                  'left join samplingfeatures sf on sf.samplingfeatureid = sa.samplingfeatureid '
                                  'where samplingfeaturecode = $1', samplingfeaturecode)
-    return result['annotationjson']
+    return result['annotationjson'] if result is not None else None
 # async def get_parent_feature_uuid(conn: asyncpg.connection, samplingfeatureuuid: str):
 #     result = await conn.fetchrow('select sf.samplingfeatureuuid from samplingfeatures sf '
 #                                  'left join relatedfeatures rf on sf.samplingfeatureid = rf.relatedfeatureid '
