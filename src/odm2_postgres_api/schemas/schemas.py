@@ -403,8 +403,15 @@ class TaxonomicClassifier(TaxonomicClassifierCreate):
 
 
 class FeatureActionsCreate(BaseModel):
-    samplingfeatureuuid: uuid.UUID
+    samplingfeatureuuid: Optional[uuid.UUID] = None
+    samplingfeaturecode: Optional[str] = None
     actionid: int
+
+    @validator('samplingfeaturecode', always=True)
+    def must_supply_uuid_or_code(cls, v, values):
+        if not values['samplingfeatureuuid'] and not v:
+            raise ValueError('Must supply either valid uuid or valid code')
+        return v
 
 
 class FeatureActions(FeatureActionsCreate):
@@ -518,6 +525,12 @@ class PersonExtended(People):
 
 
 if __name__ == '__main__':
+    FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a',
+                         samplingfeaturecode='A valid code', actionid=1)  # matching code and uuid checked by query
+    FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a', actionid=1)
+    FeatureActionsCreate(samplingfeaturecode='A valid code', actionid=1)
+    # FeatureActionsCreate(actionid=1)  # Error!
+
     BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), begindatetimeutcoffset=1)
     # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'))  # Error!
     BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), begindatetimeutcoffset=0)

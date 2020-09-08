@@ -147,18 +147,30 @@ async def create_result_data_quality(conn: asyncpg.connection, result_data_quali
 
 
 async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO featureactions (samplingfeatureid, actionid) "
-        "VALUES ((SELECT samplingfeatureid FROM samplingfeatures where samplingfeatureuuid = $1), $2) "
-        "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
-        feature_action.samplingfeatureuuid, feature_action.actionid)
-    return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
+    if feature_action.samplingfeatureuuid and feature_action.samplingfeaturecode:
+        row = await conn.fetchrow(
+            "INSERT INTO featureactions (samplingfeatureid, actionid) "
+            "VALUES ((SELECT samplingfeatureid FROM samplingfeatures "
+            "where samplingfeatureuuid = $1 AND samplingfeaturecode = $2), $3) "
+            "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
+            feature_action.samplingfeatureuuid, feature_action.samplingfeaturecode, feature_action.actionid)
+        return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
+    else:
+        row = await conn.fetchrow(
+            "INSERT INTO featureactions (samplingfeatureid, actionid) "
+            "VALUES ((SELECT samplingfeatureid FROM samplingfeatures "
+            "where samplingfeatureuuid = $1 OR samplingfeaturecode = $2), $3) "
+            "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
+            feature_action.samplingfeatureuuid, feature_action.samplingfeaturecode, feature_action.actionid)
+        return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
 
 
 async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate):
     async with conn.transaction():
-        feature_action_row = await create_feature_action(conn, schemas.FeatureActionsCreate(
-            samplingfeatureuuid=result.samplingfeatureuuid, actionid=result.actionid))
+        feature_action_create = schemas.FeatureActionsCreate(samplingfeatureuuid=result.samplingfeatureuuid,
+                                                             samplingfeaturecode=result.samplingfeaturecode,
+                                                             actionid=result.actionid)
+        feature_action_row = await create_feature_action(conn, feature_action_create)
         result_row = await conn.fetchrow(
             "INSERT INTO results (resultuuid, featureactionid, resulttypecv, variableid, unitsid,"
             "taxonomicclassifierid, processinglevelid, resultdatetime, resultdatetimeutcoffset, validdatetime,"
