@@ -74,16 +74,37 @@ async def get_annotationlink_through_sample_and_methods(conn: asyncpg.connection
     return result['annotationlink']
 
 
-async def get_replicas_uuid_from_samplingfeaturecode(conn: asyncpg.connection, samplingfeaturecode: str):
-    result = await conn.fetch('select sf.samplingfeatureuuid from samplingfeatures sf '
+async def get_replicas_from_samplingfeaturecode(conn: asyncpg.connection, samplingfeaturecode: str):
+    result = await conn.fetch('select sf.samplingfeatureuuid, sf.samplingfeaturecode from samplingfeatures sf '
                               'left join relatedfeatures r on sf.samplingfeatureid = r.samplingfeatureid '
                               'left join samplingfeatures sf2 on sf2.samplingfeatureid = r.relatedfeatureid '
                               'where r.relationshiptypecv = \'Is child of\' and sf2.samplingfeaturecode=$1 ',
                               samplingfeaturecode)
-    return [record['samplingfeatureuuid'] for record in result]
+    return [(record['samplingfeatureuuid'], record['samplingfeaturecode']) for record in
+            result] if len(result) > 0 else []
+
+
+async def get_samplingfeatureid_from_samplingfeaturecode(conn: asyncpg.connection, samplingfeaturecode: str):
+    result = await conn.fetchrow('select samplingfeatureid from samplingfeatures '
+                                 'where samplingfeaturecode=$1 ', samplingfeaturecode)
+    return result['samplingfeatureid'] if result is not None else None
 
 
 async def get_samplingfeatureuuid_from_samplingfeaturecode(conn: asyncpg.connection, samplingfeaturecode: str):
     result = await conn.fetchrow('select samplingfeatureuuid from samplingfeatures '
                                  'where samplingfeaturecode=$1 ', samplingfeaturecode)
     return result['samplingfeatureuuid'] if result is not None else None
+
+
+async def get_result_annotationlink_through_sample_uuid_and_methodcode(conn: asyncpg.connection, uuid: str,
+                                                                       methodcode: str):
+    result = await conn.fetchrow('select distinct annotationlink from annotations a '
+                                 'left join resultannotations ra on a.annotationid = ra.annotationid '
+                                 'left join results r on r.resultid = ra.resultid '
+                                 'left join featureactions fa on fa.featureactionid = r.featureactionid '
+                                 'left join samplingfeatures sf on sf.samplingfeatureid = fa.samplingfeatureid '
+                                 'left join actions ac on ac.actionid = fa.actionid '
+                                 'left join methods m on m.methodid=ac.methodid '
+                                 'where sf.samplingfeatureuuid = $1 and m.methodcode = $2',
+                                 uuid, methodcode)
+    return result['annotationlink'] if result is not None else None

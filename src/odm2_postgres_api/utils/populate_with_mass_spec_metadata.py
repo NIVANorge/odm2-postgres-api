@@ -37,10 +37,35 @@ metadata = {'sampling_features': {
         "organizationid": 1  # organization 1 is NIVA
     }, {
         "methodtypecv": "Derivation",
-        "methodcode": "convert_ms_data",
+        "methodcode": "ms_convert_filter_scanEvent_1_2",
         "methodname": "ms convert",
         "methoddescription": "",  # nopep8
-        "organizationid": 1  # organization 1 is NIVA
+        "organizationid": 1,  # organization 1 is NIVA
+        "annotations": [{
+            "annotationtypecv": "Method annotation",
+            "annotationtext": "The json field holds the parameters with which this method will be executed",
+            "annotationjson": json.dumps({
+                "verbose": '-v',
+                "bits": '--32',
+                "output": '--mzXML',
+                "filter": ' --filter \"scanEvent 1-2\"'
+            })
+        }]
+    }, {
+        "methodtypecv": "Derivation",
+        "methodcode": "ms_convert",
+        "methodname": "ms convert",
+        "methoddescription": "",  # nopep8
+        "organizationid": 1,  # organization 1 is NIVA
+        "annotations": [{
+            "annotationtypecv": "Method annotation",
+            "annotationtext": "The json field holds the parameters with which this method will be executed",
+            "annotationjson": json.dumps({
+                "verbose": '-v',
+                "bits": '--32',
+                "output": '--mzXML'
+            })
+        }]
     }, {
         "methodtypecv": "Derivation",
         "methodcode": "fd_nointerp_nscan40_allmz",

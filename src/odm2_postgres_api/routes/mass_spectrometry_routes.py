@@ -4,8 +4,9 @@ from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 from odm2_postgres_api.queries.mass_spec_select_queries import get_sample_uuid_through_result_annotation_link, \
     get_sample_annotations_through_sample_uuid, get_parent_feature_uuid, \
     get_result_annotationlink_through_sample_uuid, get_method_annotation_through_method_code, \
-    get_annotationlink_through_sample_and_method, get_replicas_uuid_from_samplingfeaturecode, \
-    get_annotationlink_through_sample_and_methods, get_samplingfeatureuuid_from_samplingfeaturecode
+    get_annotationlink_through_sample_and_method, get_replicas_from_samplingfeaturecode, \
+    get_annotationlink_through_sample_and_methods, get_samplingfeatureid_from_samplingfeaturecode, \
+    get_samplingfeatureuuid_from_samplingfeaturecode, get_result_annotationlink_through_sample_uuid_and_methodcode
 
 
 router = APIRouter()
@@ -51,9 +52,20 @@ async def get_file_location_via_methods(uuid: str, methodcode: str, fd_methodcod
 
 @router.get("/get_replicas_of_sample{samplingfeaturecode}")
 async def get_replicas_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
-    return await get_replicas_uuid_from_samplingfeaturecode(connection, samplingfeaturecode)
+    return await get_replicas_from_samplingfeaturecode(connection, samplingfeaturecode)
+
+
+@router.get("/get_samplingfeatureid_from_samplingfeaturecode{samplingfeaturecode}")
+async def get_id_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
+    return await get_samplingfeatureid_from_samplingfeaturecode(connection, samplingfeaturecode)
 
 
 @router.get("/get_samplingfeatureuuid_from_samplingfeaturecode{samplingfeaturecode}")
 async def get_uuid_of_sample(samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)):
     return await get_samplingfeatureuuid_from_samplingfeaturecode(connection, samplingfeaturecode)
+
+
+@router.get("/get_result_annotationlink_through_sample_uuid_and_methodcode{uuid}/{methodcode}")
+async def get_file_location_via_sampleuuid_and_methodcode(uuid: str, methodcode: str,
+                                                          connection=Depends(api_pool_manager.get_conn)):
+    return await get_result_annotationlink_through_sample_uuid_and_methodcode(connection, uuid, methodcode)
