@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from odm2_postgres_api.utils.db_initiate import db_init
 from test_utils import truncate_all_data
 
-DEFAULT_TRIES = 30
-def try_db_init(tries=DEFAULT_TRIES):
+
+def try_db_init(tries=30):
     try:
         db_init()
     except (asyncpg.exceptions.ConnectionDoesNotExistError, asyncpg.exceptions.CannotConnectNowError):

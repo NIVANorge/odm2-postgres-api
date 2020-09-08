@@ -54,5 +54,5 @@ async def shutdown_event():
     logging.info('Successfully closed connection pool')
 
 
+app.include_router(begroing_routes.router,   prefix="/begroing",)
 app.include_router(shared_routes.router)
-app.include_router(begroing_routes.router)

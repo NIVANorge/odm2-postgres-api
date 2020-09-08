@@ -3,7 +3,7 @@ import datetime as dt
 from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, constr, conlist,  validator
 
 from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
@@ -516,7 +516,7 @@ class IndicesInfo(BaseModel):
 
 
 class BegroingIndicesCreate(BaseModel):
-    projects: List[Directive]
+    projects: conlist(Directive, min_items=1)  # type: ignore
     date: dt.datetime
     station: Dict
     indices: List[IndicesInfo]

@@ -77,7 +77,7 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
     async with conn.transaction():
         method_row = await conn.fetchrow("SELECT methodid FROM methods WHERE methodcode = $1", action.methodcode)
         if method_row is None:
-            raise HTTPException(status_code=404, detail="Method not found.")
+            raise HTTPException(status_code=422, detail="Please specify valid methodcode.")
         action_row = await conn.fetchrow(
             "INSERT INTO actions (actiontypecv, methodid, begindatetime, begindatetimeutcoffset,  enddatetime, "
             "enddatetimeutcoffset, actiondescription, actionfilelink) "
