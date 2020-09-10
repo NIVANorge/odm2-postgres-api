@@ -179,7 +179,8 @@ async def create_feature_action(conn: asyncpg.connection, feature_action: schema
             "where samplingfeatureuuid = $1 OR samplingfeaturecode = $2), $3) "
             "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
             feature_action.samplingfeatureuuid, feature_action.samplingfeaturecode, feature_action.actionid)
-        return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
+        return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid,
+                                      samplingfeaturecode=feature_action.samplingfeaturecode, **row)
 
 
 async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate):
