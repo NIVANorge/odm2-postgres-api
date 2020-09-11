@@ -28,7 +28,7 @@ async def find_result_annotationlink(conn: asyncpg.connection, data: schemas.MsR
             valid = True
             for method_code_type, methodcode in methods.items():
                 # methodcode defaults to None because of the Pydantic model
-                if methodcode and parameters[method_code_type] != methodcode:
+                if methodcode and parameters["Methods"][method_code_type] != methodcode:
                     valid = False
             if valid:
                 link = result['annotationlink']
@@ -65,9 +65,13 @@ async def get_samplingfeature_annotationjson(conn: asyncpg.connection, samplingf
                                  'left join samplingfeatures sf on sf.samplingfeatureid = sa.samplingfeatureid '
                                  'where samplingfeaturecode = $1', samplingfeaturecode)
     return result['annotationjson'] if result is not None else None
-# async def get_parent_feature_uuid(conn: asyncpg.connection, samplingfeatureuuid: str):
-#     result = await conn.fetchrow('select sf.samplingfeatureuuid from samplingfeatures sf '
-#                                  'left join relatedfeatures rf on sf.samplingfeatureid = rf.relatedfeatureid '
-#                                  'left join samplingfeatures sa on sa.samplingfeatureid = rf.samplingfeatureid '
-#                                  'where sa.samplingfeatureuuid = $1', samplingfeatureuuid)
-#     return result['samplingfeatureuuid']
+
+
+async def get_samplingfeaturecode_from_result_annotationlink(conn: asyncpg.connection, annotationlink: str):
+    result = await conn.fetchrow('select samplingfeaturecode from samplingfeatures s '
+                                 'left join featureactions f on s.samplingfeatureid = f.samplingfeatureid '
+                                 'left join results r on f.featureactionid = r.featureactionid '
+                                 'left join resultannotations ra on r.resultid = ra.resultid '
+                                 'left join annotations a on ra.annotationid = a.annotationid '
+                                 'where annotationlink like $1', f'%{annotationlink}%')
+    return result['samplingfeaturecode'] if result is not None else None
