@@ -4,7 +4,7 @@ services:
   timescale_odm2:
     # this version is the current timescaledb version running in production at the time of writing
     # Remember to change the image version in both tsb/docker-compose.yml and the nivacloud timescale deployment
-    image: timescale/timescaledb-postgis:1.7.0-pg12
+    image: timescale/timescaledb-postgis:1.7.4-pg12
     ports:
       - "32999:5432"
     environment:
