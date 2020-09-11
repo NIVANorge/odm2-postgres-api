@@ -1,4 +1,6 @@
 import json
+import logging
+
 from odm2_postgres_api.schemas import schemas
 import asyncpg
 
@@ -13,18 +15,24 @@ async def find_result_annotationlink(conn: asyncpg.connection, data: schemas.MsR
                                'left join samplingfeatures sf on sf.samplingfeatureid = fa.samplingfeatureid '
                                'where sf.samplingfeaturecode = $1 and a.annotationcode = $2 ',
                                samplingfeaturecode, annotationcode)
+
     link = None
+    if results is None:
+        return link
     methods = data.Methods.dict()
     for result in results:
-        parameters = json.loads(result["annotationjson"])
-        valid = True
-        for method_code_type, methodcode in methods.items():
-            # methodcode defaults to None because of the Pydantic model
-            if methodcode and parameters[method_code_type] != methodcode:
-                valid = False
-        if valid:
-            link = result['annotationlink']
-            break
+        if not result["annotationjson"]:
+            return result['annotationlink']
+        else:
+            parameters = json.loads(result["annotationjson"])
+            valid = True
+            for method_code_type, methodcode in methods.items():
+                # methodcode defaults to None because of the Pydantic model
+                if methodcode and parameters[method_code_type] != methodcode:
+                    valid = False
+            if valid:
+                link = result['annotationlink']
+                break
     return link
 
 

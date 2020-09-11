@@ -26,6 +26,7 @@ app = FastAPI(
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     # Log the error that is send to the client
+    logging.debug(f'Body of failed request: {exc.body}')
     logging.info('Error thrown on request', extra={'url': request.url, 'error_detail': jsonable_encoder(exc.errors())})
     return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
