@@ -70,7 +70,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
             completed_action = await post_actions(data_action, connection)
             for result_index in method_observations:
                 data_result = schemas.ResultsCreate(
-                    samplingfeatureuuid=begroing_result.station['samplingfeatureuuid'],
+                    samplingfeatureuuid=begroing_result.station.samplingfeatureuuid,
                     actionid=completed_action.actionid,
                     resultuuid=str(uuid.uuid4()),
                     resulttypecv=result_type_and_unit_dict[method.methodname][0],
@@ -112,6 +112,8 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                         valuedatetimeutcoffset=0
                     )
                     await post_measurement_results(data_measurement_result, connection)
+        # write to aquamonitor API
+
         google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
 

@@ -541,10 +541,24 @@ class MeasurementResults(MeasurementResultsCreate):
 class BegroingResultCreate(BaseModel):
     projects: List[Directive]
     date: dt.datetime
-    station: Dict
+    station: SamplingFeatures
     taxons: List[Dict]
     methods: List[Methods]
     observations: List[List[str]]
+
+
+class BegroingObservationValues(BaseModel):
+    # TODO: ADD cv to graphql query
+    taxon: TaxonomicClassifier
+    method: Methods
+    value: str
+
+
+class BegroingObservations(BaseModel):
+    project: Directive
+    date: dt.datetime
+    station: SamplingFeatures
+    observations: List[BegroingObservationValues]
 
 
 class BegroingResult(BegroingResultCreate):

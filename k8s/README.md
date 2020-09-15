@@ -35,3 +35,13 @@ make 4 secrets, 2 for nivates and 2 for nivaprod. Apply them using:
 ```
 kubectl apply -f my_secret.yaml
 ```
+
+## Aquamonitor API user
+
+this can be the same for nivatest/nivaprod:
+
+```
+echo -n "longsecretpassword" > password
+kubectl create secret generic  aquamonitor-api-user --from-file=password --from-literal='username=nivacloud'
+rm password
+```

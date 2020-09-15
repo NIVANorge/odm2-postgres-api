@@ -74,6 +74,16 @@ spec:
                 secretKeyRef:
                   name: odm2-db-owner-password
                   key: password
+            - name: AQUAMONITOR_USER
+              valueFrom:
+                secretKeyRef:
+                  name: aquamonitor-api-user
+                  key: username
+            - name: AQUAMONITOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aquamonitor-api-user
+                  key: password
           envFrom:
             - configMapRef:
                 name: odm2-config-map
