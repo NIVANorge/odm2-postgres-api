@@ -44,7 +44,7 @@ async def init_dbpool():
     user = os.environ["POSTGRES_USER"]
     password = os.environ["POSTGRES_PASSWORD"]
     db_name = os.environ["ODM2_DB"]
-    return await asyncpg.create_pool(user=user, password=password, server_settings={"search_path": "odm2"},
+    return await asyncpg.create_pool(user=user, password=password, server_settings={"search_path": "odm2,public"},
                                      host=db_host, port=db_port, database=db_name)
 
 

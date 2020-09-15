@@ -45,7 +45,7 @@ async def startup_event():
 
     logging.info("Creating connection pool")
     api_pool_manager.pool = await asyncpg.create_pool(user=db_mighty_user, password=db_mighty_pwd,
-                                                      server_settings={"search_path": "odm2"},
+                                                      server_settings={"search_path": "odm2,public"},
                                                       host=db_host, port=db_port, database=db_name)
     logging.info("Successfully created connection pool")
 
