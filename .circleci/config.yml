@@ -18,6 +18,20 @@ jobs:
           paths:
             - project
 
+  aquamonitor_api_test:
+    docker:
+      - image: python:3.8-buster
+    steps:
+      - checkout
+      - run:
+          name: "pip install"
+          command: |
+            pip install -r requirements.txt
+            pip install .
+      - run:
+          name: "Aquamonitor API tests"
+          command: pytest -m aquamonitor_api_test
+
 workflows:
   version: 2.1
   build-test:
@@ -65,3 +79,16 @@ workflows:
           context: nivacloud secrets
           requires:
             - niva-orb/copy_containers_to_nivaprod
+
+  nightly_aquamonitor_api_test:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - dev
+                # TODO: this can be removed once merged to dev
+                - 60-sync-odm2-to-nivabase
+    jobs:
+      - aquamonitor_api_test

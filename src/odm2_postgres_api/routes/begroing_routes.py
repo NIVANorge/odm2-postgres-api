@@ -1,12 +1,17 @@
+import os
 import uuid
 from collections import defaultdict
+from distutils.util import strtobool
+from typing import List
 
 from fastapi import Depends, Header, APIRouter
 
+from odm2_postgres_api.aquamonitor.aquamonitor_client import store_begroing_results
 from odm2_postgres_api.queries.core_queries import find_row, find_unit
 from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
-from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables, BegroingIndices
+from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables, BegroingIndices, \
+    BegroingObservations, BegroingObservationValues, TaxonomicClassifier
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
@@ -70,7 +75,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
             completed_action = await post_actions(data_action, connection)
             for result_index in method_observations:
                 data_result = schemas.ResultsCreate(
-                    samplingfeatureuuid=begroing_result.station['samplingfeatureuuid'],
+                    samplingfeatureuuid=begroing_result.station.samplingfeatureuuid,
                     actionid=completed_action.actionid,
                     resultuuid=str(uuid.uuid4()),
                     resulttypecv=result_type_and_unit_dict[method.methodname][0],
@@ -112,6 +117,22 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                         valuedatetimeutcoffset=0
                     )
                     await post_measurement_results(data_measurement_result, connection)
+        # TODO: assuming that we have only one project. T*his should also be changed in API endpoint
+        observations: List[BegroingObservationValues] = []
+        for method_index, method_observations in observations_per_method.items():
+            for result_index in method_observations:
+                taxon = begroing_result.taxons[result_index]
+                value = begroing_result.observations[result_index][method_index]
+                values = BegroingObservationValues(taxon=TaxonomicClassifier(**taxon),
+                                                   method=begroing_result.methods[method_index], value=value)
+                observations.append(values)
+
+        mapped = BegroingObservations(project=begroing_result.projects[0], date=begroing_result.date,
+                                      station=begroing_result.station, observations=observations)
+
+        if strtobool(os.environ.get("WRITE_TO_AQUAMONITOR", "false")):
+            await store_begroing_results(mapped)
+
         google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
 

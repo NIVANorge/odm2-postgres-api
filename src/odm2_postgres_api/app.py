@@ -10,6 +10,8 @@ from nivacloud_logging.log_utils import setup_logging
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
+from odm2_postgres_api.aquamonitor.aquamonitor_client import AquamonitorAPIError
 from odm2_postgres_api.metadata_init.populate_metadata import populate_metadata
 from odm2_postgres_api.routes.fish_rfid import fish_rfid_routes
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
@@ -31,6 +33,15 @@ async def request_validation_exception_handler(request: Request, exc: RequestVal
     return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": jsonable_encoder(exc.errors()), "body": exc.body},
+    )
+
+
+@app.exception_handler(AquamonitorAPIError)
+async def aquamonitor_api_exception_handler(request: Request, exc: AquamonitorAPIError) -> JSONResponse:
+    logging.error(exc, extra={"method": exc.method, "url": exc.url, "status": exc.status_code})
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Error connecting to aquamonitor API", "detail": exc.message}
     )
 
 
