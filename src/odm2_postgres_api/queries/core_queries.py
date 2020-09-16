@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
-    ControlledVocabularyCreate, UnitsCreate, Units
+    ControlledVocabularyCreate, UnitsCreate, Units, ProcessingLevels
 from odm2_postgres_api.utils import shapely_postgres_adapter
 
 
@@ -33,6 +33,14 @@ async def find_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Optional[Uni
     row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
                               unit.unitsabbreviation)
     return Units(**row) if row else None
+
+
+async def get_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Units:
+    existing = await find_unit(conn, unit)
+    if not existing:
+        raise HTTPException(status_code=422, detail=f"Unit unitstypecv={unit.unitstypecv} and "
+                                                    f"unitsabbreviation={unit.unitsabbreviation} does not exist")
+    return existing
 
 
 async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model):

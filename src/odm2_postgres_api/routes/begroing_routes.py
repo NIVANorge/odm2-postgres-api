@@ -2,8 +2,11 @@ import uuid
 from collections import defaultdict
 
 from fastapi import Depends, Header, APIRouter
+
+from odm2_postgres_api.queries.core_queries import find_row, find_unit, get_unit
 from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
+from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
@@ -134,15 +137,24 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
 
     completed_action = await post_actions(data_action, connection)
 
+    processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
+                                      "0", ProcessingLevels)
+    dimensionless_unit = await get_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
+                                                                unitsname="Dimensionless"))
+    seconds_unit = await get_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
+                                                          unitsname="second"))
+
     for index_instance in new_index.indices:
+        variable = await find_row(connection, "variables", "variablenamecv", index_instance.indexType, Variables)
+
         data_result = schemas.ResultsCreate(
             samplingfeatureuuid=new_index.station_uuid,
             actionid=completed_action.actionid,
             resultuuid=str(uuid.uuid4()),
             resulttypecv="Measurement",
-            variableid=INDEX_NAME_TO_VARIABLE_ID[index_instance.indexType],
-            unitsid=19,  # Dimensionless,-,Dimensionless
-            processinglevelid=1,  # id:1, "processinglevelcode": "0", "definition": "Raw Data"
+            variableid=variable.variableid,
+            unitsid=dimensionless_unit.unitsid,
+            processinglevelid=processing_level.processinglevelid,
             valuecount=1,
             statuscv="Complete",
             sampledmediumcv="Organism",
@@ -157,7 +169,7 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
             qualitycodecv="None",
             aggregationstatisticcv="Unknown",
             timeaggregationinterval=0,
-            timeaggregationintervalunitsid=18,  # time in seconds
+            timeaggregationintervalunitsid=seconds_unit.unitsid,
             datavalue=index_instance.indexValue,
             valuedatetime=new_index.date,
             valuedatetimeutcoffset=0
