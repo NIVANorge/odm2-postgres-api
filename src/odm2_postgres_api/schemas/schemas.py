@@ -518,7 +518,7 @@ class IndicesInfo(BaseModel):
 class BegroingIndicesCreate(BaseModel):
     projects: conlist(Directive, min_items=1)  # type: ignore
     date: dt.datetime
-    station: Dict
+    station_uuid: uuid.UUID
     indices: List[IndicesInfo]
 
 

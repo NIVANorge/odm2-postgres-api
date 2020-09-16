@@ -136,7 +136,7 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
 
     for index_instance in new_index.indices:
         data_result = schemas.ResultsCreate(
-            samplingfeatureuuid=new_index.station['samplingfeatureuuid'],
+            samplingfeatureuuid=new_index.station_uuid,
             actionid=completed_action.actionid,
             resultuuid=str(uuid.uuid4()),
             resulttypecv="Measurement",
