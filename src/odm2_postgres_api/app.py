@@ -12,8 +12,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from odm2_postgres_api.metadata_init.populate_metadata import populate_metadata
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
-from odm2_postgres_api.routes.begroing_routes import begroing_routes
-from odm2_postgres_api.routes.shared import shared_routes
+from odm2_postgres_api.routes import begroing_routes, shared_routes
 
 
 app = FastAPI(
@@ -59,5 +58,5 @@ async def shutdown_event():
     logging.info('Successfully closed connection pool')
 
 
+app.include_router(begroing_routes.router,   prefix="/begroing",)
 app.include_router(shared_routes.router)
-app.include_router(begroing_routes.router)

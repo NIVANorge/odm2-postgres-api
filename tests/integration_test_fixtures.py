@@ -27,6 +27,9 @@ def try_db_init(tries=30):
 
 @pytest.fixture(scope="module")
 def wait_for_db(module_scoped_container_getter):
+    """
+    This tells pytest to try to connect to the database DEFAULT_TRIES times on a set interval (500ms).
+    """
     db_info = module_scoped_container_getter.get('timescale_odm2').network_info[0]
     env_file = Path(__file__).parent / '..' / 'src' / 'odm2_postgres_api' / 'config' / 'localdocker.env'
     load_dotenv(dotenv_path=env_file, verbose=True)
@@ -36,7 +39,6 @@ def wait_for_db(module_scoped_container_getter):
     try_db_init()
 
     asyncio.set_event_loop(asyncio.new_event_loop())
-
 
 async def init_dbpool():
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
@@ -50,6 +52,9 @@ async def init_dbpool():
 
 @pytest.fixture(scope="function")
 async def clear_db():
+    """
+    Truncates tables in database.
+    """
     db_pool = await init_dbpool()
     async with db_pool.acquire() as connection:
         await truncate_all_data(connection, "odm2")

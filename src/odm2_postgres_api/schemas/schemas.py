@@ -3,7 +3,7 @@ import datetime as dt
 from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, constr, conlist,  validator
 
 from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 
@@ -536,6 +536,22 @@ class BegroingResultCreate(BaseModel):
 
 
 class BegroingResult(BegroingResultCreate):
+    personid: int
+
+
+class IndicesInfo(BaseModel):
+    indexType: str
+    indexValue: float
+
+
+class BegroingIndicesCreate(BaseModel):
+    project_ids: conlist(int, min_items=1)  # type: ignore
+    date: dt.datetime
+    station_uuid: uuid.UUID
+    indices: List[IndicesInfo]
+
+
+class BegroingIndices(BegroingIndicesCreate):
     personid: int
 
 

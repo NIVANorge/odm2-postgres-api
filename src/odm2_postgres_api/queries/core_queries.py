@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
-    ControlledVocabularyCreate, UnitsCreate, Units
+    ControlledVocabularyCreate, UnitsCreate, Units, ProcessingLevels
 from odm2_postgres_api.utils import shapely_postgres_adapter
 
 
@@ -33,6 +33,14 @@ async def find_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Optional[Uni
     row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
                               unit.unitsabbreviation)
     return Units(**row) if row else None
+
+
+async def get_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Units:
+    existing = await find_unit(conn, unit)
+    if not existing:
+        raise HTTPException(status_code=422, detail=f"Unit unitstypecv={unit.unitstypecv} and "
+                                                    f"unitsabbreviation={unit.unitsabbreviation} does not exist")
+    return existing
 
 
 async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model):
@@ -95,6 +103,8 @@ async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate)
 async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
     async with conn.transaction():
         method_row = await conn.fetchrow("SELECT methodid FROM methods WHERE methodcode = $1", action.methodcode)
+        if method_row is None:
+            raise HTTPException(status_code=422, detail="Please specify valid methodcode.")
         action_row = await conn.fetchrow(
             "INSERT INTO actions (actiontypecv, methodid, begindatetime, begindatetimeutcoffset,  enddatetime, "
             "enddatetimeutcoffset, actiondescription, actionfilelink) "
@@ -272,3 +282,14 @@ async def upsert_categorical_result(conn: asyncpg.connection, categorical_result
                             *categoricalresults_data.values())
         await conn.fetchrow(make_sql_query('categoricalresultvalues', categoricalresultvalues_data),
                             *categoricalresultvalues_data.values())
+
+
+async def get_index_names(conn: asyncpg.connection):
+    async with conn.transaction():
+        # value_keys = []
+
+        # await conn.fetchrow(make_sql_query('categoricalresults', categoricalresults_data),
+        #                     *categoricalresults_data.values())
+        # await conn.fetchrow(make_sql_query('categoricalresultvalues', categoricalresultvalues_data),
+        #                     *categoricalresultvalues_data.values())
+        return
