@@ -1,0 +1,177 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 14
+  },
+  "objects": [
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with biological organisms.",
+      "name": "Biology",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/biology/",
+      "term": "biology",
+      "vocabulary_id": 223,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with chemistry, chemical analysis or processes.",
+      "name": "Chemistry",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/chemistry/",
+      "term": "chemistry",
+      "vocabulary_id": 224,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with the climate, weather, or atmospheric processes.",
+      "name": "Climate",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/climate/",
+      "term": "climate",
+      "vocabulary_id": 225,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with geology or geological processes.",
+      "name": "Geology",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/geology/",
+      "term": "geology",
+      "vocabulary_id": 226,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with hydrologic variables or processes.",
+      "name": "Hydrology",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/hydrology/",
+      "term": "hydrology",
+      "vocabulary_id": 227,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with instrumentation and instrument properties such as battery voltages, data logger temperatures, often useful for diagnosis.",
+      "name": "Instrumentation",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/instrumentation/",
+      "term": "instrumentation",
+      "vocabulary_id": 228,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with lithology.",
+      "name": "Lithology",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/lithology/",
+      "term": "lithology",
+      "vocabulary_id": 229,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms describing rocks.",
+      "name": "Rock",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/rock/",
+      "term": "rock",
+      "vocabulary_id": 230,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with soil variables or processes",
+      "name": "Soil",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/soil/",
+      "term": "soil",
+      "vocabulary_id": 231,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Soil",
+      "definition": "A taxonomy containing terms describing soil color.",
+      "name": "Soil color",
+      "note": "",
+      "provenance": "See http://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/planners/?cid=nrcs142p2_054184.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/soilColor/",
+      "term": "soilColor",
+      "vocabulary_id": 232,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Soil",
+      "definition": "A taxonomy containing terms describing soil horizons.",
+      "name": "Soil horizon",
+      "note": "",
+      "provenance": "See http://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/planners/?cid=nrcs142p2_054184.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/soilHorizon/",
+      "term": "soilHorizon",
+      "vocabulary_id": 233,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Soil",
+      "definition": "A taxonomy containing terms describing soil structure.",
+      "name": "Soil structure",
+      "note": "",
+      "provenance": "See http://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/planners/?cid=nrcs142p2_054184.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/soilStructure/",
+      "term": "soilStructure",
+      "vocabulary_id": 234,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "Soil",
+      "definition": "A taxonomy containing terms describing soil texture.",
+      "name": "Soil texture",
+      "note": "",
+      "provenance": "See http://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/planners/?cid=nrcs142p2_054184.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/soilTexture/",
+      "term": "soilTexture",
+      "vocabulary_id": 235,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A taxonomy containing terms associated with water quality variables or processes.",
+      "name": "Water quality",
+      "note": "",
+      "provenance": "Originally from CUAHSI HIS GeneralCategoryCV.  See http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=GeneralCategoryCV.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/taxonomicclassifiertype/waterQuality/",
+      "term": "waterQuality",
+      "vocabulary_id": 236,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

@@ -1,15 +1,17 @@
 import logging
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 
 import asyncpg
 import shapely.wkt
 from fastapi import HTTPException
+from pydantic import BaseModel
 
+from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
-from odm2_postgres_api.schemas.schemas import PersonExtended
+from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
+    ControlledVocabularyCreate, UnitsCreate, Units
 from odm2_postgres_api.utils import shapely_postgres_adapter
-from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def argument_placeholder(arguments: dict):
@@ -21,9 +23,21 @@ def make_sql_query(table: str, data: dict):
 
 
 async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pydantic_object, response_model):
+    logging.debug(f"Inserting row", extra={"table": table_name})
     pydantic_dict = pydantic_object.dict()
     row = await conn.fetchrow(make_sql_query(table_name, pydantic_dict), *pydantic_dict.values())
     return response_model(**row)
+
+
+async def find_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Optional[Units]:
+    row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
+                              unit.unitsabbreviation)
+    return Units(**row) if row else None
+
+
+async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model):
+    row = await conn.fetchrow(f"SELECT * FROM {table} WHERE {id_column}=$1", identifier)
+    return model(**row) if row else None
 
 
 # TODO: we may want to extend this further by including organization ++
@@ -45,16 +59,21 @@ async def find_person_by_external_id(conn: asyncpg.connection, external_system, 
 
 
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
-                                                controlled_vocabulary: schemas.ControlledVocabulary):
+                                                controlled_vocabulary: ControlledVocabularyCreate) \
+        -> ControlledVocabulary:
     table_name = controlled_vocabulary.controlled_vocabulary_table_name
     # Check against hardcoded table names otherwise this could be an SQL injection
     if table_name not in CONTROLLED_VOCABULARY_TABLE_NAMES:
         raise RuntimeError(f"table_name: '{table_name}' is invalid")
     value_keys = ['term', 'name', 'definition', 'category']
     controlled_vocabulary_data = {k: v for k, v in controlled_vocabulary if k in value_keys}
+    existing = await find_row(conn, table_name, "term", controlled_vocabulary.term, ControlledVocabulary)
+    if existing:
+        return existing
+
     row = await conn.fetchrow(make_sql_query(table_name, controlled_vocabulary_data),
                               *controlled_vocabulary_data.values())
-    return schemas.ControlledVocabulary(**{**dict(controlled_vocabulary), **row})
+    return schemas.ControlledVocabulary(**row)
 
 
 async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
@@ -149,18 +168,31 @@ async def create_result_data_quality(conn: asyncpg.connection, result_data_quali
 
 
 async def create_feature_action(conn: asyncpg.connection, feature_action: schemas.FeatureActionsCreate):
-    row = await conn.fetchrow(
-        "INSERT INTO featureactions (samplingfeatureid, actionid) "
-        "VALUES ((SELECT samplingfeatureid FROM samplingfeatures where samplingfeatureuuid = $1), $2) "
-        "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
-        feature_action.samplingfeatureuuid, feature_action.actionid)
-    return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
+    if feature_action.samplingfeatureuuid and feature_action.samplingfeaturecode:
+        row = await conn.fetchrow(
+            "INSERT INTO featureactions (samplingfeatureid, actionid) "
+            "VALUES ((SELECT samplingfeatureid FROM samplingfeatures "
+            "where samplingfeatureuuid = $1 AND samplingfeaturecode = $2), $3) "
+            "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
+            feature_action.samplingfeatureuuid, feature_action.samplingfeaturecode, feature_action.actionid)
+        return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid, **row)
+    else:
+        row = await conn.fetchrow(
+            "INSERT INTO featureactions (samplingfeatureid, actionid) "
+            "VALUES ((SELECT samplingfeatureid FROM samplingfeatures "
+            "where samplingfeatureuuid = $1 OR samplingfeaturecode = $2), $3) "
+            "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
+            feature_action.samplingfeatureuuid, feature_action.samplingfeaturecode, feature_action.actionid)
+        return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid,
+                                      samplingfeaturecode=feature_action.samplingfeaturecode, **row)
 
 
 async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate):
     async with conn.transaction():
-        feature_action_row = await create_feature_action(conn, schemas.FeatureActionsCreate(
-            samplingfeatureuuid=result.samplingfeatureuuid, actionid=result.actionid))
+        feature_action_create = schemas.FeatureActionsCreate(samplingfeatureuuid=result.samplingfeatureuuid,
+                                                             samplingfeaturecode=result.samplingfeaturecode,
+                                                             actionid=result.actionid)
+        feature_action_row = await create_feature_action(conn, feature_action_create)
         result_row = await conn.fetchrow(
             "INSERT INTO results (resultuuid, featureactionid, resulttypecv, variableid, unitsid,"
             "taxonomicclassifierid, processinglevelid, resultdatetime, resultdatetimeutcoffset, validdatetime,"

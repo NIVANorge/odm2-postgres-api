@@ -7,25 +7,25 @@ services:
       - "127.0.0.1:8701:5000"
     volumes:
       - $HOME/stream-data/:/stream-data/
+    restart: always
     depends_on:
       - timescale_odm2
       - db_init
-    restart: always
 
   graphql:
     image: graphile/postgraphile
     ports:
       - "127.0.0.1:8702:5000"
+    restart: always
     depends_on:
       - timescale_odm2
       - db_init
-    restart: always
     command: --enhance-graphiql --owner-connection postgres://postgres:postgres@timescale_odm2:5432/niva_odm2 --connection postgres://niva_odm2_read_only_user:1oMPPgHu5TvhAkHYRUMIdaRSKZUjh6c5@timescale_odm2:5432/niva_odm2 --schema odm2 --watch --no-ignore-rbac
 
   timescale_odm2:
     # this version is the current timescaledb version running in production at the time of writing
     # Remember to change the image version in both tsb/docker-compose.yml and the nivacloud timescale deployment
-    image: timescale/timescaledb-postgis:1.4.2-pg11
+    image: timescale/timescaledb-postgis:1.7.4-pg12
     ports:
       - "8700:5432"
     environment:
@@ -36,7 +36,6 @@ services:
 
   db_init:
     build: "."
-    command: python src/odm2_postgres_api/utils/db_initiate.py
-    restart: on-failure
+    command: python src/odm2_postgres_api/db_init/db_initiate.py
     depends_on:
       - timescale_odm2

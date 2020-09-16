@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 5
+  },
+  "objects": [
+    {
+      "category": "",
+      "definition": "A Dataset that contains multiple time series Results. This corresponds to the YAML Observations Data Archive (YODA) multi-time series profile.",
+      "name": "Multi-time series",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/datasettype/multiTimeSeries/",
+      "term": "multiTimeSeries",
+      "vocabulary_id": 297,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A dataset that contains multiple measurement Results derived from Specimens. This corresponds to the YAML Observations Data Archive (YODA) specimen time series profile.",
+      "name": "Multi-variable specimen measurements",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/datasettype/multiVariableSpecimenMeasurements/",
+      "term": "multiVariableSpecimenMeasurements",
+      "vocabulary_id": 298,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A set of Results that has been grouped into a Dataset because they are logically related. The group does not conform to any particular profile.",
+      "name": "Other",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/datasettype/other/",
+      "term": "other",
+      "vocabulary_id": 299,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A Dataset that contains a single time series Result. This corresponds to the YAML Observations Data Archive (YODA) singe time series profile.",
+      "name": "Single time series",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/datasettype/singleTimeSeries/",
+      "term": "singleTimeSeries",
+      "vocabulary_id": 300,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "A dataset that contains multiple measurement Results derived from Specimens. This corresponds to the YAML Observations Data Archive (YODA) specimen time series profile.",
+      "name": "Specimen time series",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/datasettype/specimenTimeSeries/",
+      "term": "specimenTimeSeries",
+      "vocabulary_id": 301,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

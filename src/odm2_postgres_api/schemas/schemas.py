@@ -5,7 +5,7 @@ from typing import Optional, List, Tuple, Dict, Union
 import shapely.wkt
 from pydantic import BaseModel, constr, conlist,  validator
 
-from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
+from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def create_obligatory_date_time_checker(datetime_name: str, offset_name: str):
@@ -49,9 +49,12 @@ valuedatetime_checker = create_obligatory_date_time_checker('valuedatetime', 'va
 class ControlledVocabulary(BaseModel):
     term: constr(max_length=255)  # type: ignore
     name: constr(max_length=255) = None  # type: ignore
-    definition: constr(max_length=255) = None  # type: ignore
+    definition: constr(max_length=5000) = None  # type: ignore
     category: constr(max_length=255) = None  # type: ignore
     # sourcevocabularyuri: constr(max_length=255) = None  # type: ignore
+
+
+class ControlledVocabularyCreate(ControlledVocabulary):
     controlled_vocabulary_table_name: cv_checker  # type: ignore
 
 
@@ -83,6 +86,25 @@ class PeopleCreate(BaseModel):
 
 class People(PeopleCreate):
     personid: int
+
+
+class PeopleAffiliationCreate(BaseModel):
+    personfirstname: constr(max_length=255)  # type: ignore
+    personmiddlename: constr(max_length=255) = None  # type: ignore
+    personlastname: constr(max_length=255)  # type: ignore
+    affiliationstartdate: dt.date
+    affiliationenddate: Optional[dt.date] = None
+    organizationid: Optional[str] = None
+    isprimaryorganizationcontact: Optional[bool] = None
+    primaryphone: constr(max_length=50) = None  # type: ignore
+    primaryemail: constr(max_length=255)  # type: ignore
+    primaryaddress: constr(max_length=255) = None  # type: ignore
+    personlink: constr(max_length=255) = None  # type: ignore
+
+
+class PeopleAffiliation(PeopleAffiliationCreate):
+    personid: int
+    affiliationid: int
 
 
 class PersonExternalIdentifiersCreate(BaseModel):
@@ -403,8 +425,15 @@ class TaxonomicClassifier(TaxonomicClassifierCreate):
 
 
 class FeatureActionsCreate(BaseModel):
-    samplingfeatureuuid: uuid.UUID
+    samplingfeatureuuid: Optional[uuid.UUID] = None
+    samplingfeaturecode: Optional[str] = None
     actionid: int
+
+    @validator('samplingfeaturecode', always=True)
+    def must_supply_uuid_or_code(cls, v, values):
+        if not values['samplingfeatureuuid'] and not v:
+            raise ValueError('Must supply either valid uuid or valid code')
+        return v
 
 
 class FeatureActions(FeatureActionsCreate):
@@ -534,6 +563,12 @@ class PersonExtended(People):
 
 
 if __name__ == '__main__':
+    FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a',
+                         samplingfeaturecode='A valid code', actionid=1)  # matching code and uuid checked by query
+    FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a', actionid=1)
+    FeatureActionsCreate(samplingfeaturecode='A valid code', actionid=1)
+    # FeatureActionsCreate(actionid=1)  # Error!
+
     BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), begindatetimeutcoffset=1)
     # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'))  # Error!
     BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), begindatetimeutcoffset=0)

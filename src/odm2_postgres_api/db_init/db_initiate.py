@@ -113,6 +113,20 @@ async def run_create_hypertable_commands(connection_string):
         await conn.close()
 
 
+async def wait_for_db_ready(connection_string: str, attempts=20):
+    try:
+        logging.info(f"Attempting to connect to postgres db")
+        conn = await asyncpg.connect(connection_string)
+        await conn.close()
+    except Exception as e:
+        logging.warning(e)
+        await asyncio.sleep(0.5)
+        if attempts == 0:
+            raise e
+        logging.info(f"DB not ready yet, sleeping. ", extra={"attempts_left": attempts})
+        await wait_for_db_ready(connection_string, attempts=attempts - 1)
+
+
 def db_init():
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
@@ -129,6 +143,8 @@ def db_init():
 
     pg_credentials = f"{db_users['postgres_owner']['user_name']}:{db_users['postgres_owner']['password']}"
     connection_string = f'postgresql://{pg_credentials}@{db_host}:{db_port}'
+
+    asyncio.run(wait_for_db_ready(connection_string))
     asyncio.run(postgres_user_on_postgres_db(connection_string, db_name, db_users))
 
     # Run commands on new database
