@@ -30,7 +30,7 @@ def test_post_new_indices(wait_for_db, clear_db):
         assert sampling_feature_res.status_code == 200
 
         index_data = {
-            "projects": [project_response.json()],
+            "project_ids": [project_response.json()["directiveid"]],
             "station_uuid": sampling_feature_res.json()["samplingfeatureuuid"],
             "date": "2020-09-01T00:00:00.000Z",
             "indices": [{"indexType": "PIT EQR", "indexValue": "11"}]

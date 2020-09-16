@@ -132,7 +132,7 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
         begindatetime=new_index.date,
         begindatetimeutcoffset=0,
         equipmentids=[],
-        directiveids=[e.directiveid for e in new_index.projects]
+        directiveids=new_index.project_ids
     )
 
     completed_action = await post_actions(data_action, connection)

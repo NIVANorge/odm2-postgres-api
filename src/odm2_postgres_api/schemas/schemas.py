@@ -545,7 +545,7 @@ class IndicesInfo(BaseModel):
 
 
 class BegroingIndicesCreate(BaseModel):
-    projects: conlist(Directive, min_items=1)  # type: ignore
+    project_ids: conlist(int, min_items=1)  # type: ignore
     date: dt.datetime
     station_uuid: uuid.UUID
     indices: List[IndicesInfo]
