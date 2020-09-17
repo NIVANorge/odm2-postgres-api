@@ -48,7 +48,7 @@ spec:
       containers:
       - name: timescale-odm2
         # Remember to change the image version in both nivacloud/docker-compose.yml and the odm2/docker-compose.yml
-        image: timescale/timescaledb-postgis:1.4.2-pg11
+        image: timescale/timescaledb-postgis:1.7.4-pg12
         imagePullPolicy: Always
         lifecycle:
           preStop:
@@ -60,7 +60,7 @@ spec:
                 - su
                 - postgres
                 - -c
-                - "pg_ctl -D /var/lib/postgresql/data/pg11 stop"
+                - "pg_ctl -D /var/lib/postgresql/data/pg12 stop"
         resources:
           requests:
             # If you update these, also update the TS_TUNE_* variables below.
@@ -75,7 +75,7 @@ spec:
               name: odm2-postgres-password
               key: password
         - name: PGDATA
-          value: /var/lib/postgresql/data/pg11
+          value: /var/lib/postgresql/data/pg12
         - name: TS_TUNE_NUM_CPUS
           value: "4"
         - name: TS_TUNE_MEMORY

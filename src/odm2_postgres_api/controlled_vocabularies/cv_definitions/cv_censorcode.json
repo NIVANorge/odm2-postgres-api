@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 6
+  },
+  "objects": [
+    {
+      "category": "",
+      "definition": "The value is known to be greater than the recorded value.",
+      "name": "Greater than",
+      "note": "",
+      "provenance": "Adapted from CUAHSI HIS CensorCodeCV.  See: http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Cen",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/censorcode/greaterThan/",
+      "term": "greaterThan",
+      "vocabulary_id": 288,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The value is known to be less than the recorded value.",
+      "name": "Less than",
+      "note": "",
+      "provenance": "Adapted from CUAHSI HIS CensorCodeCV.  See: http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Cen",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/censorcode/lessThan/",
+      "term": "lessThan",
+      "vocabulary_id": 289,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The value was reported as a non-detect. The recorded value represents the level at which the anlalyte can be detected.",
+      "name": "Non-detect",
+      "note": "",
+      "provenance": "Adapted from CUAHSI HIS CensorCodeCV.  See: http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Cen",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/censorcode/nonDetect/",
+      "term": "nonDetect",
+      "vocabulary_id": 290,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The reported value is not censored.",
+      "name": "Not censored",
+      "note": "",
+      "provenance": "Adapted from CUAHSI HIS CensorCodeCV.  See: http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Cen",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/censorcode/notCensored/",
+      "term": "notCensored",
+      "vocabulary_id": 291,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The anlayte is known to be present, but was not quantified. The recorded value represents the level below which the analyte can no longer be quantified.",
+      "name": "Present but not quantified",
+      "note": "",
+      "provenance": "Adapted from CUAHSI HIS CensorCodeCV.  See: http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Cen",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/censorcode/presentButNotQuantified/",
+      "term": "presentButNotQuantified",
+      "vocabulary_id": 292,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "It is unknown whether the data value as reported is censored.",
+      "name": "Unknown",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/censorcode/unknown/",
+      "term": "unknown",
+      "vocabulary_id": 293,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

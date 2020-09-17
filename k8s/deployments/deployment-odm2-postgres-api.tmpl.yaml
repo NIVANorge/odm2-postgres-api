@@ -119,4 +119,4 @@ spec:
           envFrom:
             - configMapRef:
                 name: odm2-config-map
-          command: ['python', 'src/odm2_postgres_api/utils/db_initiate.py']
+          command: ['python', 'src/odm2_postgres_api/db_init/db_initiate.py']

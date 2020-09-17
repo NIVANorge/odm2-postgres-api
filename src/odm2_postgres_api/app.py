@@ -9,11 +9,10 @@ from fastapi.exceptions import RequestValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from odm2_postgres_api.metadata_init.populate_metadata import populate_metadata
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
-from odm2_postgres_api.routes.begroing_routes import begroing_routes
-from odm2_postgres_api.routes.shared import shared_routes
-from odm2_postgres_api.routes import mass_spectrometry_routes
+from odm2_postgres_api.routes import begroing_routes, shared_routes, mass_spectrometry_routes
 
 
 app = FastAPI(
@@ -46,8 +45,11 @@ async def startup_event():
 
     logging.info("Creating connection pool")
     api_pool_manager.pool = await asyncpg.create_pool(user=db_mighty_user, password=db_mighty_pwd,
+                                                      server_settings={"search_path": "odm2,public"},
                                                       host=db_host, port=db_port, database=db_name)
     logging.info("Successfully created connection pool")
+
+    await populate_metadata(api_pool_manager.pool)
 
 
 @app.on_event("shutdown")
@@ -58,5 +60,5 @@ async def shutdown_event():
 
 
 app.include_router(shared_routes.router)
-app.include_router(begroing_routes.router)
+app.include_router(begroing_routes.router, prefix="/begroing",)
 app.include_router(mass_spectrometry_routes.router, prefix="/mass_spec")

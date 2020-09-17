@@ -2,8 +2,11 @@ import uuid
 from collections import defaultdict
 
 from fastapi import Depends, Header, APIRouter
-from odm2_postgres_api.routes.shared.shared_routes import post_actions, post_results, post_categorical_results, \
+
+from odm2_postgres_api.queries.core_queries import find_row, find_unit, get_unit
+from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
+from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
@@ -11,6 +14,20 @@ from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
 from odm2_postgres_api.utils import google_cloud_utils
 
+INDEX_NAME_TO_VARIABLE_ID = {
+    "PIT": 11,
+    "AIP": 12,
+    "HBI": 13,
+    "HBI2": 14,
+    "PIT EQR": 15,
+    "AIP EQR": 16,
+    "HBI EQR": 17,
+    "HBI2 EQR": 18,
+    "PIT nEQR": 19,
+    "AIP nEQR": 20,
+    "HBI nEQR": 21,
+    "HBI2 nEQR": 22,
+}
 
 router = APIRouter()
 
@@ -99,3 +116,65 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
     # TODO: Send email about new bucket_files
 
     return schemas.BegroingResult(personid=user.personid, **begroing_result.dict())
+
+
+@router.post("/indices", response_model=schemas.BegroingIndices)
+async def post_indices(new_index: schemas.BegroingIndicesCreate,
+                       connection=Depends(api_pool_manager.get_conn),
+                       niva_user: str = Header(None)):
+    user = await create_or_get_user(connection, niva_user)
+
+    data_action = schemas.ActionsCreate(
+        affiliationid=user.affiliationid,
+        isactionlead=True,
+        methodcode="begroing_6",  # code begroing_6 = Begroing Index Calculation
+        actiontypecv="Derivation",
+        begindatetime=new_index.date,
+        begindatetimeutcoffset=0,
+        equipmentids=[],
+        directiveids=new_index.project_ids
+    )
+
+    completed_action = await post_actions(data_action, connection)
+
+    processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
+                                      "0", ProcessingLevels)
+    dimensionless_unit = await get_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
+                                                                unitsname="Dimensionless"))
+    seconds_unit = await get_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
+                                                          unitsname="second"))
+
+    for index_instance in new_index.indices:
+        variable = await find_row(connection, "variables", "variablenamecv", index_instance.indexType, Variables)
+
+        data_result = schemas.ResultsCreate(
+            samplingfeatureuuid=new_index.station_uuid,
+            actionid=completed_action.actionid,
+            resultuuid=str(uuid.uuid4()),
+            resulttypecv="Measurement",
+            variableid=variable.variableid,
+            unitsid=dimensionless_unit.unitsid,
+            processinglevelid=processing_level.processinglevelid,
+            valuecount=1,
+            statuscv="Complete",
+            sampledmediumcv="Organism",
+            dataqualitycodes=[]
+        )
+
+        completed_result = await post_results(data_result, connection)
+
+        data_measurement_result = schemas.MeasurementResultsCreate(
+            resultid=completed_result.resultid,
+            censorcodecv="Not censored",
+            qualitycodecv="None",
+            aggregationstatisticcv="Unknown",
+            timeaggregationinterval=0,
+            timeaggregationintervalunitsid=seconds_unit.unitsid,
+            datavalue=index_instance.indexValue,
+            valuedatetime=new_index.date,
+            valuedatetimeutcoffset=0
+        )
+
+        await post_measurement_results(data_measurement_result, connection)
+
+    return schemas.BegroingIndices(personid=user.personid, **new_index.dict())

@@ -116,7 +116,8 @@ async def run_create_hypertable_commands(connection_string):
 async def wait_for_db_ready(connection_string: str, attempts=20):
     try:
         logging.info(f"Attempting to connect to postgres db")
-        await asyncpg.connect(connection_string)
+        conn = await asyncpg.connect(connection_string)
+        await conn.close()
     except Exception as e:
         logging.warning(e)
         await asyncio.sleep(0.5)

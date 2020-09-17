@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "limit": 0,
+    "offset": 0,
+    "total_count": 6
+  },
+  "objects": [
+    {
+      "category": "",
+      "definition": "The degree of closeness of a measurement of a quantity to that quantity's true value.",
+      "name": "Accuracy",
+      "note": "",
+      "provenance": "Definition adapted from Wikipedia. See http://en.wikipedia.org/wiki/Accuracy_and_precision",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/dataqualitytype/accuracy/",
+      "term": "accuracy",
+      "vocabulary_id": 31,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The minimum concentration of a substance that can be distinguished from the absence of that substance within a stated confidence limit (generally 1%) given a particular analytical method.",
+      "name": "Method detection limit",
+      "note": "",
+      "provenance": "Definition adapted from Wikipedia. See http://en.wikipedia.org/wiki/Detection_limit.",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/dataqualitytype/methodDetectionLimit/",
+      "term": "methodDetectionLimit",
+      "vocabulary_id": 32,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "This describes a numeric value below which measured values should be considered suspect. This numeric value should be empirically derived.",
+      "name": "Physical limit lower bound",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/dataqualitytype/physicalLimitLowerBound/",
+      "term": "physicalLimitLowerBound",
+      "vocabulary_id": 33,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "This describes a numeric value above which measured values should be considered suspect. This numeric value should be empirically derived.",
+      "name": "Physical limit upper bound",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/dataqualitytype/physicalLimitUpperBound/",
+      "term": "physicalLimitUpperBound",
+      "vocabulary_id": 34,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The degree to which repeated measurements under unchanged conditions show the same results.",
+      "name": "Precision",
+      "note": "",
+      "provenance": "Definition adapted from Wikipedia. See http://en.wikipedia.org/wiki/Accuracy_and_precision",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/dataqualitytype/precision/",
+      "term": "precision",
+      "vocabulary_id": 35,
+      "vocabulary_status": "Current"
+    },
+    {
+      "category": "",
+      "definition": "The smallest concentration of analyte that can be reported by laboratory.",
+      "name": "Reporting level",
+      "note": "",
+      "provenance": "",
+      "provenance_uri": "",
+      "resource_uri": "/api/v1/dataqualitytype/reportingLevel/",
+      "term": "reportingLevel",
+      "vocabulary_id": 36,
+      "vocabulary_status": "Current"
+    }
+  ]
+}

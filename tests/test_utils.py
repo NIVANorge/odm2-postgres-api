@@ -29,8 +29,7 @@ async def truncate_all_data(connection, schema: str):
 
 
 def test_pool_mamager_uses_same_instance():
-    from odm2_postgres_api.routes.shared import shared_routes
-    from odm2_postgres_api.routes.begroing_routes import begroing_routes
+    from odm2_postgres_api.routes import begroing_routes, shared_routes
     from odm2_postgres_api.app import api_pool_manager
 
     assert shared_routes.api_pool_manager is begroing_routes.api_pool_manager

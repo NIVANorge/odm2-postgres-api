@@ -3,9 +3,9 @@ import datetime as dt
 from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, constr, conlist,  validator
 
-from odm2_postgres_api.queries.controlled_vocabulary_queries import CONTROLLED_VOCABULARY_TABLE_NAMES
+from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 
 
 def create_obligatory_date_time_checker(datetime_name: str, offset_name: str):
@@ -49,9 +49,12 @@ valuedatetime_checker = create_obligatory_date_time_checker('valuedatetime', 'va
 class ControlledVocabulary(BaseModel):
     term: constr(max_length=255)  # type: ignore
     name: constr(max_length=255) = None  # type: ignore
-    definition: constr(max_length=255) = None  # type: ignore
+    definition: constr(max_length=5000) = None  # type: ignore
     category: constr(max_length=255) = None  # type: ignore
     # sourcevocabularyuri: constr(max_length=255) = None  # type: ignore
+
+
+class ControlledVocabularyCreate(ControlledVocabulary):
     controlled_vocabulary_table_name: cv_checker  # type: ignore
 
 
@@ -88,6 +91,25 @@ class PeopleCreate(BaseModel):
 
 class People(PeopleCreate):
     personid: int
+
+
+class PeopleAffiliationCreate(BaseModel):
+    personfirstname: constr(max_length=255)  # type: ignore
+    personmiddlename: constr(max_length=255) = None  # type: ignore
+    personlastname: constr(max_length=255)  # type: ignore
+    affiliationstartdate: dt.date
+    affiliationenddate: Optional[dt.date] = None
+    organizationid: Optional[str] = None
+    isprimaryorganizationcontact: Optional[bool] = None
+    primaryphone: constr(max_length=50) = None  # type: ignore
+    primaryemail: constr(max_length=255)  # type: ignore
+    primaryaddress: constr(max_length=255) = None  # type: ignore
+    personlink: constr(max_length=255) = None  # type: ignore
+
+
+class PeopleAffiliation(PeopleAffiliationCreate):
+    personid: int
+    affiliationid: int
 
 
 class PersonExternalIdentifiersCreate(BaseModel):
@@ -526,6 +548,22 @@ class BegroingResultCreate(BaseModel):
 
 
 class BegroingResult(BegroingResultCreate):
+    personid: int
+
+
+class IndicesInfo(BaseModel):
+    indexType: str
+    indexValue: float
+
+
+class BegroingIndicesCreate(BaseModel):
+    project_ids: conlist(int, min_items=1)  # type: ignore
+    date: dt.datetime
+    station_uuid: uuid.UUID
+    indices: List[IndicesInfo]
+
+
+class BegroingIndices(BegroingIndicesCreate):
     personid: int
 
 

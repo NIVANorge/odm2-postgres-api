@@ -68,7 +68,7 @@ setup(
     extras_require=EXTRAS,
     tests_require=TEST_REQUIRES,
     include_package_data=True,
-    package_data={'': ['**/ODM2_for_PostgreSQL.sql']},
+    package_data={'': ['**/ODM2_for_PostgreSQL.sql', '**/cv_*.json']},
     license='MIT license',
     classifiers=[
         # Trove classifiers
