@@ -48,7 +48,7 @@ async def get_samplingfeaturecodes_of_replicas(conn: asyncpg.connection, samplin
                               'left join samplingfeatures sf2 on sf2.samplingfeatureid = r.relatedfeatureid '
                               'where r.relationshiptypecv = \'Is child of\' and sf2.samplingfeaturecode=$1 ',
                               samplingfeaturecode)
-    return [(record['samplingfeaturecode']) for record in result] if len(result) > 0 else []
+    return [(record['samplingfeaturecode']) for record in result]
 
 
 async def get_method_annotationjson(conn: asyncpg.connection, methodcode: str):
@@ -60,11 +60,14 @@ async def get_method_annotationjson(conn: asyncpg.connection, methodcode: str):
 
 
 async def get_samplingfeature_annotationjson(conn: asyncpg.connection, samplingfeaturecode: str):
-    result = await conn.fetchrow('select annotationjson from annotations a '
-                                 'left join samplingfeatureannotations sa on a.annotationid = sa.annotationid '
-                                 'left join samplingfeatures sf on sf.samplingfeatureid = sa.samplingfeatureid '
-                                 'where samplingfeaturecode = $1', samplingfeaturecode)
-    return result['annotationjson'] if result is not None else None
+    result = await conn.fetch('select annotationjson, annotationdatetime from annotations a '
+                              'left join samplingfeatureannotations sa on a.annotationid = sa.annotationid '
+                              'left join samplingfeatures sf on sf.samplingfeatureid = sa.samplingfeatureid '
+                              'where samplingfeaturecode = $1', samplingfeaturecode)
+
+    result_with_datetime = [item for item in result if item["annotationdatetime"] is not None]
+    sorted(result_with_datetime, key=lambda item: item["annotationdatetime"])
+    return [(record['annotationjson']) for record in result_with_datetime]
 
 
 async def get_samplingfeaturecode_from_result_annotationlink(conn: asyncpg.connection, annotationlink: str):

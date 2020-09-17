@@ -154,6 +154,21 @@ async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: sc
     return schemas.SamplingFeatures(**sampling_row)
 
 
+async def create_sampling_feature_annotation(conn: asyncpg.connection,
+                                             sampling_feature_annotation: schemas.SamplingFeatureAnnotationCreate):
+    if sampling_feature_annotation.annotationid is None:
+        annotation_id = await create_or_parse_annotations(conn, [
+            schemas.AnnotationsCreate(**sampling_feature_annotation.dict())])
+        sampling_feature_annotation.annotationid = annotation_id[0]
+
+    await conn.fetchrow(
+        "INSERT INTO samplingfeatureannotations (samplingfeatureid, annotationid) "
+        "VALUES ($1, $2) returning * ", sampling_feature_annotation.samplingfeatureid,
+        sampling_feature_annotation.annotationid)
+
+    return sampling_feature_annotation
+
+
 async def create_result_data_quality(conn: asyncpg.connection, result_data_quality: schemas.ResultsDataQualityCreate):
     row = await conn.fetchrow(
         "INSERT INTO resultsdataquality (resultid, dataqualityid) "

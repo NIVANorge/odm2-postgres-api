@@ -7,7 +7,6 @@ from odm2_postgres_api.queries.controlled_vocabulary_queries import synchronize_
 from odm2_postgres_api.schemas.schemas import PersonExtended
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
-
 router = APIRouter()
 
 
@@ -112,6 +111,12 @@ async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(
 async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreate,
                                  connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.create_sampling_feature(connection, sampling_feature)
+
+
+@router.post("/sampling_feature_annotation", response_model=schemas.SamplingFeatureAnnotationCreate)
+async def post_sampling_features_annotation(sampling_feature_annotation: schemas.SamplingFeatureAnnotationCreate,
+                                            connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_sampling_feature_annotation(connection, sampling_feature_annotation)
 
 
 @router.post("/processing_levels", response_model=schemas.ProcessingLevels)

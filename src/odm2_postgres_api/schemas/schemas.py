@@ -75,6 +75,11 @@ class Annotations(AnnotationsCreate):
     annotationid: int
 
 
+class SamplingFeatureAnnotationCreate(AnnotationsCreate):
+    samplingfeatureid: int
+    annotationid: Optional[int]
+
+
 class PeopleCreate(BaseModel):
     personfirstname: constr(max_length=255)  # type: ignore
     personmiddlename: constr(max_length=255) = None  # type: ignore
