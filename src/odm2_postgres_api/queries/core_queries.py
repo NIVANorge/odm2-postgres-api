@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import asyncpg
 import shapely.wkt
@@ -9,8 +9,8 @@ from pydantic import BaseModel
 
 from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 from odm2_postgres_api.schemas import schemas
-from odm2_postgres_api.schemas.schemas import PersonExtended, Organizations, ControlledVocabulary, \
-    ControlledVocabularyCreate, UnitsCreate, Units, ProcessingLevels
+from odm2_postgres_api.schemas.schemas import PersonExtended, ControlledVocabulary, ControlledVocabularyCreate,\
+    UnitsCreate, Units
 from odm2_postgres_api.utils import shapely_postgres_adapter
 
 
@@ -84,17 +84,23 @@ async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
     return schemas.ControlledVocabulary(**row)
 
 
+async def create_or_parse_annotations(conn: asyncpg.connection,
+                                      annotations: List[Union[schemas.AnnotationsCreate, int]]):
+    annotation_ids = []
+    for annotation in annotations:
+        if type(annotation) == schemas.AnnotationsCreate:
+            annotation_row = await insert_pydantic_object(conn, 'annotations', annotation, schemas.Annotations)
+            annotation_ids.append(annotation_row.annotationid)
+        elif type(annotation) == int:  # No need for 'else' clause with TypeError since fastapi already checked
+            annotation_ids.append(annotation)
+    return annotation_ids
+
+
 async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
     method_data = {k: v for k, v in method if k != "annotations"}
     async with conn.transaction():
         method_row = await conn.fetchrow(make_sql_query('methods', method_data), *method_data.values())
-        for annotation in method.annotations:
-            if type(annotation) == schemas.AnnotationsCreate:
-                annotation_row = await insert_pydantic_object(conn, 'annotations', annotation, schemas.Annotations)
-                annotation_id = annotation_row.annotationid
-            elif type(annotation) == int:  # No need for 'else' clause with TypeError since fastapi already checked
-                annotation_id = annotation
-
+        for annotation_id in await create_or_parse_annotations(conn, method.annotations):
             await conn.fetchrow('INSERT INTO methodannotations (methodid, annotationid) Values ($1, $2) returning *',
                                 method_row['methodid'], annotation_id)
     return schemas.Methods(annotations=method.annotations, **method_row)
@@ -130,9 +136,17 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate):
             related_action_create = schemas.RelatedActionCreate(
                 actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id)
             await insert_pydantic_object(conn, 'relatedactions', related_action_create, schemas.RelatedAction)
+
+        new_sampling_features = []
+        for sampling_feature in action.sampling_features:
+            new_sampling_features.append(await create_sampling_feature(conn, sampling_feature))
+
+            feature_action = schemas.FeatureActionsCreate(
+                samplingfeatureuuid=new_sampling_features[-1].samplingfeatureuuid, actionid=action_row['actionid'])
+            await create_feature_action(conn, feature_action)
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
     return schemas.Action(equipmentids=action.equipmentids, methodcode=action.methodcode,
-                          **{**action_row, **dict(action_by_row)})
+                          sampling_features=new_sampling_features, **{**action_row, **dict(action_by_row)})
 
 
 async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
@@ -163,7 +177,25 @@ async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: sc
             )
             await insert_pydantic_object(conn, 'relatedfeatures', related_sampling_feature_create,
                                          schemas.RelatedSamplingFeature)
+        for annotation_id in await create_or_parse_annotations(conn, sampling_feature.annotations):
+            await conn.fetchrow('INSERT INTO samplingfeatureannotations (samplingfeatureid, annotationid) '
+                                'Values ($1, $2) returning *', sampling_row['samplingfeatureid'], annotation_id)
     return schemas.SamplingFeatures(**sampling_row)
+
+
+async def create_sampling_feature_annotation(conn: asyncpg.connection,
+                                             sampling_feature_annotation: schemas.SamplingFeatureAnnotationCreate):
+    if sampling_feature_annotation.annotationid is None:
+        annotation_id = await create_or_parse_annotations(conn, [
+            schemas.AnnotationsCreate(**sampling_feature_annotation.dict())])
+        sampling_feature_annotation.annotationid = annotation_id[0]
+
+    await conn.fetchrow(
+        "INSERT INTO samplingfeatureannotations (samplingfeatureid, annotationid) "
+        "VALUES ($1, $2) returning * ", sampling_feature_annotation.samplingfeatureid,
+        sampling_feature_annotation.annotationid)
+
+    return sampling_feature_annotation
 
 
 async def create_result_data_quality(conn: asyncpg.connection, result_data_quality: schemas.ResultsDataQualityCreate):
@@ -213,6 +245,10 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
         for data_quality_code in result.dataqualitycodes:
             await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
                 resultid=result_row['resultid'], dataqualitycode=data_quality_code))
+        for annotation_id in await create_or_parse_annotations(conn, result.annotations):
+            await conn.fetchrow('INSERT INTO resultannotations (resultid, annotationid, begindatetime, enddatetime) '
+                                'Values ($1, $2, $3, $4) returning *',
+                                result_row["resultid"], annotation_id, result.resultdatetime, result.validdatetime)
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
     return schemas.Results(dataqualitycodes=result.dataqualitycodes, **{**result_row, **dict(feature_action_row)})
 

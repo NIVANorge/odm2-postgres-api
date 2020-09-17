@@ -78,6 +78,11 @@ class Annotations(AnnotationsCreate):
     annotationid: int
 
 
+class SamplingFeatureAnnotationCreate(AnnotationsCreate):
+    samplingfeatureid: int
+    annotationid: Optional[int]
+
+
 class PeopleCreate(BaseModel):
     personfirstname: constr(max_length=255)  # type: ignore
     personmiddlename: constr(max_length=255) = None  # type: ignore
@@ -311,20 +316,6 @@ class EndDateTimeBase(BaseModel):
         return enddatetime_checker(enddatetime, values)
 
 
-class ActionsCreate(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
-    actiontypecv: constr(max_length=255)  # type: ignore
-    methodcode: str
-    actiondescription: constr(max_length=5000) = None  # type: ignore
-    actionfilelink: constr(max_length=255) = None  # type: ignore
-    equipmentids: List[int] = []
-    directiveids: List[int] = []
-    relatedactions: List[Tuple[int, str]] = []
-
-
-class Action(ActionsCreate):
-    actionid: int
-
-
 class SamplingFeaturesCreate(BaseModel):
     samplingfeatureuuid: uuid.UUID
     samplingfeaturetypecv: constr(max_length=255)  # type: ignore
@@ -336,6 +327,7 @@ class SamplingFeaturesCreate(BaseModel):
     elevation_m: Optional[float]
     elevationdatumcv: constr(max_length=255) = None  # type: ignore
     relatedsamplingfeatures: List[Tuple[int, str]] = []
+    annotations: List[Union[AnnotationsCreate, int]] = []
 
     @validator('featuregeometrywkt')
     def featuregeometrywkt_validator(cls, wkt):
@@ -359,6 +351,25 @@ class RelatedSamplingFeatureCreate(BaseModel):
 
 class RelatedSamplingFeature(RelatedSamplingFeatureCreate):
     relationid: int
+
+
+class ActionsBase(ActionsByFields, BeginDateTimeBase, EndDateTimeBase):
+    actiontypecv: constr(max_length=255)  # type: ignore
+    methodcode: str
+    actiondescription: constr(max_length=5000) = None  # type: ignore
+    actionfilelink: constr(max_length=255) = None  # type: ignore
+    equipmentids: List[int] = []
+    directiveids: List[int] = []
+    relatedactions: List[Tuple[int, str]] = []
+
+
+class ActionsCreate(ActionsBase):
+    sampling_features: List[SamplingFeaturesCreate] = []
+
+
+class Action(ActionsBase):
+    actionid: int
+    sampling_features: List[SamplingFeatures] = []
 
 
 class SpatialReferencesCreate(BaseModel):
@@ -455,6 +466,7 @@ class ResultsCreate(FeatureActionsCreate):
     statuscv: constr(max_length=255) = None  # type: ignore
     sampledmediumcv: constr(max_length=5000) = None  # type: ignore
     valuecount: int
+    annotations: List[Union[AnnotationsCreate, int]] = []
 
     @validator('resultdatetime')
     def check_resultdatetime_utc_offset(cls, enddatetime: dt.datetime, values):
@@ -560,6 +572,22 @@ class PersonExtended(People):
     primaryemail: str
     externalidentifiersystemid: str
     externalidentifiersystemname: str
+
+
+class MsMethods(BaseModel):
+    fd_methodcode: Optional[str] = None
+    fdc_methodcode: Optional[str] = None
+    convt_methodcode: Optional[str] = None
+    fid_methodcode: Optional[str] = None
+
+    class Config:
+        extra = 'forbid'
+
+
+class MsResultAnnotationLinkQuery(BaseModel):
+    samplingfeaturecode: str
+    annotationcode: str
+    Methods: MsMethods
 
 
 if __name__ == '__main__':

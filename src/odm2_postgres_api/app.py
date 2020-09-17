@@ -12,7 +12,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from odm2_postgres_api.metadata_init.populate_metadata import populate_metadata
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
-from odm2_postgres_api.routes import begroing_routes, shared_routes
+from odm2_postgres_api.routes import begroing_routes, shared_routes, mass_spectrometry_routes
 
 
 app = FastAPI(
@@ -25,10 +25,11 @@ app = FastAPI(
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     # Log the error that is send to the client
+    logging.debug(f'Body of failed request: {exc.body}')
     logging.info('Error thrown on request', extra={'url': request.url, 'error_detail': jsonable_encoder(exc.errors())})
     return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": jsonable_encoder(exc.errors())},
+        content={"detail": jsonable_encoder(exc.errors()), "body": exc.body},
     )
 
 
@@ -58,5 +59,6 @@ async def shutdown_event():
     logging.info('Successfully closed connection pool')
 
 
-app.include_router(begroing_routes.router,   prefix="/begroing",)
 app.include_router(shared_routes.router)
+app.include_router(begroing_routes.router, prefix="/begroing",)
+app.include_router(mass_spectrometry_routes.router, prefix="/mass_spec")

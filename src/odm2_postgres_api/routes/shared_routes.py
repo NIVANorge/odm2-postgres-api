@@ -59,6 +59,18 @@ async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreat
     return await core_queries.create_sampling_feature(connection, sampling_feature)
 
 
+@router.post("/sampling_feature_annotation", response_model=schemas.SamplingFeatureAnnotationCreate)
+async def post_sampling_features_annotation(sampling_feature_annotation: schemas.SamplingFeatureAnnotationCreate,
+                                            connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.create_sampling_feature_annotation(connection, sampling_feature_annotation)
+
+
+@router.post("/processing_levels", response_model=schemas.ProcessingLevels)
+async def post_processing_levels(processing_level: schemas.ProcessingLevelsCreate,
+                                 connection=Depends(api_pool_manager.get_conn)):
+    return await insert_pydantic_object(connection, 'processinglevels', processing_level, schemas.ProcessingLevels)
+
+
 @router.post("/spatial_references", response_model=schemas.SpatialReferences)
 async def post_spatial_references(spatial_reference: schemas.SpatialReferencesCreate,
                                   connection=Depends(api_pool_manager.get_conn)):

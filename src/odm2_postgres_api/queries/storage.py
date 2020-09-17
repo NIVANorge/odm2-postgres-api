@@ -3,7 +3,7 @@ from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_
 from odm2_postgres_api.schemas.schemas import OrganizationsCreate, Organizations, ExternalIdentifierSystemsCreate, \
     ExternalIdentifierSystems, PeopleAffiliation, PeopleAffiliationCreate, AffiliationsCreate, People, PeopleCreate, \
     Affiliations, ProcessingLevelsCreate, ProcessingLevels, ControlledVocabularyCreate, ControlledVocabulary, \
-    UnitsCreate, Units, VariablesCreate, Variables, Methods, MethodsCreate
+    UnitsCreate, Units, VariablesCreate, Variables, Methods, MethodsCreate, SamplingFeaturesCreate, SamplingFeatures
 
 
 async def save_organization(connection, organization: OrganizationsCreate) -> Organizations:
@@ -57,6 +57,14 @@ async def post_processing_levels(connection, processing_level: ProcessingLevelsC
 
 async def save_controlled_vocab(conn, controlled_vocabulary: ControlledVocabularyCreate) -> ControlledVocabulary:
     return await core_queries.create_new_controlled_vocabulary_item(conn, controlled_vocabulary)
+
+
+async def save_sampling_features(connection, sampling_feature: SamplingFeaturesCreate):
+    existing = await find_row(connection, "samplingfeatures", "samplingfeaturecode",
+                              sampling_feature.samplingfeaturecode, SamplingFeatures)
+    if existing:
+        return existing
+    return await core_queries.create_sampling_feature(connection, sampling_feature)
 
 
 async def save_units(connection, unit: UnitsCreate) -> Units:
