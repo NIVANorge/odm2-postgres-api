@@ -42,8 +42,10 @@ async def get_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Units:
     return existing
 
 
-async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model):
+async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model, raise_if_none=False):
     row = await conn.fetchrow(f"SELECT * FROM {table} WHERE {id_column}=$1", identifier)
+    if row is None and raise_if_none:
+        raise HTTPException(status_code=422, detail=f"did not find item in table {table} with id={identifier}")
     return model(**row) if row else None
 
 

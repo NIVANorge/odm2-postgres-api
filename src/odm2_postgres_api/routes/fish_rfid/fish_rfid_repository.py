@@ -22,7 +22,7 @@ async def register_fish_observations(conn, request: FishObservationRequest,
         if fish_sf not in fish_sampling_features:
             fish_sampling_features.append(fish_sf)
         station_sf = await find_row(conn, "samplingfeatures", "samplingfeaturecode", observation.station_code,
-                                    SamplingFeatures)
+                                    SamplingFeatures, raise_if_none=True)
         if station_sf not in station_sampling_features:
             station_sampling_features.append(station_sf)
 
