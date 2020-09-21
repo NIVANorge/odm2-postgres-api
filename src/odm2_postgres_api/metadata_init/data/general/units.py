@@ -52,28 +52,6 @@ general_units = [
         "unitsabbreviation": "m/s",
         "unitsname": "meter per second"
     }, {
-        "unitstypecv": "Dimensionless",
-        "unitsabbreviation": "Microscopic semi quantitative abundance classifier",
-        "unitsname": "Microscopic semi quantitative abundance classifier, x = observed, xx = common, xxx = frequent"
-    }, {
-        "unitstypecv": "Dimensionless",
-        "unitsabbreviation": "PrsAbs",
-        "unitsname": "Presence or Absence",
-        "unitslink": "http://qwwebservices.usgs.gov/service-domains.html"
-    }, {
-        "unitstypecv": "Dimensionless",
-        "unitsabbreviation": "Macroscopic species coverage 1-5 scale",
-        "unitsname": "Macroscopic species coverage 1-5 scale, 1 = single / rare (<1% coverage), 2 = scattered / occasional (1 <5% coverage), 3 = regular / frequent (5 <25% coverage), 4 = frequent / abundant (25 <50% coverage) ), 5 = dominant / dominant (50-100% coverage)"  # nopep8
-    }, {
-        "unitstypecv": "Dimensionless",
-        "unitsabbreviation": "%",
-        "unitsname": "Kiselalger Relative abundance",
-        "unitslink": "http://qudt.org/vocab/unit#Percent; http://unitsofmeasure.org/ucum.html#para-29; http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Units&id=1125579048; http://www.unidata.ucar.edu/software/udunits/; http://qwwebservices.usgs.gov/service-domains.html"  # nopep8
-    }, {
-        "unitstypecv": "Dimensionless",
-        "unitsabbreviation": "%",
-        "unitsname": "Percent"
-    }, {
         "unitstypecv": "Time",
         "unitsabbreviation": "s",
         "unitsname": "second"
@@ -81,6 +59,16 @@ general_units = [
         "unitstypecv": "Dimensionless",
         "unitsabbreviation": "-",
         "unitsname": "Dimensionless"
+    }, {
+        "unitstypecv": "Dimensionless",
+        "unitsabbreviation": "PrsAbs",
+        "unitsname": "Presence or Absence",
+        "unitslink": "http://qwwebservices.usgs.gov/service-domains.html"
+    }, {
+        "unitstypecv": "Dimensionless",
+        "unitsabbreviation": "%",
+        "unitsname": "Percent",
+        "unitslink": "http://qudt.org/vocab/unit#Percent; http://unitsofmeasure.org/ucum.html#para-29; http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=Units&id=1125579048; http://www.unidata.ucar.edu/software/udunits/; http://qwwebservices.usgs.gov/service-domains.html"  # nopep8
     },
 ]
 

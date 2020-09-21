@@ -61,9 +61,9 @@ general_variables = [
         "variabletypecv": "Biota",
         "variablenamecv": "Abundance",
         "variabledefinition": "This variable indicates the abundance of the taxon of the result",
-        "variablecode": "begroing_0",
+        "variablecode": "010",
         "nodatavalue": -9999
-    },
+    }
 ]
 
 

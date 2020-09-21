@@ -1,6 +1,6 @@
 from typing import List
 
-from odm2_postgres_api.schemas.schemas import VariablesCreate, MethodsCreate, ControlledVocabularyCreate
+from odm2_postgres_api.schemas.schemas import VariablesCreate, MethodsCreate, ControlledVocabularyCreate, UnitsCreate
 
 begroing_indices = [{
     "name": "PIT",
@@ -81,16 +81,33 @@ def begroing_controlled_vocabularies() -> List[ControlledVocabularyCreate]:
     return [ControlledVocabularyCreate(**cv) for cv in begroing_indices]
 
 
+begroing_units_list = [
+    {
+        "unitstypecv": "Dimensionless",
+        "unitsabbreviation": "Microscopic semi quantitative abundance classifier",
+        "unitsname": "Microscopic semi quantitative abundance classifier, x = observed, xx = common, xxx = frequent"
+    }, {
+        "unitstypecv": "Dimensionless",
+        "unitsabbreviation": "Macroscopic species coverage 1-5 scale",
+        "unitsname": "Macroscopic species coverage 1-5 scale, 1 = single / rare (<1% coverage), 2 = scattered / occasional (1 <5% coverage), 3 = regular / frequent (5 <25% coverage), 4 = frequent / abundant (25 <50% coverage) ), 5 = dominant / dominant (50-100% coverage)"  # nopep8
+    }
+]
+
+
+def begroing_units() -> List[UnitsCreate]:
+    return [UnitsCreate(**u) for u in begroing_units_list]
+
+
 def begroing_variables() -> List[VariablesCreate]:
-    begroing_variables = [{
+    begroing_variables_list = [{
         "variabletypecv": "Water quality",
         "variablenamecv": index_dict["name"],
         "variabledefinition": "water quality index",
-        "variablecode": f'begroing_{i + 1}',  # The abundance variable down below is begroing_0
+        "variablecode": f'begroing_{i}',  # The abundance variable down below is begroing_0
         "nodatavalue": -9999
     } for i, index_dict in enumerate(begroing_indices)]
 
-    return [VariablesCreate(**v) for v in begroing_variables]
+    return [VariablesCreate(**v) for v in begroing_variables_list]
 
 
 def begroing_methods(org_id: int) -> List[MethodsCreate]:
