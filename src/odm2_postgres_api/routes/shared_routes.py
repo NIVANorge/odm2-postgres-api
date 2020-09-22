@@ -143,3 +143,10 @@ async def get_variable(variablecode: constr(max_length=50),  # type: ignore
                        connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.find_row(connection, 'variables', 'variablecode',
                                        variablecode, schemas.Variables, raise_if_none=True)
+
+
+@router.get("/processinglevel", response_model=schemas.ProcessingLevels)
+async def get_processinglevel(processinglevelcode: constr(max_length=50),  # type: ignore
+                              connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.find_row(connection, 'processinglevels', 'processinglevelcode',
+                                       processinglevelcode, schemas.ProcessingLevels, raise_if_none=True)
