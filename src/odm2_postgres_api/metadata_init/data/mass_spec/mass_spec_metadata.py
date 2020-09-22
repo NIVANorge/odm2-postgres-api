@@ -66,7 +66,7 @@ def mass_spec_variables() -> List[VariablesCreate]:
         "nodatavalue": -9999
     }, {
         "variabletypecv": "Chemistry",
-        "variablenamecv": "LC_QTOF_Peaks",
+        "variablenamecv": "LC_QTOF_mzXML",
         "variabledefinition": "Data produced by Liquid Chmoatography coupled to Quadrupole Time of Flight "
                               "instrument and converted to mzXML format",
         "variablecode": f'mass_spec_01',
