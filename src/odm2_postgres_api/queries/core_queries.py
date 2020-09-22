@@ -28,24 +28,19 @@ async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pyda
     return response_model(**row)
 
 
-async def find_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Optional[Units]:
+async def find_unit(conn: asyncpg.connection, unit: UnitsCreate, raise_if_none=False) -> Optional[Units]:
     row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
                               unit.unitsabbreviation)
-    return Units(**row) if row else None
-
-
-async def get_unit(conn: asyncpg.connection, unit: UnitsCreate) -> Units:
-    existing = await find_unit(conn, unit)
-    if not existing:
+    if row is None and raise_if_none:
         raise HTTPException(status_code=422, detail=f"Unit unitstypecv={unit.unitstypecv} and "
                                                     f"unitsabbreviation={unit.unitsabbreviation} does not exist")
-    return existing
+    return Units(**row) if row else None
 
 
 async def find_row(conn: asyncpg.connection, table: str, id_column: str, identifier, model, raise_if_none=False):
     row = await conn.fetchrow(f"SELECT * FROM {table} WHERE {id_column}=$1", identifier)
     if row is None and raise_if_none:
-        raise HTTPException(status_code=422, detail=f"did not find item in table {table} with id={identifier}")
+        raise HTTPException(status_code=422, detail=f"Item in table {table} with '{id_column}={identifier}' not found")
     return model(**row) if row else None
 
 
