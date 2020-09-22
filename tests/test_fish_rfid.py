@@ -1,11 +1,9 @@
-from datetime import datetime, timezone
+from datetime import timezone
 
 import pytest
 from odm2_postgres_api.routes.fish_rfid.fish_rfid_routes import post_fish_observation
-from starlette.testclient import TestClient
 
-from integration_test_fixtures import wait_for_db, clear_db, init_dbpool
-from odm2_postgres_api.app import app
+from integration_test_fixtures import db_conn, wait_for_db
 from odm2_postgres_api.queries.core_queries import find_or_create_sampling_feature
 from odm2_postgres_api.routes.fish_rfid.fish_rfid_types import FishObservationRequest, FishObservationResponse, \
     FishObservationCreate
@@ -14,15 +12,13 @@ from test_utils import user_header
 
 @pytest.mark.docker
 @pytest.mark.asyncio
-async def test_create_sampling_feature_if_not_exists(wait_for_db, clear_db):
-    db_pool = await init_dbpool()
-    async with db_pool.acquire() as conn:
-        code = "AAA"
-        sf_type = "Specimen"
-        fish_sf = await find_or_create_sampling_feature(conn, code, sf_type)
-        assert fish_sf.samplingfeatureid > 0
-        fish_sf2 = await find_or_create_sampling_feature(conn, code, sf_type)
-        assert fish_sf == fish_sf2
+async def test_create_sampling_feature_if_not_exists(db_conn):
+    code = "AAA"
+    sf_type = "Specimen"
+    fish_sf = await find_or_create_sampling_feature(db_conn, code, sf_type)
+    assert fish_sf.samplingfeatureid > 0
+    fish_sf2 = await find_or_create_sampling_feature(db_conn, code, sf_type)
+    assert fish_sf == fish_sf2
 
 
 example_file = """
@@ -67,50 +63,48 @@ def csv_to_observation(l: str) -> FishObservationCreate:
 
 @pytest.mark.docker
 @pytest.mark.asyncio
-async def test_store_fish_observations(wait_for_db, clear_db):
+async def test_store_fish_observations(db_conn):
     observations = [csv_to_observation(l) for l in example_file.split("\n") if l]
     payload = FishObservationRequest(observations=observations)
 
-    db_pool = await init_dbpool()
-    async with db_pool.acquire() as conn:
-        station_codes = set([o.station_code for o in observations])
-        for station_code in station_codes:
-            station = await find_or_create_sampling_feature(conn, station_code, "Site",
-                                                            wkt="POINT (10.907013757789976 60.25819134332953)")
+    station_codes = set([o.station_code for o in observations])
+    for station_code in station_codes:
+        station = await find_or_create_sampling_feature(db_conn, station_code, "Site",
+                                                        wkt="POINT (10.907013757789976 60.25819134332953)")
 
-        response = await post_fish_observation(payload, conn, niva_user=user_header()["Niva-User"])
+    response = await post_fish_observation(payload, db_conn, niva_user=user_header()["Niva-User"])
 
-        for i, obs in enumerate(observations):
-            stored = response.observations[i]
+    for i, obs in enumerate(observations):
+        stored = response.observations[i]
 
-            if obs.datetime.tzinfo:
-                assert obs.datetime.astimezone(timezone.utc) == stored.action.begindatetime.replace(tzinfo=timezone.utc)
-            else:
-                assert obs.datetime == stored.action.begindatetime
-            assert stored.action.begindatetimeutcoffset == 0  # we store all times as UTC
-            assert stored.station_sampling_feature in [sf.samplingfeatureuuid for sf in response.station_sampling_features]
-            assert stored.fish_sampling_feature in [sf.samplingfeatureuuid for sf in response.fish_sampling_features]
+        if obs.datetime.tzinfo:
+            assert obs.datetime.astimezone(timezone.utc) == stored.action.begindatetime.replace(tzinfo=timezone.utc)
+        else:
+            assert obs.datetime == stored.action.begindatetime
+        assert stored.action.begindatetimeutcoffset == 0  # we store all times as UTC
+        assert stored.station_sampling_feature in [sf.samplingfeatureuuid for sf in response.station_sampling_features]
+        assert stored.fish_sampling_feature in [sf.samplingfeatureuuid for sf in response.fish_sampling_features]
 
-            assert stored.action.enddatetime - stored.action.begindatetime == obs.duration
-            assert stored.action.actionid > 0
-            assert stored.action.actiontypecv == "Observation"
-            assert stored.action.methodcode == "fish_rfid:observe_fish"
+        assert stored.action.enddatetime - stored.action.begindatetime == obs.duration
+        assert stored.action.actionid > 0
+        assert stored.action.actiontypecv == "Observation"
+        assert stored.action.methodcode == "fish_rfid:observe_fish"
 
-        fish_tags = set([o.fish_tag for o in observations])
+    fish_tags = set([o.fish_tag for o in observations])
 
-        assert len(response.fish_sampling_features) == len(fish_tags)
-        for fish_sf in response.fish_sampling_features:
-            assert fish_sf.samplingfeaturecode in fish_tags
-            assert fish_sf.samplingfeatureid > 0
-            assert fish_sf.samplingfeatureuuid is not None
-            assert fish_sf.samplingfeaturetypecv == "Specimen"
+    assert len(response.fish_sampling_features) == len(fish_tags)
+    for fish_sf in response.fish_sampling_features:
+        assert fish_sf.samplingfeaturecode in fish_tags
+        assert fish_sf.samplingfeatureid > 0
+        assert fish_sf.samplingfeatureuuid is not None
+        assert fish_sf.samplingfeaturetypecv == "Specimen"
 
-        station_codes = set([o.station_code for o in observations])
+    station_codes = set([o.station_code for o in observations])
 
-        assert len(response.station_sampling_features) == len(station_codes)
-        for station_sf in response.station_sampling_features:
-            assert station_sf.samplingfeatureuuid is not None
-            assert station_sf.samplingfeatureid > 0
-            assert station_sf.samplingfeaturecode in station_codes
-            assert station_sf.samplingfeaturetypecv == "Site"
-            assert station_sf.featuregeometrywkt is not None
+    assert len(response.station_sampling_features) == len(station_codes)
+    for station_sf in response.station_sampling_features:
+        assert station_sf.samplingfeatureuuid is not None
+        assert station_sf.samplingfeatureid > 0
+        assert station_sf.samplingfeaturecode in station_codes
+        assert station_sf.samplingfeaturetypecv == "Site"
+        assert station_sf.featuregeometrywkt is not None

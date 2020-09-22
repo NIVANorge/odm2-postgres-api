@@ -25,6 +25,11 @@ def try_db_init(tries=30):
             raise
 
 
+async def init_metadata():
+    db_pool = await init_dbpool()
+    await populate_metadata(db_pool)
+
+
 @pytest.fixture(scope="module")
 def wait_for_db(module_scoped_container_getter):
     """
@@ -39,6 +44,7 @@ def wait_for_db(module_scoped_container_getter):
     try_db_init()
 
     asyncio.set_event_loop(asyncio.new_event_loop())
+    asyncio.run(init_metadata())
 
 
 async def init_dbpool():
@@ -60,3 +66,17 @@ async def clear_db():
     async with db_pool.acquire() as connection:
         await truncate_all_data(connection, "odm2")
     await populate_metadata(db_pool)
+
+
+@pytest.fixture(scope="function")
+async def db_conn(wait_for_db):
+    db_pool = await init_dbpool()
+    async with db_pool.acquire() as conn:
+        transaction = conn.transaction()
+
+        await transaction.start()
+        try:
+            yield conn
+        finally:
+            # clean up after test
+            await transaction.rollback()
