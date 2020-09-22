@@ -1,7 +1,8 @@
 import json
 from typing import List
 
-from odm2_postgres_api.schemas.schemas import SamplingFeaturesCreate, MethodsCreate
+from odm2_postgres_api.schemas.schemas import SamplingFeaturesCreate, MethodsCreate, VariablesCreate, \
+    ControlledVocabularyCreate
 
 
 def mass_spec_sampling_features() -> List[SamplingFeaturesCreate]:
@@ -13,6 +14,88 @@ def mass_spec_sampling_features() -> List[SamplingFeaturesCreate]:
         "samplingfeaturedescription": "Station ID: 3275"
     }]
     return [SamplingFeaturesCreate(**sf) for sf in sampling_features]
+
+
+mass_spec_cv = [
+    {
+        "name": "LC_QTOF_Raw",
+        "term": "Raw data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
+        "definition": "Raw data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
+        "category": "Chemistry",
+        "controlled_vocabulary_table_name": "cv_variablename"
+    }, {
+        "name": "LC_QTOF_mzXML",
+        "term": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument"
+                "and converted to mzXML format",
+        "definition": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight "
+                      "instrument and converted to mzXML format",
+        "category": "Chemistry",
+        "controlled_vocabulary_table_name": "cv_variablename"
+    }, {
+        "name": "LC_QTOF_Peaks",
+        "term": "Peaks detected by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
+        "definition": "List of peaks and their properties to be further identified as chemicals",
+        "category": "Chemistry",
+        "controlled_vocabulary_table_name": "cv_variablename"
+    }, {
+        "name": "LC_QTOF_Peaks_and_Fragments",
+        "term": "Peaks and their fragments "
+                "detected by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
+        "definition": "List of peaks, associated peaks and their properties to be further identified as chemicals",
+        "category": "Chemistry",
+        "controlled_vocabulary_table_name": "cv_variablename"
+    }, {
+        "name": "LC_QTOF_Chemicals",
+        "term": "Chemicals detected by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
+        "definition": "List of chemicals identified based on LC_QTOF_Peaks_and_Fragments",
+        "category": "Chemistry",
+        "controlled_vocabulary_table_name": "cv_variablename"
+    }]
+
+
+def mass_spec_controlled_vocabularies() -> List[ControlledVocabularyCreate]:
+    return [ControlledVocabularyCreate(**cv) for cv in mass_spec_cv]
+
+
+def mass_spec_variables() -> List[VariablesCreate]:
+    mass_spec_variables_list = [{
+        "variabletypecv": "Chemistry",
+        "variablenamecv": "LC_QTOF_Raw",
+        "variabledefinition": "Raw data produced by Liquid Chromatography coupled to Quadrupole Time of Flight "
+                              "instrument",
+        "variablecode": f'mass_spec_00',
+        "nodatavalue": -9999
+    }, {
+        "variabletypecv": "Chemistry",
+        "variablenamecv": "LC_QTOF_mzXML",
+        "variabledefinition": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight "
+                              "instrument and converted to mzXML format",
+        "variablecode": f'mass_spec_01',
+        "nodatavalue": -9999
+    }, {
+        "variabletypecv": "Chemistry",
+        "variablenamecv": "LC_QTOF_Peaks",
+        "variabledefinition": "Peaks detected by Liquid Chromatography coupled to Quadrupole Time of Flight "
+                              "instrument",
+        "variablecode": f'mass_spec_1',
+        "nodatavalue": -9999
+    }, {
+        "variabletypecv": "Chemistry",
+        "variablenamecv": "LC_QTOF_Peaks_and_Fragments",
+        "variabledefinition": "Peaks and fragments detected by Liquid Chromatography coupled to Quadrupole "
+                              "Time of Flight instrument",
+        "variablecode": f'mass_spec_2',
+        "nodatavalue": -9999
+    }, {
+        "variabletypecv": "Chemistry",
+        "variablenamecv": "LC_QTOF_Chemicals",
+        "variabledefinition": "Peaks identified in Liquid Chromatography coupled to Quadrupole Time of Flight "
+                              "instrument",
+        "variablecode": f'mass_spec_3',
+        "nodatavalue": -9999
+    }]
+
+    return [VariablesCreate(**v) for v in mass_spec_variables_list]
 
 
 def mass_spec_methods(org_id: int) -> List[MethodsCreate]:
