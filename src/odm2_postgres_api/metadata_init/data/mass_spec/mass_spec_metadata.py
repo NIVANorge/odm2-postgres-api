@@ -20,14 +20,15 @@ mass_spec_cv = [
     {
         "name": "LC_QTOF_Raw",
         "term": "Raw data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
-        "definition": "List of peaks and their properties to be further identified as chemicals",
+        "definition": "Raw data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
         "category": "Chemistry",
         "controlled_vocabulary_table_name": "cv_variablename"
     }, {
         "name": "LC_QTOF_mzXML",
         "term": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument"
                 "converted to mzXML format",
-        "definition": "List of peaks and their properties to be further identified as chemicals",
+        "definition": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight "
+                      "instrument and converted to mzXML format",
         "category": "Chemistry",
         "controlled_vocabulary_table_name": "cv_variablename"
     }, {
