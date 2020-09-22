@@ -1,4 +1,7 @@
+from typing import Union
+
 from fastapi import Depends, APIRouter
+from pydantic import constr
 
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id
@@ -126,3 +129,17 @@ async def post_measurement_results(measurement_result: schemas.MeasurementResult
 async def post_categorical_results(categorical_result: schemas.CategoricalResultsCreate,
                                    connection=Depends(api_pool_manager.get_conn)):
     return await core_queries.upsert_categorical_result(connection, categorical_result)
+
+
+@router.get("/unit", response_model=schemas.Units)
+async def get_unit(unitstypecv: constr(max_length=255), unitsabbreviation: constr(max_length=50),  # type: ignore
+                   connection=Depends(api_pool_manager.get_conn)):
+    units_create = schemas.UnitsCreate(unitstypecv=unitstypecv, unitsabbreviation=unitsabbreviation, unitsname="")
+    return await core_queries.find_unit(connection, units_create, raise_if_none=True)
+
+
+@router.get("/variable", response_model=schemas.Variables)
+async def get_variable(variablecode: constr(max_length=50),  # type: ignore
+                       connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.find_row(connection, 'variables', 'variablecode',
+                                       variablecode, schemas.Variables, raise_if_none=True)

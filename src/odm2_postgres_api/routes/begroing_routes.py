@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from fastapi import Depends, Header, APIRouter
 
-from odm2_postgres_api.queries.core_queries import find_row, find_unit, get_unit
+from odm2_postgres_api.queries.core_queries import find_row, find_unit
 from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
 from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables
@@ -139,10 +139,12 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
 
     processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
                                       "0", ProcessingLevels)
-    dimensionless_unit = await get_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
-                                                                unitsname="Dimensionless"))
-    seconds_unit = await get_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
-                                                          unitsname="second"))
+    dimensionless_unit = await find_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
+                                                                 unitsname="Dimensionless"), raise_if_none=True)
+    seconds_unit = await find_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
+                                                           unitsname="second"), raise_if_none=True)
+    if dimensionless_unit is None or seconds_unit is None:
+        raise ValueError('Units cannot be "None"')
 
     for index_instance in new_index.indices:
         variable = await find_row(connection, "variables", "variablenamecv", index_instance.indexType, Variables)
