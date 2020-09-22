@@ -26,7 +26,7 @@ mass_spec_cv = [
     }, {
         "name": "LC_QTOF_mzXML",
         "term": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight instrument"
-                "converted to mzXML format",
+                "and converted to mzXML format",
         "definition": "Data produced by Liquid Chromatography coupled to Quadrupole Time of Flight "
                       "instrument and converted to mzXML format",
         "category": "Chemistry",
@@ -75,7 +75,8 @@ def mass_spec_variables() -> List[VariablesCreate]:
     }, {
         "variabletypecv": "Chemistry",
         "variablenamecv": "LC_QTOF_Peaks",
-        "variabledefinition": "Peaks detected by Liquid Chromatography coupled to Quadrupole Time of Flight instrument",
+        "variabledefinition": "Peaks detected by Liquid Chromatography coupled to Quadrupole Time of Flight "
+                              "instrument",
         "variablecode": f'mass_spec_1',
         "nodatavalue": -9999
     }, {
