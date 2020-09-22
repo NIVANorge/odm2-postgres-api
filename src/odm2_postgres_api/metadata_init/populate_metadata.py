@@ -7,7 +7,7 @@ from odm2_postgres_api.metadata_init.data.begroing.begroing_metadata import begr
 from odm2_postgres_api.metadata_init.data.fish_rfid.fish_rfid_metadata import fish_rfid_sampling_features, \
     fish_rfid_methods
 from odm2_postgres_api.metadata_init.data.mass_spec.mass_spec_metadata import mass_spec_methods,\
-    mass_spec_sampling_features
+    mass_spec_sampling_features, mass_spec_variables, mass_spec_controlled_vocabularies
 from odm2_postgres_api.metadata_init.data.general.controlled_vocabularies import controlled_vocabularies
 from odm2_postgres_api.metadata_init.data.general.external_identifier_systems import external_identifier_systems
 from odm2_postgres_api.metadata_init.data.general.methods import methods
@@ -62,8 +62,14 @@ async def populate_metadata(db_pool):
         for sf in mass_spec_sampling_features():
             await save_sampling_features(conn, sf)
 
+        for cv in mass_spec_controlled_vocabularies():
+            await save_controlled_vocab(conn, cv)
+
         for m in mass_spec_methods(org_id=niva_org_id):
             await save_methods(conn, m)
+
+        for v in mass_spec_variables():
+            await save_variables(conn, v)
 
         # fish_rfid metadata
         for sf in fish_rfid_sampling_features():
