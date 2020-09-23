@@ -92,6 +92,18 @@ async def create_or_parse_annotations(conn: asyncpg.connection,
     return annotation_ids
 
 
+async def insert_taxonomic_classifier(conn: asyncpg.connection, taxon: schemas.TaxonomicClassifierCreate):
+    taxon_data = {k: v for k, v in taxon if k != "annotations"}
+    async with conn.transaction():
+        taxon_row = await conn.fetchrow(make_sql_query('taxonomicclassifiers', taxon_data), *taxon_data.values())
+        logging.info(taxon_row)
+        for annotation_id in await create_or_parse_annotations(conn, taxon.annotations):
+            await conn.fetchrow('INSERT INTO TaxonomicClassifiersAnnotations (taxonomicclassifierid, annotationid) '
+                                'Values ($1, $2) returning *',
+                                taxon_row['taxonomicclassifierid'], annotation_id)
+    return schemas.TaxonomicClassifier(annotations=taxon.annotations, **taxon_row)
+
+
 async def insert_method(conn: asyncpg.connection, method: schemas.MethodsCreate):
     method_data = {k: v for k, v in method if k != "annotations"}
     async with conn.transaction():

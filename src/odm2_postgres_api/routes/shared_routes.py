@@ -94,8 +94,7 @@ async def post_data_quality(data_quality: schemas.DataQualityCreate, connection=
 @router.post("/taxonomic_classifiers", response_model=schemas.TaxonomicClassifier)
 async def post_taxonomic_classifiers(taxonomic_classifier_create: schemas.TaxonomicClassifierCreate,
                                      connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'taxonomicclassifiers',
-                                        taxonomic_classifier_create, schemas.TaxonomicClassifier)
+    return await core_queries.insert_taxonomic_classifier(connection, taxonomic_classifier_create)
 
 
 @router.post("/result_data_quality", response_model=schemas.ResultsDataQuality)

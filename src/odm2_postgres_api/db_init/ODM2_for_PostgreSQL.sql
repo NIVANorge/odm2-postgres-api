@@ -2333,3 +2333,17 @@ ALTER TABLE ODM2.externalidentifiersystems ADD UNIQUE (externalidentifiersystemn
 ALTER TABLE ODM2.units ADD UNIQUE (unitstypecv, unitsabbreviation);
 
 ALTER TABLE ODM2.samplingfeatures ADD UNIQUE (samplingfeatureuuid);
+
+create table ODM2.TaxonomicClassifiersAnnotations (
+	bridgeid serial  NOT NULL primary key,
+	taxonomicclassifierid integer  NOT NULL,
+	annotationid integer  NOT NULL
+);
+
+alter table ODM2.TaxonomicClassifiersAnnotations add constraint fk_TaxonomicClassifiersAnnotations_Actions
+foreign key (taxonomicclassifierid) References ODM2.TaxonomicClassifiers (taxonomicclassifierid)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.TaxonomicClassifiersAnnotations add constraint fk_TaxonomicClassifiersAnnotations_Annotations
+foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
+on update no Action on delete RESTRICT;

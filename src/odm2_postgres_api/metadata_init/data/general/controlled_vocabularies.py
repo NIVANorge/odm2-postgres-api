@@ -10,6 +10,12 @@ cvs = [{
                   "and measured over time.",
     "category": "Coverage",
     "controlled_vocabulary_table_name": "cv_resulttype"
+}, {
+    "term": "taxonomicClassifierAnnotation",
+    "name": "Taxonomic classifier annotation",
+    "definition": "An annotation or qualifying comment about an TaxonomicClassifier.",
+    "category": "Annotation",
+    "controlled_vocabulary_table_name": "cv_annotationtype"
 },
 ]
 

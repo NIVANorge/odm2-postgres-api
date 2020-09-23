@@ -37,6 +37,13 @@ def create_optional_date_time_checker(datetime_name: str, offset_name: str):
     return check_utc_offset
 
 
+def create_annotation_type_cv_checker(annotations, annotation_type):
+    for annotation in annotations:
+        if type(annotation) == AnnotationsCreate and annotation.annotationtypecv != annotation_type:
+            raise ValueError(f'annotation type must be "{annotation_type}"')
+    return annotations
+
+
 cv_checker = constr(regex=f'({"|".join([f"^{cv}$" for cv in CONTROLLED_VOCABULARY_TABLE_NAMES])})')
 annotation_datetime_checker = create_optional_date_time_checker('annotationdatetime', 'annotationutcoffset')
 begindatetime_checker = create_obligatory_date_time_checker('begindatetime', 'begindatetimeutcoffset')
@@ -429,6 +436,11 @@ class TaxonomicClassifierCreate(BaseModel):
     taxonomicclassifiercommonname: constr(max_length=255) = None  # type: ignore
     taxonomicclassifierdescription: constr(max_length=5000) = None  # type: ignore
     parenttaxonomicclassifierid: Optional[int]
+    annotations: List[Union[AnnotationsCreate, int]] = []
+
+    @validator('annotations')
+    def check_annotations(cls, annotations):
+        return create_annotation_type_cv_checker(annotations, "Taxonomic classifier annotation")
 
 
 class TaxonomicClassifier(TaxonomicClassifierCreate):
