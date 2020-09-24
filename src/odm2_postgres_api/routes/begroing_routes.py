@@ -6,7 +6,7 @@ from fastapi import Depends, Header, APIRouter
 from odm2_postgres_api.queries.core_queries import find_row, find_unit
 from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
-from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables
+from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables, BegroingIndices
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
@@ -121,7 +121,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
 @router.post("/indices", response_model=schemas.BegroingIndices)
 async def post_indices(new_index: schemas.BegroingIndicesCreate,
                        connection=Depends(api_pool_manager.get_conn),
-                       niva_user: str = Header(None)):
+                       niva_user: str = Header(None)) -> BegroingIndices:
     user = await create_or_get_user(connection, niva_user)
 
     data_action = schemas.ActionsCreate(

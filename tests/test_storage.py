@@ -1,7 +1,7 @@
 import uuid
 
 import pytest
-from integration_test_fixtures import wait_for_db,db_conn, clear_db, init_dbpool
+from integration_test_fixtures import wait_for_db,db_conn
 
 from odm2_postgres_api.queries.storage import save_organization, save_controlled_vocab, save_units
 from odm2_postgres_api.schemas.schemas import OrganizationsCreate, ControlledVocabularyCreate, UnitsCreate

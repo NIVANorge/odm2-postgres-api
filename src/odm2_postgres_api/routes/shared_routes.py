@@ -6,7 +6,7 @@ from pydantic import constr
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object, find_person_by_external_id
 from odm2_postgres_api.schemas import schemas
-from odm2_postgres_api.schemas.schemas import PersonExtended
+from odm2_postgres_api.schemas.schemas import PersonExtended, Directive, SamplingFeatures
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
 router = APIRouter()
@@ -42,7 +42,8 @@ async def post_equipment(equipment: schemas.EquipmentCreate, connection=Depends(
 
 
 @router.post("/directives", response_model=schemas.Directive)
-async def post_directive(directive: schemas.DirectivesCreate, connection=Depends(api_pool_manager.get_conn)):
+async def post_directive(directive: schemas.DirectivesCreate,
+                         connection=Depends(api_pool_manager.get_conn)) -> Directive:
     return await insert_pydantic_object(connection, 'directives', directive, schemas.Directive)
 
 
@@ -56,9 +57,9 @@ async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(
     return await core_queries.do_action(connection, action_create)
 
 
-@router.post("/sampling_features", response_model=schemas.SamplingFeatures)
+@router.post("/sampling_features", response_model=SamplingFeatures)
 async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreate,
-                                 connection=Depends(api_pool_manager.get_conn)):
+                                 connection=Depends(api_pool_manager.get_conn)) -> SamplingFeatures:
     return await core_queries.create_sampling_feature(connection, sampling_feature)
 
 

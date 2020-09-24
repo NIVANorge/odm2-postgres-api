@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 from odm2_postgres_api.db_init.db_initiate import db_init
 from odm2_postgres_api.metadata_init.populate_metadata import populate_metadata
-from test_utils import truncate_all_data
 
 
 def try_db_init(tries=30):
@@ -55,17 +54,6 @@ async def init_dbpool():
     db_name = os.environ["ODM2_DB"]
     return await asyncpg.create_pool(user=user, password=password, server_settings={"search_path": "odm2,public"},
                                      host=db_host, port=db_port, database=db_name)
-
-
-@pytest.fixture(scope="function")
-async def clear_db():
-    """
-    Truncates tables in database.
-    """
-    db_pool = await init_dbpool()
-    async with db_pool.acquire() as connection:
-        await truncate_all_data(connection, "odm2")
-    await populate_metadata(db_pool)
 
 
 @pytest.fixture(scope="function")
