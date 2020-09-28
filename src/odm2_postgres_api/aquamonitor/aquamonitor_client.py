@@ -218,6 +218,15 @@ async def main(api_url: str, username: str, password: str):
             "taxonomicclassifierdescription": "Bryophyta Bryophyta (Moser) Bryophyta\nrubin_nr:BG091",
         })
 
+        achnanthes = TaxonomicClassifier(**{
+            "taxonomicclassifiercommonname": "Achnanthes biasolettiana",
+            "taxonomicclassifierdescription": "autor:Grun., autor_ref:None↵ph_opt:None, "
+                                              "ph_ref:None↵rubin_kode:ACHN BIA",
+            "taxonomicclassifiertypecv": "Biology",
+            "taxonomicclassifierid": 1015,
+            "taxonomicclassifiername": "ACHN BIA",
+        })
+
         method_pres_abs = Methods(**{
             "methodid": 4,
             "methodname": "Presence/absence",
@@ -228,7 +237,7 @@ async def main(api_url: str, username: str, password: str):
 
         observation_values = [
             BegroingObservationValues(taxon=bryophyt, method=method_pres_abs, value="x"),
-            BegroingObservationValues(taxon=bryophyt, method=method_pres_abs, value="<1"),
+            BegroingObservationValues(taxon=achnanthes, method=method_pres_abs, value="<1"),
         ]
 
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
