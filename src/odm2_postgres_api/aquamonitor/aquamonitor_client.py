@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime, date
-from typing import List, Optional
+from typing import List, Optional, Dict
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -53,9 +53,9 @@ async def get_begroing_observations(client: AsyncClient, sample_id: int, method_
 
 
 async def post_begroing_sample(client: AsyncClient, sample: BegroingSampleCargoCreate) -> BegroingSampleCargo:
-    # TODO: this does not  set json headers properly..
     headers = {"Content-Type": "application/json"}
-    response = await client.post(f"/begroing/samples", data=sample.json(), headers=headers)
+
+    response = await client.post(f"/begroing/samples", data=sample.json(), headers=headers)  # type: ignore
     response.raise_for_status()
     return BegroingSampleCargo(**response.json())
 
@@ -65,7 +65,7 @@ async def delete_begroing_sample(client: AsyncClient, begroing_sample_id: int):
     response.raise_for_status()
 
 
-async def get_project_stations(client: AsyncClient, project_name: str, station_code: str) -> Optional[StationCargo]:
+async def get_project_stations(client: AsyncClient, project_name: str, station_code: str) -> StationCargo:
     res = await client.get(f"/query/Stations?projectName={project_name}&stationCode={station_code}")
     if res.status_code == 404:
         raise HTTPException(422, f"Did not find station={station_code} in Aquamonitor")
@@ -106,6 +106,7 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
                                         result: BegroingObservations) -> BegroingSampleCargo:
     samples = await get_begroing_samples(client, station.Id, result.date)
     if len(samples) == 1:
+        logging.info("Found sample in aquamonitor", extra={"sample_id": samples[0].Id})
         return samples[0]
 
     if len(samples) > 1:
@@ -113,19 +114,19 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
         raise Exception(
             f"Found {len(samples)} samples in aquamonitor. This is not taken care of, not implemented yet. "
             f"Please contact cloud@niva.no for help")
-    if not samples:
-        body = BegroingSampleCargoCreate(Station=station, SampleDate=result.date)
-        samples = await post_begroing_sample(client, body)
-        # TODO: deleting all our writes for now to avoid noise. this is not 100% safe as the delete could fail
-        await delete_begroing_sample(client, samples.Id)
-    return samples
+
+    body = BegroingSampleCargoCreate(Station=station, SampleDate=result.date)
+    sample = await post_begroing_sample(client, body)
+    # TODO: deleting all our writes for now to avoid noise. this is not 100% safe as the delete could fail
+    await delete_begroing_sample(client, sample.Id)
+    return sample
 
 
 async def update_begroing_observation(client: AsyncClient,
                                       observation: BegroingObservationCargo) -> BegroingObservationCargo:
     sample_id = observation.Sample.Id
     res = await client.put(f"/begroing/samples/{sample_id}/observations/{observation.Id}",
-                           data=observation.json(),
+                           data=observation.json(),  # type: ignore
                            headers={"Content-Type": "application/json"})
     handle_aquamonitor_error(res)
     return res.json()
@@ -145,7 +146,7 @@ async def post_begroing_observation(client: AsyncClient, sample: BegroingSampleC
 
     body = BegroingObservationCargoCreate(Sample=sample, Method=method, Taxonomy=taxon, Value=obs.value)
     res = await client.post(f"/begroing/samples/{sample.Id}/observations",
-                            data=body.json(),
+                            data=body.json(),  # type: ignore
                             headers={"Content-Type": "application/json"})
     handle_aquamonitor_error(res)
     result = BegroingObservationCargo(**res.json())
@@ -155,16 +156,26 @@ async def post_begroing_observation(client: AsyncClient, sample: BegroingSampleC
     return result
 
 
-async def post_begroing_observations(client: AsyncClient, result: BegroingObservations):
+async def store_begroing_results(result: BegroingObservations) -> Dict:
+    base_url = "https://test-aquamonitor.niva.no/AquaServices/api"
+    username = os.environ["AQUAMONITOR_USER"]
+    password = os.environ["AQUAMONITOR_PASSWORD"]
+    async with AsyncClient(base_url=base_url, auth=(username, password), event_hooks=request_hooks) as client:
+        return await post_begroing_observations(client=client, result=result)
+
+
+async def post_begroing_observations(client: AsyncClient, result: BegroingObservations) -> Dict:
     station_code = result.station.samplingfeaturecode
     station: StationCargo = await get_project_stations(client, result.project.directivedescription, station_code)
 
     sample = await get_or_create_begroing_sample(client, station, result)
-
-    created_observersions = await asyncio.gather(
-        *[post_begroing_observation(client, sample, o) for o in result.observations])
-    observation_ids = [o.Id for o in created_observersions]
-    logging.info("Successfully stored observations", extra={"observation_ids": observation_ids})
+    with LogContext(sample_id=sample.Id, station_code=station.Code, station_id=station.Id,
+                    project_name=result.project.directivedescription, date=result.date):
+        created_observations = await asyncio.gather(
+            *[post_begroing_observation(client, sample, o) for o in result.observations])
+        observation_ids = [o.Id for o in created_observations]
+        logging.info("Successfully stored observations", extra={"observation_ids": observation_ids})
+        return {"sample": sample, "observations": created_observations}
 
 
 # TODO: move this to nivacloud-logging

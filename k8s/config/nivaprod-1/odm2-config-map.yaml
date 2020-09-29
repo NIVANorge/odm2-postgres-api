@@ -15,3 +15,4 @@ data:
   TIMESCALE_ODM2_SERVICE_PORT: "5432"
   ODM2_DB_READ_ONLY_USER: niva_odm2_read_only_user
   DATA_UPLOAD_BUCKET: niva-data-upload-nivaprod-1
+  WRITE_TO_AQUAMONITOR: "true"
