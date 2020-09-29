@@ -3,7 +3,7 @@ import datetime as dt
 from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
-from pydantic import BaseModel, constr, conlist,  validator
+from pydantic import BaseModel, constr, conlist, validator
 
 from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
 
@@ -588,6 +588,45 @@ class MsResultAnnotationLinkQuery(BaseModel):
     samplingfeaturecode: str
     annotationcode: str
     Methods: MsMethods
+
+
+class MsCreateReplicas(BaseModel):
+    samplingfeaturecode: str
+    parent_samplingfeatureid: int
+    samplingfeatureannotationjson: str
+    resultannotationlink: str
+
+
+class MsReplicas(BaseModel):
+    fractionate_sample: Action
+    ran_mass_spec: Action
+    results: Results
+
+
+class MsCreateSample(BaseModel):
+    samplingfeaturecode: str
+    parent_samplingfeatureid: int
+    collection_time: dt.datetime
+
+
+class MsCreateSite(BaseModel):
+    samplingfeaturecode: str
+    samplingfeaturename: str
+    description: str
+
+
+class MsCreateOutput(BaseModel):
+    methodcode: str
+    resultannotationlink: str
+    resultannotationjson: str
+    samplingfeaturecode: str
+    resultannotationcode: str
+    variablecode: str
+
+
+class MsOutput(BaseModel):
+    action: Action
+    result: Results
 
 
 if __name__ == '__main__':
