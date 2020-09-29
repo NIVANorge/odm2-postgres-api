@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, Dict
 
+from fastapi import HTTPException
 from pydantic import Field
 from pydantic.main import BaseModel
 
@@ -106,3 +107,7 @@ class BegroingObservationCargoCreate(BaseModel):
 
 class BegroingObservationCargo(BegroingObservationCargoCreate):
     Id: int
+
+
+class AquamonitorAPIError(HTTPException):
+    pass

@@ -26,7 +26,7 @@ async def get_taxonomy_codes(client: AsyncClient, domain_id: str):
 
 async def get_taxonomy(client: AsyncClient, domain_id: str, code: str) -> TaxonomyCodeCargo:
     res = await client.get(f"/query/taxonomy/domains?domain={domain_id}&code={code}")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return TaxonomyCodeCargo(**res.json())
 
 
@@ -40,7 +40,7 @@ async def get_taxonomy_domain_id(client: AsyncClient, domain: str):
 async def get_begroing_samples(client: AsyncClient, station_id: int, sample_date: datetime) \
         -> List[BegroingSampleCargo]:
     res = await client.get(f"/query/begroing/samples?stationId={station_id}&sampleDate={sample_date}")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     samples = [BegroingSampleCargo(**s) for s in res.json()]
     return samples
 
@@ -69,13 +69,13 @@ async def get_project_stations(client: AsyncClient, project_name: str, station_c
     res = await client.get(f"/query/Stations?projectName={project_name}&stationCode={station_code}")
     if res.status_code == 404:
         raise HTTPException(422, f"Did not find station={station_code} in Aquamonitor")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return StationCargo(**res.json())
 
 
 async def get_project(client: AsyncClient, project: Directive) -> ProjectCargo:
     res = await client.get(f"/query/projects")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     projects = [ProjectCargo(**p) for p in res.json()]
 
     actual_project = [p for p in projects if p.name == project.directivedescription]
@@ -86,19 +86,19 @@ async def get_project(client: AsyncClient, project: Directive) -> ProjectCargo:
 
 async def get_method(client: AsyncClient, method_name: str, unit: str, laboratory: str):
     res = await client.get(f"/query/Methods?name={method_name}&unit={unit}&laboratory={laboratory}&methodRef=")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return res.json()
 
 
 async def get_method_by_id(client: AsyncClient, method_id: int) -> MethodCargo:
     res = await client.get(f"/methods/{method_id}")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return MethodCargo(**res.json())
 
 
 async def methods_for_project_station(client: AsyncClient, project_id: int, station_id: int) -> List[MethodCargo]:
     res = await client.get(f"/projects/{project_id}/stations/{station_id}/methods")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return [MethodCargo(**m) for m in res.json()]
 
 
@@ -127,14 +127,14 @@ async def update_begroing_observation(client: AsyncClient,
     res = await client.put(f"/begroing/samples/{sample_id}/observations/{observation.Id}",
                            data=observation.json(),
                            headers={"Content-Type": "application/json"})
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return res.json()
 
 
 async def delete_begroing_observation(client: AsyncClient, observation: BegroingObservationCargo):
     sample_id = observation.Sample.Id
     res = await client.delete(f"/begroing/samples/{sample_id}/observations/{observation.Id}")
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     return res.json()
 
 
@@ -147,7 +147,7 @@ async def post_begroing_observation(client: AsyncClient, sample: BegroingSampleC
     res = await client.post(f"/begroing/samples/{sample.Id}/observations",
                             data=body.json(),
                             headers={"Content-Type": "application/json"})
-    res.raise_for_status()
+    handle_aquamonitor_error(res)
     result = BegroingObservationCargo(**res.json())
 
     # TODO: Deleting during testing
@@ -198,6 +198,30 @@ request_hooks = {
     "request": [traced_request, request_logger],
     "response": [response_logger],
 }
+
+
+class AquamonitorAPIError(Exception):
+    def __init__(self, message: str, url: str, method: str, status_code: int, ) -> None:
+        super().__init__(message)
+        self.message = message
+        self.url = url
+        self.method = method
+        self.status_code = status_code
+
+    def __str__(self):
+        return f"Aquamonitor API error: {self.message}"
+
+
+def handle_aquamonitor_error(response):
+    if response.status_code < 399:
+        return
+    if "application/json" in response.headers.get('Content-Type'):
+        error = response.json()
+        message = error.get("Message").replace("\n", "").replace("\r", "") or error
+    else:
+        message = response.text.replace("\n", "").replace("\r", "")
+    raise AquamonitorAPIError(message=message, url=response.request.url, method=response.request.method,
+                              status_code=response.status_code)
 
 
 async def main(api_url: str, username: str, password: str):
