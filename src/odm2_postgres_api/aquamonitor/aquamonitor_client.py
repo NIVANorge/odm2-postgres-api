@@ -150,8 +150,6 @@ async def post_begroing_observation(client: AsyncClient, sample: BegroingSampleC
     handle_aquamonitor_error(res)
     result = BegroingObservationCargo(**res.json())
 
-    # TODO: Deleting during testing
-    await delete_begroing_observation(client, result)
     return result
 
 
@@ -174,8 +172,6 @@ async def post_begroing_observations(client: AsyncClient, result: BegroingObserv
             *[post_begroing_observation(client, sample, o) for o in result.observations])
         observation_ids = [o.Id for o in created_observations]
 
-        # TODO: deleting all our writes for now to avoid noise. this is not 100% safe as the delete could fail
-        await delete_begroing_sample(client, sample.Id)
         logging.info("Successfully stored observations", extra={"observation_ids": observation_ids})
 
         return {"sample": sample, "observations": created_observations}
@@ -236,58 +232,3 @@ def handle_aquamonitor_error(response):
         message = response.text.replace("\n", "").replace("\r", "")
     raise AquamonitorAPIError(message=message, url=response.request.url, method=response.request.method,
                               status_code=response.status_code)
-
-
-async def main(api_url: str, username: str, password: str):
-    async with AsyncClient(base_url=api_url, auth=(username, password), event_hooks=request_hooks) as client:
-        project = Directive(directiveid=1, directivetypecv="Project",
-                            directivedescription="Overvåkning av Glomma, Vorma og Øyeren")
-        station = SamplingFeatures(samplingfeatureid=1, samplingfeatureuuid=uuid4(),
-                                   samplingfeaturecode="HEDEGL06",  # 'DGL SJU' in begroing
-                                   samplingfeaturetypecv="Site",
-                                   samplingfeaturegeometrywkt="POINT (10.791888159215542 59.90455564858938)")
-
-        bryophyt = TaxonomicClassifier(**{
-            "taxonomicclassifierid": 2,
-            "taxonomicclassifiercommonname": "BRYOPHYT, Bryophyta",
-            "taxonomicclassifiertypecv": "Biology",
-            # TODO: fill in name. is this the right one?
-            "taxonomicclassifiername": "BRYOPHYT",
-            "taxonomicclassifierdescription": "Bryophyta Bryophyta (Moser) Bryophyta\nrubin_nr:BG091",
-        })
-
-        achnanthes = TaxonomicClassifier(**{
-            "taxonomicclassifiercommonname": "Achnanthes biasolettiana",
-            "taxonomicclassifierdescription": "autor:Grun., autor_ref:None↵ph_opt:None, "
-                                              "ph_ref:None↵rubin_kode:ACHN BIA",
-            "taxonomicclassifiertypecv": "Biology",
-            "taxonomicclassifierid": 1015,
-            "taxonomicclassifiername": "ACHN BIA",
-        })
-
-        method_pres_abs = Methods(**{
-            "methodid": 4,
-            "methodname": "Presence/absence",
-            "methoddescription": "A person observes if a species is present in the observed area or not.",
-            "methodtypecv": "Observation",
-            "methodcode": "003"
-        })
-
-        observation_values = [
-            BegroingObservationValues(taxon=bryophyt, method=method_pres_abs, value="x"),
-            BegroingObservationValues(taxon=achnanthes, method=method_pres_abs, value="<1"),
-        ]
-
-        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        obs = await post_begroing_observations(client,
-                                               BegroingObservations(project=project, station=station, date=today,
-                                                                    observations=observation_values))
-
-
-if __name__ == '__main__':
-    username = os.environ["AQUAMONITOR_USER"]
-    password = os.environ["AQUAMONITOR_PASSWORD"]
-    os.environ["HTTPX_LOG_LEVEL"] = "debug"
-    setup_logging(plaintext=True)
-    asyncio.run(main(api_url="https://test-aquamonitor.niva.no/AquaServices/api",
-                     username=username, password=password))
