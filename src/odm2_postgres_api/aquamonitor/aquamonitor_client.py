@@ -117,8 +117,7 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
 
     body = BegroingSampleCargoCreate(Station=station, SampleDate=result.date)
     sample = await post_begroing_sample(client, body)
-    # TODO: deleting all our writes for now to avoid noise. this is not 100% safe as the delete could fail
-    await delete_begroing_sample(client, sample.Id)
+
     return sample
 
 
@@ -174,7 +173,11 @@ async def post_begroing_observations(client: AsyncClient, result: BegroingObserv
         created_observations = await asyncio.gather(
             *[post_begroing_observation(client, sample, o) for o in result.observations])
         observation_ids = [o.Id for o in created_observations]
+
+        # TODO: deleting all our writes for now to avoid noise. this is not 100% safe as the delete could fail
+        await delete_begroing_sample(client, sample.Id)
         logging.info("Successfully stored observations", extra={"observation_ids": observation_ids})
+
         return {"sample": sample, "observations": created_observations}
 
 
