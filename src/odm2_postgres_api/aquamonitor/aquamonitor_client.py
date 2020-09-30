@@ -173,7 +173,6 @@ async def post_begroing_observations(client: AsyncClient, result: BegroingObserv
         observation_ids = [o.Id for o in created_observations]
 
         logging.info("Successfully stored observations", extra={"observation_ids": observation_ids})
-
         return {"sample": sample, "observations": created_observations}
 
 

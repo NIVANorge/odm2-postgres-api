@@ -16,3 +16,4 @@ python-dotenv==0.14.0
 requests==2.24.0
 gcloud-common-utils==0.1.2
 httpx==0.15.4
+respx==0.12.1
