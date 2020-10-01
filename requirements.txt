@@ -1,6 +1,6 @@
 asyncpg==0.21.0
 aiohttp==3.6.2
-fastapi==0.60.1
+fastapi==0.61.1
 pydantic[email]==1.6.1
 typeguard==2.9.1
 uvicorn==0.11.7
