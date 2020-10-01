@@ -4,7 +4,7 @@ fastapi==0.60.1
 pydantic[email]==1.6.1
 typeguard==2.9.1
 uvicorn==0.11.7
-Shapely==1.7.0
+Shapely==1.7.1
 mypy==0.782
 pycodestyle==2.6.0
 starlette-prometheus==0.7.0
