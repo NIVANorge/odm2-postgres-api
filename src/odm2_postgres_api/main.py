@@ -25,4 +25,4 @@ if __name__ == "__main__":
     app.add_middleware(StarletteTracingMiddleware)
     app.add_route("/metrics/", metrics)
 
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info", access_log=False)
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level=logging.WARNING, access_log=False)
