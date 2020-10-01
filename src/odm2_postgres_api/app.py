@@ -6,6 +6,7 @@ import asyncpg
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
+from nivacloud_logging.log_utils import setup_logging
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -14,7 +15,6 @@ from odm2_postgres_api.routes.fish_rfid import fish_rfid_routes
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
 from odm2_postgres_api.routes import begroing_routes, shared_routes, mass_spectrometry_routes
-
 
 app = FastAPI(
     docs_url="/",
@@ -36,6 +36,8 @@ async def request_validation_exception_handler(request: Request, exc: RequestVal
 
 @app.on_event("startup")
 async def startup_event():
+    setup_logging()
+
     # TODO: This can run before the database is ready, it should actually be lazily tried on the first connection
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
@@ -61,6 +63,6 @@ async def shutdown_event():
 
 
 app.include_router(shared_routes.router)
-app.include_router(begroing_routes.router, prefix="/begroing",)
+app.include_router(begroing_routes.router, prefix="/begroing", )
 app.include_router(mass_spectrometry_routes.router, prefix="/mass_spec")
 app.include_router(fish_rfid_routes.router)
