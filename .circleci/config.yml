@@ -88,7 +88,5 @@ workflows:
             branches:
               only:
                 - dev
-                # TODO: this can be removed once merged to dev
-                - 60-sync-odm2-to-nivabase
     jobs:
       - aquamonitor_api_test
