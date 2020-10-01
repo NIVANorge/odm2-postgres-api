@@ -1,4 +1,4 @@
-asyncpg==0.20.1
+asyncpg==0.21.0
 aiohttp==3.6.2
 fastapi==0.60.1
 pydantic[email]==1.6.1
