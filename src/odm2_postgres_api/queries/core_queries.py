@@ -28,7 +28,7 @@ async def insert_pydantic_object(conn: asyncpg.connection, table_name: str, pyda
     return response_model(**row)
 
 
-async def find_unit(conn: asyncpg.connection, unit: UnitsCreate, raise_if_none=False) -> Optional[Units]:
+async def find_unit(conn: asyncpg.connection, unit: UnitsCreate, raise_if_none=False):
     row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
                               unit.unitsabbreviation)
     if row is None and raise_if_none:

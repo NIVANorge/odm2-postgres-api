@@ -2,7 +2,7 @@ import os
 import uuid
 from collections import defaultdict
 from distutils.util import strtobool
-from typing import List
+from typing import List, cast
 
 from fastapi import Depends, Header, APIRouter
 
@@ -11,13 +11,12 @@ from odm2_postgres_api.queries.core_queries import find_row, find_unit
 from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
     post_measurement_results
 from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables, BegroingIndices, \
-    BegroingObservations, BegroingObservationValues, TaxonomicClassifier
+    BegroingObservations, BegroingObservationValues, TaxonomicClassifier, Units
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
-from odm2_postgres_api.utils import google_cloud_utils
 
 INDEX_NAME_TO_VARIABLE_ID = {
     "PIT": 11,
@@ -43,9 +42,6 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                                niva_user: str = Header(None)):
     user = await create_or_get_user(connection, niva_user)
 
-    csv_data = google_cloud_utils.generate_csv_from_form(begroing_result)
-    if not csv_data:
-        return schemas.BegroingResult(personid=user.personid, **begroing_result.dict())
     observations_per_method = defaultdict(list)
     for index, species in enumerate(begroing_result.taxons):
         used_method_indices = [i for i, e in enumerate(begroing_result.observations[index]) if e]
@@ -53,11 +49,20 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
             raise ValueError('Must have one and only one method per species')
         observations_per_method[used_method_indices[0]].append(index)
 
-    # 13 is 'Microscopic semi quantitative abundance classifier', 17 is a percentage
+    unit_micr_abundance = await find_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
+                                                                  unitsname="Presence or Absence"), raise_if_none=True)
+    unit_macro_coverage = await find_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="%",
+                                                                  unitsname="Percent"),
+                                          raise_if_none=True)
+
+    seconds_unit = await find_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
+                                                           unitsname="second"), raise_if_none=True)
+
     result_type_and_unit_dict = {
-        'Microscopic abundance': ("Category observation", 13, "Liquid aqueous"),
-        'Macroscopic coverage': ("Measurement", 17, "Vegetation")
+        'Microscopic abundance': ("Category observation", unit_micr_abundance.unitsid, "Liquid aqueous"),
+        'Macroscopic coverage': ("Measurement", unit_macro_coverage.unitsid, "Vegetation")
     }
+
     async with connection.transaction():
         for method_index, method_observations in observations_per_method.items():
             method = begroing_result.methods[method_index]
@@ -72,17 +77,23 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                 equipmentids=[],
                 directiveids=[e.directiveid for e in begroing_result.projects]
             )
+
+            processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
+                                              "0", ProcessingLevels)
+            abundance_variable = await find_row(connection, "variables", "variablenamecv", "Abundance", Variables)
+
             completed_action = await post_actions(data_action, connection)
             for result_index in method_observations:
+
                 data_result = schemas.ResultsCreate(
                     samplingfeatureuuid=begroing_result.station.samplingfeatureuuid,
                     actionid=completed_action.actionid,
                     resultuuid=str(uuid.uuid4()),
                     resulttypecv=result_type_and_unit_dict[method.methodname][0],
-                    variableid=10,  # This variable indicates the abundance of the taxon of the result
+                    variableid=abundance_variable.variableid,
                     unitsid=result_type_and_unit_dict[method.methodname][1],
                     taxonomicclassifierid=begroing_result.taxons[result_index]['taxonomicclassifierid'],
-                    processinglevelid=1,  # id:1, "processinglevelcode": "0", "definition": "Raw Data"
+                    processinglevelid=processing_level.processinglevelid,
                     valuecount=0,
                     statuscv="Complete",
                     sampledmediumcv=result_type_and_unit_dict[method.methodname][2],
@@ -111,7 +122,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                         qualitycodecv="None",
                         aggregationstatisticcv="Sporadic",
                         timeaggregationinterval=0,
-                        timeaggregationintervalunitsid=18,  # time in seconds
+                        timeaggregationintervalunitsid=seconds_unit.unitsid,
                         datavalue=data_value,
                         valuedatetime=begroing_result.date,
                         valuedatetimeutcoffset=0
@@ -133,7 +144,6 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
         if strtobool(os.environ.get("WRITE_TO_AQUAMONITOR", "false")):
             await store_begroing_results(mapped)
 
-        google_cloud_utils.put_csv_to_bucket(csv_data)
     # TODO: Send email about new bucket_files
 
     return schemas.BegroingResult(personid=user.personid, **begroing_result.dict())
@@ -160,20 +170,18 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
 
     processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
                                       "0", ProcessingLevels)
-    dimensionless_unit = await find_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
-                                                                 unitsname="Dimensionless"), raise_if_none=True)
+    dimensionless_unit = await find_unit(connection,
+                                         UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="PrsAbs",
+                                                     unitsname="Presence or Absence"), raise_if_none=True)
     seconds_unit = await find_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
                                                            unitsname="second"), raise_if_none=True)
-    if dimensionless_unit is None or seconds_unit is None:
-        raise ValueError('Units cannot be "None"')
-
     for index_instance in new_index.indices:
         variable = await find_row(connection, "variables", "variablenamecv", index_instance.indexType, Variables)
 
         data_result = schemas.ResultsCreate(
             samplingfeatureuuid=new_index.station_uuid,
             actionid=completed_action.actionid,
-            resultuuid=str(uuid.uuid4()),
+            resultuuid=uuid.uuid4(),
             resulttypecv="Measurement",
             variableid=variable.variableid,
             unitsid=dimensionless_unit.unitsid,
