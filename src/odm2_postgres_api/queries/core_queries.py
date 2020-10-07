@@ -93,14 +93,22 @@ async def create_or_parse_annotations(conn: asyncpg.connection,
 
 
 async def insert_taxonomic_classifier(conn: asyncpg.connection, taxon: schemas.TaxonomicClassifierCreate):
-    taxon_data = {k: v for k, v in taxon if k != "annotations"}
+    taxon_data = {k: v for k, v in taxon if k not in ["annotations", "relatedtaxonomicclassifiers"]}
     async with conn.transaction():
         taxon_row = await conn.fetchrow(make_sql_query('taxonomicclassifiers', taxon_data), *taxon_data.values())
         logging.info(taxon_row)
+
+        for related_taxonomicclassifier_id, relation_ship_type in taxon.relatedtaxonomicclassifiers:
+            related_taxonomicclassifier_create = schemas.RelatedTaxonomicClassifierCreate(
+                taxonomicclassifierid=taxon_row['taxonomicclassifierid'],
+                relationshiptypecv=relation_ship_type,
+                relatedtaxonomicclassifierid=related_taxonomicclassifier_id)
+            await insert_pydantic_object(conn, 'relatedtaxonomicclassifiers',
+                                         related_taxonomicclassifier_create, schemas.RelatedTaxonomicClassifier)
+
         for annotation_id in await create_or_parse_annotations(conn, taxon.annotations):
             await conn.fetchrow('INSERT INTO TaxonomicClassifiersAnnotations (taxonomicclassifierid, annotationid) '
-                                'Values ($1, $2) returning *',
-                                taxon_row['taxonomicclassifierid'], annotation_id)
+                                'Values ($1, $2) returning *', taxon_row['taxonomicclassifierid'], annotation_id)
     return schemas.TaxonomicClassifier(annotations=taxon.annotations, **taxon_row)
 
 

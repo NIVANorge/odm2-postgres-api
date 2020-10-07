@@ -2347,3 +2347,22 @@ on update no Action on delete RESTRICT;
 alter table ODM2.TaxonomicClassifiersAnnotations add constraint fk_TaxonomicClassifiersAnnotations_Annotations
 foreign key (AnnotationID) References ODM2.Annotations (AnnotationID)
 on update no Action on delete RESTRICT;
+
+create table ODM2.RelatedTaxonomicClassifiers (
+	relationid serial  NOT NULL primary key,
+	taxonomicclassifierid integer  NOT NULL,
+	relationshiptypecv varchar (255) NOT NULL,
+	relatedtaxonomicclassifierid integer  NOT NULL
+);
+
+alter table ODM2.RelatedTaxonomicClassifiers add constraint fk_RelatedTaxonomicClassifiers_TaxonomicClassifiers
+foreign key (taxonomicclassifierid) References ODM2.TaxonomicClassifiers (taxonomicclassifierid)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.RelatedTaxonomicClassifiers add constraint fk_RelatedTaxonomicClassifiers_TaxonomicClassifiers_AreRelated
+foreign key (relatedtaxonomicclassifierid) References ODM2.TaxonomicClassifiers (taxonomicclassifierid)
+on update no Action on delete RESTRICT;
+
+alter table ODM2.RelatedTaxonomicClassifiers add constraint fk_RelatedTaxonomicClassifiers_CV_RelationshipType
+foreign key (RelationshipTypeCV) References ODM2.CV_RelationshipType (Name)
+on update no Action on delete RESTRICT;

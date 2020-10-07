@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from asyncpg import ForeignKeyViolationError
 from pydantic import ValidationError
 
 from integration_test_fixtures import wait_for_db, db_conn
@@ -17,43 +18,47 @@ BEGROING_TAXON_ROWS = [
 ]
 
 
-@pytest.mark.docker
-@pytest.mark.asyncio
-async def test_create_taxons_with_annotations(db_conn):
-    for row in BEGROING_TAXON_ROWS:
-        annotation = {
-            "annotationtypecv": "Taxonomic classifier annotation",
-            "annotationcode": "begroing-t_Artsliste_Begroing",
-            "annotationtext": f'Artsliste_Begroing_Sys_Id={row["Artsliste_Begroing_Sys_Id"]}',
-            "annotationjson": json.dumps(row, default=str),
-        }
-        data = {
-            "taxonomicclassifiertypecv": "Biology",
-            "taxonomicclassifiername": row["latinsk_navn"].strip(),
-            "taxonomicclassifiercommonname": row["rubin_kode"].strip(),
-            "taxonomicclassifierdescription": "Taken from begroing access database, "
-                                              "check annotation for original row",
-            "annotations": [annotation],
-        }
-        taxon_result = await insert_taxonomic_classifier(db_conn, schemas.TaxonomicClassifierCreate(**data))
-        assert type(taxon_result) == schemas.TaxonomicClassifier
-
-
-def test_create_taxons_with_wrong_annotation():
-    row = BEGROING_TAXON_ROWS[0]
+def format_taxon_data(row, related_taxonomic_classifiers=None):
+    if related_taxonomic_classifiers is None:
+        related_taxonomic_classifiers = []
     annotation = {
-        "annotationtypecv": "something wrong",
+        "annotationtypecv": "Taxonomic classifier annotation",
         "annotationcode": "begroing-t_Artsliste_Begroing",
         "annotationtext": f'Artsliste_Begroing_Sys_Id={row["Artsliste_Begroing_Sys_Id"]}',
         "annotationjson": json.dumps(row, default=str),
     }
     data = {
         "taxonomicclassifiertypecv": "Biology",
-        "taxonomicclassifiername": row["latinsk_navn"].strip(),
-        "taxonomicclassifiercommonname": row["rubin_kode"].strip(),
+        "taxonomicclassifiername": row["latinsk_navn"],
+        "taxonomicclassifiercommonname": row["rubin_kode"],
         "taxonomicclassifierdescription": "Taken from begroing access database, "
                                           "check annotation for original row",
+        "relatedtaxonomicclassifiers": related_taxonomic_classifiers,
         "annotations": [annotation],
     }
+    return data
+
+
+@pytest.mark.docker
+@pytest.mark.asyncio
+async def test_create_taxons_with_annotations(db_conn):
+    for row in BEGROING_TAXON_ROWS[:-1]:
+        data = format_taxon_data(row)
+        taxon_result = await insert_taxonomic_classifier(db_conn, schemas.TaxonomicClassifierCreate(**data))
+        assert type(taxon_result) == schemas.TaxonomicClassifier
+
+    with pytest.raises(ForeignKeyViolationError):  # 0 can never exist since 'serial' datatype starts at 1
+        data = format_taxon_data(BEGROING_TAXON_ROWS[-1], [(0, 'Is previous version of')])
+        await insert_taxonomic_classifier(db_conn, schemas.TaxonomicClassifierCreate(**data))
+
+    # Testing that an insert with a valid related action succeeds
+    data = format_taxon_data(BEGROING_TAXON_ROWS[-1], [(taxon_result.taxonomicclassifierid, 'Is previous version of')])
+    await insert_taxonomic_classifier(db_conn, schemas.TaxonomicClassifierCreate(**data))
+
+
+def test_create_taxons_with_wrong_annotation():
+    data = format_taxon_data(BEGROING_TAXON_ROWS[0])
+    # Currently it is enforced that annotations for taxons always need "Taxonomic classifier annotation" as type
     with pytest.raises(ValidationError):
+        data["annotations"][0]["annotationtypecv"] = "A wrong CV term"
         schemas.TaxonomicClassifierCreate(**data)

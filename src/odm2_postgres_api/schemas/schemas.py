@@ -430,12 +430,23 @@ class ResultsDataQuality(ResultsDataQualityCreate):
     bridgeid: int
 
 
+class RelatedTaxonomicClassifierCreate(BaseModel):
+    taxonomicclassifierid: int
+    relationshiptypecv: constr(max_length=255)  # type: ignore
+    relatedtaxonomicclassifierid: int
+
+
+class RelatedTaxonomicClassifier(RelatedTaxonomicClassifierCreate):
+    relationid: int
+
+
 class TaxonomicClassifierCreate(BaseModel):
     taxonomicclassifiertypecv: constr(max_length=255)  # type: ignore
     taxonomicclassifiername: constr(max_length=255)  # type: ignore
     taxonomicclassifiercommonname: constr(max_length=255) = None  # type: ignore
     taxonomicclassifierdescription: constr(max_length=5000) = None  # type: ignore
     parenttaxonomicclassifierid: Optional[int]
+    relatedtaxonomicclassifiers: List[Tuple[int, str]] = []
     annotations: List[Union[AnnotationsCreate, int]] = []
 
     @validator('annotations')
