@@ -92,16 +92,16 @@ async def test_post_begroing_observations():
             content=BegroingObservationCargo(Id=555, Sample=sample, Method=method, Taxonomy=taxon, Value="x").json()
         )
 
-    begroing_observations = BegroingObservations(project=project, date=sample_date, station=station,
-                                                 observations=observations)
+        begroing_observations = BegroingObservations(project=project, date=sample_date, station=station,
+                                                     observations=observations)
 
-    response = await post_begroing_observations(client, begroing_observations)
-    assert mock_post_observations.call_count == len(observations)
-    for i, obs in enumerate(observations):
-        # check that our outgoing request is wired correctly together
-        body = [l for l in mock_post_observations.calls[i][0].stream][0]
-        obs_post_body = BegroingObservationCargoCreate(**json.loads(body))
-        assert obs_post_body.Method == method
-        assert obs_post_body.Taxonomy == taxon
-        assert obs_post_body.Value == obs.value
-        assert obs_post_body.Sample == sample
+        response = await post_begroing_observations(client, begroing_observations)
+        assert mock_post_observations.call_count == len(observations)
+        for i, obs in enumerate(observations):
+            # check that our outgoing request is wired correctly together
+            body = [l for l in mock_post_observations.calls[i][0].stream][0]
+            obs_post_body = BegroingObservationCargoCreate(**json.loads(body))
+            assert obs_post_body.Method == method
+            assert obs_post_body.Taxonomy == taxon
+            assert obs_post_body.Value == obs.value
+            assert obs_post_body.Sample == sample
