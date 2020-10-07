@@ -12,8 +12,14 @@ from pydantic import BaseModel, ValidationError
 
 from odm2_postgres_api.queries.core_queries import insert_pydantic_object
 from odm2_postgres_api.queries.user import StoredPerson
-from odm2_postgres_api.schemas.schemas import People, PeopleCreate, PersonExternalIdentifiers, AffiliationsCreate, \
-    Affiliations, PersonExternalIdentifiersCreate
+from odm2_postgres_api.schemas.schemas import (
+    People,
+    PeopleCreate,
+    PersonExternalIdentifiers,
+    AffiliationsCreate,
+    Affiliations,
+    PersonExternalIdentifiersCreate,
+)
 
 
 class User(BaseModel):
@@ -52,41 +58,59 @@ async def import_users_from_legacy_AD(conn: Connection, ext_identifier_sys_id, u
             name = user.GivenName.strip().split(" ")
             middle = name[1] if (len(name) > 1) else None
 
-            row = await conn.fetchrow("SELECT * FROM odm2.affiliations WHERE primaryemail=$1", user.UserPrincipalName)
+            row = await conn.fetchrow(
+                "SELECT * FROM odm2.affiliations WHERE primaryemail=$1",
+                user.UserPrincipalName,
+            )
 
-            people = PeopleCreate(personfirstname=name[0], personmiddlename=middle, personlastname=user.Surname)
+            people = PeopleCreate(
+                personfirstname=name[0],
+                personmiddlename=middle,
+                personlastname=user.Surname,
+            )
 
             if not row:
                 stored_person = await insert_pydantic_object(conn, "odm2.people", people, People)
                 await create_affiliations(conn, stored_person, user),
-                await create_external_identifier(conn, stored_person,
-                                                 ext_identifier_sys_id, user)
+                await create_external_identifier(conn, stored_person, ext_identifier_sys_id, user)
             else:
                 logging.info(f"User already exists in db", extra={"user": user})
                 ad_reference = await conn.fetchrow(
                     "SELECT * FROM odm2.personexternalidentifiers where personexternalidentifier=$1",
-                    user.SamAccountName)
+                    user.SamAccountName,
+                )
                 if not ad_reference:
                     person = People(**{**row, **people.dict()})
-                    logging.info(f"Storing SamAccountName for existing user without reference",
-                                 extra={"person": person, "sam_account_name": user.SamAccountName})
-                    await create_external_identifier(conn, person,
-                                                     ext_identifier_sys_id, user)
+                    logging.info(
+                        f"Storing SamAccountName for existing user without reference",
+                        extra={
+                            "person": person,
+                            "sam_account_name": user.SamAccountName,
+                        },
+                    )
+                    await create_external_identifier(conn, person, ext_identifier_sys_id, user)
 
 
 # TODO: check if affiliation exists for user?
 async def create_affiliations(conn: Connection, person: People, user: User) -> Affiliations:
-    aff = AffiliationsCreate(personid=person.personid, affiliationstartdate=datetime.utcnow(), organizationid=1,
-                             primaryemail=user.UserPrincipalName)
+    aff = AffiliationsCreate(
+        personid=person.personid,
+        affiliationstartdate=datetime.utcnow(),
+        organizationid=1,
+        primaryemail=user.UserPrincipalName,
+    )
     return await insert_pydantic_object(conn, "odm2.affiliations", aff, Affiliations)
 
 
 # TODO: check if externalidentifier already exists for user?
-async def create_external_identifier(conn: Connection, stored_person: People, external_system_id: int, user: User) \
-        -> PersonExternalIdentifiers:
-    external_id = PersonExternalIdentifiersCreate(personid=stored_person.personid,
-                                                  externalidentifiersystemid=external_system_id,
-                                                  personexternalidentifier=user.SamAccountName)
+async def create_external_identifier(
+    conn: Connection, stored_person: People, external_system_id: int, user: User
+) -> PersonExternalIdentifiers:
+    external_id = PersonExternalIdentifiersCreate(
+        personid=stored_person.personid,
+        externalidentifiersystemid=external_system_id,
+        personexternalidentifier=user.SamAccountName,
+    )
     return await insert_pydantic_object(conn, "odm2.personexternalidentifiers", external_id, PersonExternalIdentifiers)
 
 
@@ -122,7 +146,7 @@ def read_users_csv() -> List[User]:
         return users
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setup_logging(min_level=logging.INFO, plaintext=True)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

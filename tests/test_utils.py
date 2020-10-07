@@ -42,15 +42,15 @@ def test_pool_mamager_uses_same_instance():
 
 
 def user_header(email="devuser@someemail.com") -> Dict:
-    user_obj = {"id": 1,
-                "uid": "1ed200d3-f09a-4164-9110-a1f24f899bb3",
-                "displayName": "Åge Olsen",
-                "email": email,
-                "provider": "DevLogin",
-                "createTime": "2020-04-20T11:45:21.241Z",
-                "updateTime": "2020-04-20T11:45:21.241Z",
-                "roles": ["apps:admin", "niva"]}
-
-    return {
-        "Niva-User": str(b64encode(json.dumps(user_obj).encode("utf-8")), "utf-8")
+    user_obj = {
+        "id": 1,
+        "uid": "1ed200d3-f09a-4164-9110-a1f24f899bb3",
+        "displayName": "Åge Olsen",
+        "email": email,
+        "provider": "DevLogin",
+        "createTime": "2020-04-20T11:45:21.241Z",
+        "updateTime": "2020-04-20T11:45:21.241Z",
+        "roles": ["apps:admin", "niva"],
     }
+
+    return {"Niva-User": str(b64encode(json.dumps(user_obj).encode("utf-8")), "utf-8")}

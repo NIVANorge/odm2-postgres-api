@@ -1,10 +1,18 @@
 import uuid
 
 import pytest
-from integration_test_fixtures import wait_for_db,db_conn
+from integration_test_fixtures import wait_for_db, db_conn
 
-from odm2_postgres_api.queries.storage import save_organization, save_controlled_vocab, save_units
-from odm2_postgres_api.schemas.schemas import OrganizationsCreate, ControlledVocabularyCreate, UnitsCreate
+from odm2_postgres_api.queries.storage import (
+    save_organization,
+    save_controlled_vocab,
+    save_units,
+)
+from odm2_postgres_api.schemas.schemas import (
+    OrganizationsCreate,
+    ControlledVocabularyCreate,
+    UnitsCreate,
+)
 
 
 @pytest.mark.docker
@@ -12,10 +20,10 @@ from odm2_postgres_api.schemas.schemas import OrganizationsCreate, ControlledVoc
 async def test_create_organization(db_conn):
     org = {
         "organizationtypecv": "Research institute",
-        "organizationcode": str(uuid.uuid4()), # creating random code to avoid duplicates
+        "organizationcode": str(uuid.uuid4()),  # creating random code to avoid duplicates
         "organizationname": "NIVA Norsk institutt for vannforskning",
         "organizationdescription": "The Norwegian institute for water research",
-        "organizationlink": "www.niva.no"
+        "organizationlink": "www.niva.no",
     }
 
     saved = await save_organization(db_conn, OrganizationsCreate(**org))
@@ -30,15 +38,18 @@ async def test_create_organization(db_conn):
 @pytest.mark.docker
 @pytest.mark.asyncio
 async def test_create_units(db_conn):
-    units = [{
-        "unitstypecv": "SaltySalinity",
-        "unitsabbreviation": "SPSU",
-        "unitsname": "Dummy unit"
-    }, {
-        "unitstypecv": "Strange unit",
-        "unitsabbreviation": "unitcode",
-        "unitsname": "StrangeUnit"
-    }]
+    units = [
+        {
+            "unitstypecv": "SaltySalinity",
+            "unitsabbreviation": "SPSU",
+            "unitsname": "Dummy unit",
+        },
+        {
+            "unitstypecv": "Strange unit",
+            "unitsabbreviation": "unitcode",
+            "unitsname": "StrangeUnit",
+        },
+    ]
 
     for u in units:
         unit = UnitsCreate(**u)
@@ -47,7 +58,7 @@ async def test_create_units(db_conn):
             "name": unit.unitstypecv,
             "definition": "Very useful unit, such a tremendous effort put down by this unit",
             "category": "TestUnits",
-            "controlled_vocabulary_table_name": "cv_unitstype"
+            "controlled_vocabulary_table_name": "cv_unitstype",
         }
         cv = ControlledVocabularyCreate(**controlled_vocabulary)
         saved_cv = await save_controlled_vocab(db_conn, cv)

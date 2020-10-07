@@ -5,16 +5,20 @@ from typing import Optional, List, Tuple, Dict, Union
 import shapely.wkt
 from pydantic import BaseModel, constr, conlist, validator
 
-from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
+from odm2_postgres_api.controlled_vocabularies.download_cvs import (
+    CONTROLLED_VOCABULARY_TABLE_NAMES,
+)
 
 
 def create_obligatory_date_time_checker(datetime_name: str, offset_name: str):
     def check_utc_offset(date_time: dt.datetime, values):
         if date_time.tzinfo:
             if values[offset_name] != date_time.utcoffset().seconds / 3600:  # type: ignore
-                raise ValueError(f"conflicting utcoffset on '{datetime_name}.utcoffset().seconds/3600="  # type: ignore
-                                 f"{date_time.utcoffset().seconds / 3600}' and "
-                                 f"'values[{offset_name}]={values[offset_name]}'")
+                raise ValueError(
+                    f"conflicting utcoffset on '{datetime_name}.utcoffset().seconds/3600="  # type: ignore
+                    f"{date_time.utcoffset().seconds / 3600}' and "
+                    f"'values[{offset_name}]={values[offset_name]}'"
+                )
         else:
             if values[offset_name] != 0:
                 raise ValueError(f"'{offset_name}' should be 0 when no timezone on '{datetime_name}' is supplied")
@@ -30,8 +34,9 @@ def create_optional_date_time_checker(datetime_name: str, offset_name: str):
         if not date_time:
             return date_time
         if values[offset_name] is None:
-            raise ValueError(f"Missing '{offset_name}', When '{datetime_name}' is "
-                             f"supplied you must supply '{offset_name}'")
+            raise ValueError(
+                f"Missing '{offset_name}', When '{datetime_name}' is " f"supplied you must supply '{offset_name}'"
+            )
         return obligatory_check(date_time, values)
 
     return check_utc_offset
@@ -45,12 +50,12 @@ def create_annotation_type_cv_checker(annotations, annotation_type):
 
 
 cv_checker = constr(regex=f'({"|".join([f"^{cv}$" for cv in CONTROLLED_VOCABULARY_TABLE_NAMES])})')
-annotation_datetime_checker = create_optional_date_time_checker('annotationdatetime', 'annotationutcoffset')
-begindatetime_checker = create_obligatory_date_time_checker('begindatetime', 'begindatetimeutcoffset')
-enddatetime_checker = create_optional_date_time_checker('enddatetime', 'enddatetimeutcoffset')
-resultdatetime_checker = create_optional_date_time_checker('resultdatetime', 'resultdatetimeutcoffset')
-validdatetime_checker = create_optional_date_time_checker('validdatetime', 'validdatetimeutcoffset')
-valuedatetime_checker = create_obligatory_date_time_checker('valuedatetime', 'valuedatetimeutcoffset')
+annotation_datetime_checker = create_optional_date_time_checker("annotationdatetime", "annotationutcoffset")
+begindatetime_checker = create_obligatory_date_time_checker("begindatetime", "begindatetimeutcoffset")
+enddatetime_checker = create_optional_date_time_checker("enddatetime", "enddatetimeutcoffset")
+resultdatetime_checker = create_optional_date_time_checker("resultdatetime", "resultdatetimeutcoffset")
+validdatetime_checker = create_optional_date_time_checker("validdatetime", "validdatetimeutcoffset")
+valuedatetime_checker = create_obligatory_date_time_checker("valuedatetime", "valuedatetimeutcoffset")
 
 
 class ControlledVocabulary(BaseModel):
@@ -76,7 +81,7 @@ class AnnotationsCreate(BaseModel):
     annotatorid: Optional[int] = None
     citationid: Optional[int] = None
 
-    @validator('annotationdatetime')
+    @validator("annotationdatetime")
     def check_utc_offset(cls, annotationdatetime: dt.datetime, values):
         return annotation_datetime_checker(annotationdatetime, values)
 
@@ -309,7 +314,7 @@ class BeginDateTimeBase(BaseModel):
     begindatetimeutcoffset: int
     begindatetime: dt.datetime
 
-    @validator('begindatetime')
+    @validator("begindatetime")
     def check_utc_offset(cls, begindatetime: dt.datetime, values):
         return begindatetime_checker(begindatetime, values)
 
@@ -318,7 +323,7 @@ class EndDateTimeBase(BaseModel):
     enddatetimeutcoffset: Optional[int] = None
     enddatetime: Optional[dt.datetime] = None
 
-    @validator('enddatetime')
+    @validator("enddatetime")
     def check_utc_offset(cls, enddatetime: dt.datetime, values):
         return enddatetime_checker(enddatetime, values)
 
@@ -336,12 +341,12 @@ class SamplingFeaturesCreate(BaseModel):
     relatedsamplingfeatures: List[Tuple[int, str]] = []
     annotations: List[Union[AnnotationsCreate, int]] = []
 
-    @validator('featuregeometrywkt')
+    @validator("featuregeometrywkt")
     def featuregeometrywkt_validator(cls, wkt):
         if wkt:
             new_shape = shapely.wkt.loads(wkt)
             if not new_shape.is_valid:
-                raise ValueError('well known text is not valid!')
+                raise ValueError("well known text is not valid!")
         return wkt
 
 
@@ -449,7 +454,7 @@ class TaxonomicClassifierCreate(BaseModel):
     relatedtaxonomicclassifiers: List[Tuple[int, str]] = []
     annotations: List[Union[AnnotationsCreate, int]] = []
 
-    @validator('annotations')
+    @validator("annotations")
     def check_annotations(cls, annotations):
         return create_annotation_type_cv_checker(annotations, "Taxonomic classifier annotation")
 
@@ -463,10 +468,10 @@ class FeatureActionsCreate(BaseModel):
     samplingfeaturecode: Optional[str] = None
     actionid: int
 
-    @validator('samplingfeaturecode', always=True)
+    @validator("samplingfeaturecode", always=True)
     def must_supply_uuid_or_code(cls, v, values):
-        if not values['samplingfeatureuuid'] and not v:
-            raise ValueError('Must supply either valid uuid or valid code')
+        if not values["samplingfeatureuuid"] and not v:
+            raise ValueError("Must supply either valid uuid or valid code")
         return v
 
 
@@ -491,11 +496,11 @@ class ResultsCreate(FeatureActionsCreate):
     valuecount: int
     annotations: List[Union[AnnotationsCreate, int]] = []
 
-    @validator('resultdatetime')
+    @validator("resultdatetime")
     def check_resultdatetime_utc_offset(cls, enddatetime: dt.datetime, values):
         return resultdatetime_checker(enddatetime, values)
 
-    @validator('validdatetime')
+    @validator("validdatetime")
     def check_validdatetime_utc_offset(cls, enddatetime: dt.datetime, values):
         return validdatetime_checker(enddatetime, values)
 
@@ -534,7 +539,7 @@ class ResultSharedBase(BaseModel):
     valuedatetimeutcoffset: int
     valuedatetime: dt.datetime
 
-    @validator('valuedatetime')
+    @validator("valuedatetime")
     def check_utc_offset(cls, enddatetime: dt.datetime, values):
         return valuedatetime_checker(enddatetime, values)
 
@@ -618,7 +623,7 @@ class MsMethods(BaseModel):
     fid_methodcode: Optional[str] = None
 
     class Config:
-        extra = 'forbid'
+        extra = "forbid"
 
 
 class MsResultAnnotationLinkQuery(BaseModel):
@@ -666,18 +671,30 @@ class MsOutput(BaseModel):
     result: Results
 
 
-if __name__ == '__main__':
-    FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a',
-                         samplingfeaturecode='A valid code', actionid=1)  # matching code and uuid checked by query
-    FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a', actionid=1)
-    FeatureActionsCreate(samplingfeaturecode='A valid code', actionid=1)
+if __name__ == "__main__":
+    FeatureActionsCreate(
+        samplingfeatureuuid="e4d0985a-1060-4766-8bb8-7d7b34d8b15a",
+        samplingfeaturecode="A valid code",
+        actionid=1,
+    )  # matching code and uuid checked by query
+    FeatureActionsCreate(samplingfeatureuuid="e4d0985a-1060-4766-8bb8-7d7b34d8b15a", actionid=1)
+    FeatureActionsCreate(samplingfeaturecode="A valid code", actionid=1)
     # FeatureActionsCreate(actionid=1)  # Error!
 
-    BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), begindatetimeutcoffset=1)
+    BeginDateTimeBase(
+        begindatetime=dt.datetime.fromisoformat("2019-08-27T22:00:00+01:00"),
+        begindatetimeutcoffset=1,
+    )
     # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'))  # Error!
-    BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), begindatetimeutcoffset=0)
+    BeginDateTimeBase(
+        begindatetime=dt.datetime.fromisoformat("2019-08-27T22:00:00+00:00"),
+        begindatetimeutcoffset=0,
+    )
     # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), begindatetimeutcoffset=1)
-    BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00'), begindatetimeutcoffset=0)
+    BeginDateTimeBase(
+        begindatetime=dt.datetime.fromisoformat("2019-08-27T22:00:00"),
+        begindatetimeutcoffset=0,
+    )
     # BeginDateTimeBase(begindatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00'), begindatetimeutcoffset=1)
 
     EndDateTimeBase(enddatetime=None)
@@ -685,5 +702,11 @@ if __name__ == '__main__':
     # EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00'))  # Error!
     # EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'))  # Error!
     # EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), enddatetimeutcoffset=2) #Err
-    EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+00:00'), enddatetimeutcoffset=0)
-    EndDateTimeBase(enddatetime=dt.datetime.fromisoformat('2019-08-27T22:00:00+01:00'), enddatetimeutcoffset=1)
+    EndDateTimeBase(
+        enddatetime=dt.datetime.fromisoformat("2019-08-27T22:00:00+00:00"),
+        enddatetimeutcoffset=0,
+    )
+    EndDateTimeBase(
+        enddatetime=dt.datetime.fromisoformat("2019-08-27T22:00:00+01:00"),
+        enddatetimeutcoffset=1,
+    )

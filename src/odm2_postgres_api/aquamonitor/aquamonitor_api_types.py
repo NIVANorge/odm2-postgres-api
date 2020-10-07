@@ -27,15 +27,15 @@ class StationCargo(BaseModel):
 
 
 class ProjectCargoCreate(BaseModel):
-    name: str = Field(None, alias='_Name')
-    description: str = Field(None, alias='_Description')
-    number: str = Field(None, alias='_Number')
-    start_date: Optional[datetime] = Field(None, alias='_StartDate')
-    end_date: Optional[datetime] = Field(None, alias='_EndDate')
+    name: str = Field(None, alias="_Name")
+    description: str = Field(None, alias="_Description")
+    number: str = Field(None, alias="_Number")
+    start_date: Optional[datetime] = Field(None, alias="_StartDate")
+    end_date: Optional[datetime] = Field(None, alias="_EndDate")
 
 
 class ProjectCargo(ProjectCargoCreate):
-    id: int = Field(None, alias='_Id')
+    id: int = Field(None, alias="_Id")
 
 
 class BegroingSampleCargoCreate(BaseModel):

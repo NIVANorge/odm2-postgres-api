@@ -8,11 +8,22 @@ from fastapi import HTTPException
 from httpx import AsyncClient
 from nivacloud_logging.log_utils import LogContext, generate_trace_id
 
-from odm2_postgres_api.aquamonitor.aquamonitor_api_types import BegroingSampleCargo, BegroingObservationCargo, \
-    BegroingSampleCargoCreate, StationCargo, BegroingObservationCargoCreate, MethodCargo, TaxonomyCodeCargo, \
-    ProjectCargo
+from odm2_postgres_api.aquamonitor.aquamonitor_api_types import (
+    BegroingSampleCargo,
+    BegroingObservationCargo,
+    BegroingSampleCargoCreate,
+    StationCargo,
+    BegroingObservationCargoCreate,
+    MethodCargo,
+    TaxonomyCodeCargo,
+    ProjectCargo,
+)
 from odm2_postgres_api.aquamonitor.aquamonitor_mapping import METHODS_NIVABASE_MAP
-from odm2_postgres_api.schemas.schemas import Directive, BegroingObservations, BegroingObservationValues
+from odm2_postgres_api.schemas.schemas import (
+    Directive,
+    BegroingObservations,
+    BegroingObservationValues,
+)
 
 
 async def get_taxonomy_codes(client: AsyncClient, domain_id: str) -> List[TaxonomyCodeCargo]:
@@ -34,16 +45,18 @@ async def get_taxonomy_domain_id(client: AsyncClient, domain: str):
     return response.json()["Id"]
 
 
-async def get_begroing_samples(client: AsyncClient, station_id: int, sample_date: datetime) \
-        -> List[BegroingSampleCargo]:
+async def get_begroing_samples(
+    client: AsyncClient, station_id: int, sample_date: datetime
+) -> List[BegroingSampleCargo]:
     res = await client.get(f"/query/begroing/samples?stationId={station_id}&sampleDate={sample_date}")
     handle_aquamonitor_error(res)
     samples = [BegroingSampleCargo(**s) for s in res.json()]
     return samples
 
 
-async def get_begroing_observations(client: AsyncClient, sample_id: int, method_id="null") \
-        -> List[BegroingObservationCargo]:
+async def get_begroing_observations(
+    client: AsyncClient, sample_id: int, method_id="null"
+) -> List[BegroingObservationCargo]:
     response = await client.get(f"/begroing/samples/{sample_id}/observations?methodId={method_id}")
     handle_aquamonitor_error(response)
     return [BegroingObservationCargo(**o) for o in response.json()]
@@ -100,8 +113,9 @@ async def methods_for_project_station(client: AsyncClient, project_id: int, stat
     return [MethodCargo(**m) for m in res.json()]
 
 
-async def get_or_create_begroing_sample(client, station: StationCargo,
-                                        result: BegroingObservations) -> BegroingSampleCargo:
+async def get_or_create_begroing_sample(
+    client, station: StationCargo, result: BegroingObservations
+) -> BegroingSampleCargo:
     samples = await get_begroing_samples(client, station.Id, result.date)
     if len(samples) == 1:
         logging.info("Found sample in aquamonitor", extra={"sample_id": samples[0].Id})
@@ -111,7 +125,8 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
         # TODO: what do we do if we get more than 1 sample back? throwing exception for now
         raise Exception(
             f"Found {len(samples)} samples in aquamonitor. This is not taken care of, not implemented yet. "
-            f"Please contact cloud@niva.no for help")
+            f"Please contact cloud@niva.no for help"
+        )
 
     body = BegroingSampleCargoCreate(Station=station, SampleDate=result.date)
     sample = await post_begroing_sample(client, body)
@@ -119,12 +134,15 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
     return sample
 
 
-async def update_begroing_observation(client: AsyncClient,
-                                      observation: BegroingObservationCargo) -> BegroingObservationCargo:
+async def update_begroing_observation(
+    client: AsyncClient, observation: BegroingObservationCargo
+) -> BegroingObservationCargo:
     sample_id = observation.Sample.Id
-    res = await client.put(f"/begroing/samples/{sample_id}/observations/{observation.Id}",
-                           data=observation.json(),  # type: ignore
-                           headers={"Content-Type": "application/json"})
+    res = await client.put(
+        f"/begroing/samples/{sample_id}/observations/{observation.Id}",
+        data=observation.json(),  # type: ignore
+        headers={"Content-Type": "application/json"},
+    )
     handle_aquamonitor_error(res)
     return res.json()
 
@@ -136,15 +154,18 @@ async def delete_begroing_observation(client: AsyncClient, observation: Begroing
     return res.json()
 
 
-async def post_begroing_observation(client: AsyncClient, sample: BegroingSampleCargo,
-                                    obs: BegroingObservationValues) -> BegroingObservationCargo:
+async def post_begroing_observation(
+    client: AsyncClient, sample: BegroingSampleCargo, obs: BegroingObservationValues
+) -> BegroingObservationCargo:
     method = await get_method_by_id(client, METHODS_NIVABASE_MAP[obs.method.methodname])
     taxon = await get_taxonomy(client, "Begroingsalger", obs.taxon.taxonomicclassifiername)
 
     body = BegroingObservationCargoCreate(Sample=sample, Method=method, Taxonomy=taxon, Value=obs.value)
-    res = await client.post(f"/begroing/samples/{sample.Id}/observations",
-                            data=body.json(),  # type: ignore
-                            headers={"Content-Type": "application/json"})
+    res = await client.post(
+        f"/begroing/samples/{sample.Id}/observations",
+        data=body.json(),  # type: ignore
+        headers={"Content-Type": "application/json"},
+    )
     handle_aquamonitor_error(res)
     result = BegroingObservationCargo(**res.json())
 
@@ -164,41 +185,56 @@ async def post_begroing_observations(client: AsyncClient, result: BegroingObserv
     station: StationCargo = await get_project_stations(client, result.project.directivedescription, station_code)
 
     sample = await get_or_create_begroing_sample(client, station, result)
-    with LogContext(sample_id=sample.Id, station_code=station.Code, station_id=station.Id,
-                    project_name=result.project.directivedescription, date=result.date):
+    with LogContext(
+        sample_id=sample.Id,
+        station_code=station.Code,
+        station_id=station.Id,
+        project_name=result.project.directivedescription,
+        date=result.date,
+    ):
         created_observations = await asyncio.gather(
-            *[post_begroing_observation(client, sample, o) for o in result.observations])
+            *[post_begroing_observation(client, sample, o) for o in result.observations]
+        )
         observation_ids = [o.Id for o in created_observations]
 
-        logging.info("Successfully stored observations", extra={"observation_ids": observation_ids})
+        logging.info(
+            "Successfully stored observations",
+            extra={"observation_ids": observation_ids},
+        )
         return {"sample": sample, "observations": created_observations}
 
 
 # TODO: move this to nivacloud-logging
 async def traced_request(request):
-    request.headers['Span-Id'] = LogContext.getcontext("span_id") or generate_trace_id()
+    request.headers["Span-Id"] = LogContext.getcontext("span_id") or generate_trace_id()
     trace_id = LogContext.getcontext("trace_id")
     if trace_id:
-        request.headers['Trace-Id'] = trace_id
+        request.headers["Trace-Id"] = trace_id
 
 
 async def request_logger(request):
-    logging.info(f"Outgoing request", extra={
-        "url": request.url,
-        "method": request.method,
-        "span_id": request.headers.get("Span-Id"),
-    })
+    logging.info(
+        f"Outgoing request",
+        extra={
+            "url": request.url,
+            "method": request.method,
+            "span_id": request.headers.get("Span-Id"),
+        },
+    )
 
 
 async def response_logger(response):
     request = response.request
-    logging.info(f"Received response", extra={
-        "url": request.url,
-        "method": request.method,
-        "status": response.status_code,
-        "elapsed_microseconds": response.elapsed.microseconds,
-        "span_id": request.headers.get("Span-Id"),
-    })
+    logging.info(
+        f"Received response",
+        extra={
+            "url": request.url,
+            "method": request.method,
+            "status": response.status_code,
+            "elapsed_microseconds": response.elapsed.microseconds,
+            "span_id": request.headers.get("Span-Id"),
+        },
+    )
 
 
 request_hooks = {
@@ -208,7 +244,13 @@ request_hooks = {
 
 
 class AquamonitorAPIError(Exception):
-    def __init__(self, message: str, url: str, method: str, status_code: int, ) -> None:
+    def __init__(
+        self,
+        message: str,
+        url: str,
+        method: str,
+        status_code: int,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.url = url
@@ -222,10 +264,14 @@ class AquamonitorAPIError(Exception):
 def handle_aquamonitor_error(response):
     if response.status_code < 399:
         return
-    if "application/json" in response.headers.get('Content-Type'):
+    if "application/json" in response.headers.get("Content-Type"):
         error = response.json()
         message = error.get("Message").replace("\n", "").replace("\r", "") or error
     else:
         message = response.text.replace("\n", "").replace("\r", "")
-    raise AquamonitorAPIError(message=message, url=response.request.url, method=response.request.method,
-                              status_code=response.status_code)
+    raise AquamonitorAPIError(
+        message=message,
+        url=response.request.url,
+        method=response.request.method,
+        status_code=response.status_code,
+    )

@@ -36,6 +36,33 @@ odm2-postgres-api_timescale_odm2_1      docker-entrypoint.sh postgres    Up     
 
 odm2_postgres_api initialize some metadata on startup. First time setting up this might take some seconds before all metadata is populated.
 
+## Code formatting
+
+All code in src/tests folders is automatically formatted using [black](https://github.com/psf/black). It is recommended to setup black to automatically run on file save.
+
+### Pycharm setup
+
+settings -> file watchers -> create new custom
+
+|   	|   	|
+|---	|---	|
+|   file type	|  python  	|
+|  scope 	| project files  	|
+|  program 	| black executable, example: venv/bin/black  	|
+|  advanced options 	| uncheck all  	|
+
+### Format all files
+
+```
+black .
+```
+
+### Validate format
+
+```
+black --check .
+```
+
 ## Controlled vocabularies
 
 ODM2 relies on community-defined vocabularies, further explained at http://vocabulary.odm2.org/. In order to streamline environment setup we have downloaded a local copy of vocabularies at [controlled_vocabularies](./src/odm2_postgres_api/controlled_vocabularies/cv_definitions).

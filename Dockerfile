@@ -12,6 +12,7 @@ COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
 COPY . /app/
+RUN black --check .
 RUN pycodestyle --config .pycodestyle src
 RUN mypy src
 RUN pip install .

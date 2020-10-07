@@ -7,6 +7,6 @@ def niva_org() -> OrganizationsCreate:
         "organizationcode": "niva-no",
         "organizationname": "Norsk institutt for vannforskning",
         "organizationdescription": "Norwegian institute for water research",
-        "organizationlink": "www.niva.no"
+        "organizationlink": "www.niva.no",
     }
     return OrganizationsCreate(**org)

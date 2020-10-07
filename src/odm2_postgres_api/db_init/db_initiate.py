@@ -9,17 +9,23 @@ from nivacloud_logging.log_utils import setup_logging
 
 
 async def create_database_if_not_exists(conn, quoted_db_name: str):
-    if not await conn.fetchval(f"SELECT COUNT(*) FROM pg_catalog.pg_database WHERE datname = $1", quoted_db_name) == 1:
+    if (
+        not await conn.fetchval(
+            f"SELECT COUNT(*) FROM pg_catalog.pg_database WHERE datname = $1",
+            quoted_db_name,
+        )
+        == 1
+    ):
         logging.info(await conn.execute(f"CREATE DATABASE {quoted_db_name}"))
     else:
-        logging.info("Database exists, doing nothing", extra={'database': quoted_db_name})
+        logging.info("Database exists, doing nothing", extra={"database": quoted_db_name})
 
 
 async def create_user_if_not_exists(conn, credentials: dict):
-    user, password = credentials['user_name'], credentials['password']
+    user, password = credentials["user_name"], credentials["password"]
 
     if await conn.fetchval(f"SELECT count(*) FROM pg_catalog.pg_roles WHERE rolname = $1", user) != 0:
-        logging.info(f"User/role exists, doing nothing", extra={'db_user': user})
+        logging.info(f"User/role exists, doing nothing", extra={"db_user": user})
     else:
         logging.info(await conn.execute(f"CREATE ROLE {user} WITH LOGIN ENCRYPTED PASSWORD '{password}'"))
 
@@ -51,14 +57,17 @@ async def postgres_user_on_postgres_db(connection_string, db_name: str, db_users
     conn = await asyncpg.connect(connection_string)
     try:
         await create_database_if_not_exists(conn, db_name)
-        await create_user_if_not_exists(conn, db_users['odm2_owner'])
-        await create_user_if_not_exists(conn, db_users['read_only_user'])
+        await create_user_if_not_exists(conn, db_users["odm2_owner"])
+        await create_user_if_not_exists(conn, db_users["read_only_user"])
     finally:
         await conn.close()
 
 
 async def postgres_user_on_odm_db(connection_string, db_name: str, schema_name: str, users: dict):
-    owning_user, read_only_user = users['odm2_owner']['user_name'], users['read_only_user']['user_name']
+    owning_user, read_only_user = (
+        users["odm2_owner"]["user_name"],
+        users["read_only_user"]["user_name"],
+    )
     conn = await asyncpg.connect(connection_string)
     try:
         async with conn.transaction():
@@ -70,23 +79,31 @@ async def postgres_user_on_odm_db(connection_string, db_name: str, schema_name: 
             ]
             for command in commands:
                 logging.info(await conn.execute(command))
-            extensions = ['timescaledb', 'postgis', 'postgis_topology', 'fuzzystrmatch', 'postgis_tiger_geoCoder']
+            extensions = [
+                "timescaledb",
+                "postgis",
+                "postgis_topology",
+                "fuzzystrmatch",
+                "postgis_tiger_geoCoder",
+            ]
             for extension in extensions:
-                res = await conn.execute(f'CREATE EXTENSION IF NOT EXISTS {extension} CASCADE')
+                res = await conn.execute(f"CREATE EXTENSION IF NOT EXISTS {extension} CASCADE")
                 logging.info(res)
         failed_commands = 0
-        with open(Path(__file__).parent / 'ODM2_for_PostgreSQL.sql') as my_file:
+        with open(Path(__file__).parent / "ODM2_for_PostgreSQL.sql") as my_file:
             postgres_odm2_code = my_file.read()
-        for command in postgres_odm2_code.split(';'):
+        for command in postgres_odm2_code.split(";"):
             async with conn.transaction():
-                if command and '--' not in command and command is not '\n':
+                if command and "--" not in command and command is not "\n":
                     try:
                         logging.info(await conn.execute(command))
-                    except (asyncpg.exceptions.DuplicateObjectError,
-                            asyncpg.exceptions.DuplicateTableError,
-                            asyncpg.exceptions.DuplicateColumnError):
+                    except (
+                        asyncpg.exceptions.DuplicateObjectError,
+                        asyncpg.exceptions.DuplicateTableError,
+                        asyncpg.exceptions.DuplicateColumnError,
+                    ):
                         failed_commands += 1
-        logging.info(f'Duplicate commands from ODM2_for_PostgreSQL.sql: {failed_commands}')
+        logging.info(f"Duplicate commands from ODM2_for_PostgreSQL.sql: {failed_commands}")
         await run_create_hypertable_commands(connection_string)
         async with conn.transaction():
             await grant_all_on_db_to_role(conn, schema_name, owning_user)
@@ -101,7 +118,7 @@ async def run_create_hypertable_commands(connection_string):
         "SELECT create_hypertable('ODM2.TrackResultLocations', 'valuedatetime', "
         "chunk_time_interval => interval '7 day', if_not_exists=>TRUE)",
         "SELECT create_hypertable('ODM2.TrackResultValues', 'valuedatetime', "
-        "chunk_time_interval => interval '7 day', if_not_exists=>TRUE);"
+        "chunk_time_interval => interval '7 day', if_not_exists=>TRUE);",
     ]
 
     conn = await asyncpg.connect(connection_string)
@@ -131,35 +148,43 @@ def db_init():
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
     db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]
-    db_users = {'postgres_owner': {'user_name': os.environ["POSTGRES_USER"],
-                                   'password': os.environ["POSTGRES_PASSWORD"]},
-                'odm2_owner': {'user_name': os.environ["ODM2_DB_USER"],
-                               'password': os.environ["ODM2_DB_PASSWORD"]},
-                'read_only_user': {'user_name': os.environ["ODM2_DB_READ_ONLY_USER"],
-                                   'password': os.environ["ODM2_DB_READ_ONLY_PASSWORD"]}}
+    db_users = {
+        "postgres_owner": {
+            "user_name": os.environ["POSTGRES_USER"],
+            "password": os.environ["POSTGRES_PASSWORD"],
+        },
+        "odm2_owner": {
+            "user_name": os.environ["ODM2_DB_USER"],
+            "password": os.environ["ODM2_DB_PASSWORD"],
+        },
+        "read_only_user": {
+            "user_name": os.environ["ODM2_DB_READ_ONLY_USER"],
+            "password": os.environ["ODM2_DB_READ_ONLY_PASSWORD"],
+        },
+    }
 
     db_name = os.environ["ODM2_DB"]
     odm2_schema_name = os.environ["ODM2_SCHEMA_NAME"]
 
     pg_credentials = f"{db_users['postgres_owner']['user_name']}:{db_users['postgres_owner']['password']}"
-    connection_string = f'postgresql://{pg_credentials}@{db_host}:{db_port}'
+    connection_string = f"postgresql://{pg_credentials}@{db_host}:{db_port}"
 
     asyncio.run(wait_for_db_ready(connection_string))
     asyncio.run(postgres_user_on_postgres_db(connection_string, db_name, db_users))
 
     # Run commands on new database
-    connection_string = f'postgresql://{pg_credentials}@{db_host}:{db_port}/{db_name}'
+    connection_string = f"postgresql://{pg_credentials}@{db_host}:{db_port}/{db_name}"
     asyncio.run(postgres_user_on_odm_db(connection_string, db_name, odm2_schema_name, db_users))
 
     logging.info("Database tables for odm2 created")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setup_logging(plaintext=True)
-    if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:
-        if Path.cwd() == Path('/app'):
-            env_file = Path(__file__).parent / '..' / 'config' / 'localdocker.env'
+    if os.environ.get("NIVA_ENVIRONMENT") not in ["dev", "master"]:
+        if Path.cwd() == Path("/app"):
+            env_file = Path(__file__).parent / ".." / "config" / "localdocker.env"
         else:
-            env_file = Path(__file__).parent / '..' / 'config' / 'localdev.env'
+            env_file = Path(__file__).parent / ".." / "config" / "localdev.env"
         load_dotenv(dotenv_path=env_file, verbose=True)
     db_init()

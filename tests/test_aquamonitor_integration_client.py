@@ -3,8 +3,13 @@ import os
 import pytest
 from httpx import AsyncClient
 
-from odm2_postgres_api.aquamonitor.aquamonitor_client import get_method_by_id, get_project_stations, get_taxonomy, \
-    get_taxonomy_domain_id, get_taxonomy_codes
+from odm2_postgres_api.aquamonitor.aquamonitor_client import (
+    get_method_by_id,
+    get_project_stations,
+    get_taxonomy,
+    get_taxonomy_domain_id,
+    get_taxonomy_codes,
+)
 from odm2_postgres_api.aquamonitor.aquamonitor_mapping import METHODS_NIVABASE_MAP
 
 """
@@ -41,8 +46,11 @@ async def test_aquamonitor_client_get_method(aquamonitor_client):
 @pytest.mark.aquamonitor_api_test
 async def test_aquamonitor_client_get_stations(aquamonitor_client):
     station_code = "HEDEGL06"
-    station = await get_project_stations(aquamonitor_client, project_name="Overvåkning av Glomma, Vorma og Øyeren",
-                                         station_code=station_code)
+    station = await get_project_stations(
+        aquamonitor_client,
+        project_name="Overvåkning av Glomma, Vorma og Øyeren",
+        station_code=station_code,
+    )
 
     assert station.Name == "Sjulhusbrua, Alvdal"
     assert station.Id == 57692

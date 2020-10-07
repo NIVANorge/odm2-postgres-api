@@ -3,7 +3,9 @@ import logging
 import os
 from typing import List
 
-from odm2_postgres_api.controlled_vocabularies.download_cvs import CONTROLLED_VOCABULARY_TABLE_NAMES
+from odm2_postgres_api.controlled_vocabularies.download_cvs import (
+    CONTROLLED_VOCABULARY_TABLE_NAMES,
+)
 from odm2_postgres_api.queries.core_queries import find_row, insert_pydantic_object
 from odm2_postgres_api.schemas.schemas import ControlledVocabulary
 

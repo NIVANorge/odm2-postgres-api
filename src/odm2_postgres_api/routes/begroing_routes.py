@@ -8,10 +8,22 @@ from fastapi import Depends, Header, APIRouter
 
 from odm2_postgres_api.aquamonitor.aquamonitor_client import store_begroing_results
 from odm2_postgres_api.queries.core_queries import find_row, find_unit
-from odm2_postgres_api.routes.shared_routes import post_actions, post_results, post_categorical_results, \
-    post_measurement_results
-from odm2_postgres_api.schemas.schemas import ProcessingLevels, UnitsCreate, Variables, BegroingIndices, \
-    BegroingObservations, BegroingObservationValues, TaxonomicClassifier, Units
+from odm2_postgres_api.routes.shared_routes import (
+    post_actions,
+    post_results,
+    post_categorical_results,
+    post_measurement_results,
+)
+from odm2_postgres_api.schemas.schemas import (
+    ProcessingLevels,
+    UnitsCreate,
+    Variables,
+    BegroingIndices,
+    BegroingObservations,
+    BegroingObservationValues,
+    TaxonomicClassifier,
+    Units,
+)
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
@@ -37,30 +49,52 @@ router = APIRouter()
 
 
 @router.post("/begroing_result", response_model=schemas.BegroingResult)
-async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
-                               connection=Depends(api_pool_manager.get_conn),
-                               niva_user: str = Header(None)):
+async def post_begroing_result(
+    begroing_result: schemas.BegroingResultCreate,
+    connection=Depends(api_pool_manager.get_conn),
+    niva_user: str = Header(None),
+):
     user = await create_or_get_user(connection, niva_user)
 
     observations_per_method = defaultdict(list)
     for index, species in enumerate(begroing_result.taxons):
         used_method_indices = [i for i, e in enumerate(begroing_result.observations[index]) if e]
         if len(used_method_indices) != 1:
-            raise ValueError('Must have one and only one method per species')
+            raise ValueError("Must have one and only one method per species")
         observations_per_method[used_method_indices[0]].append(index)
 
-    unit_micr_abundance = await find_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="-",
-                                                                  unitsname="Presence or Absence"), raise_if_none=True)
-    unit_macro_coverage = await find_unit(connection, UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="%",
-                                                                  unitsname="Percent"),
-                                          raise_if_none=True)
+    unit_micr_abundance = await find_unit(
+        connection,
+        UnitsCreate(
+            unitstypecv="Dimensionless",
+            unitsabbreviation="-",
+            unitsname="Presence or Absence",
+        ),
+        raise_if_none=True,
+    )
+    unit_macro_coverage = await find_unit(
+        connection,
+        UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="%", unitsname="Percent"),
+        raise_if_none=True,
+    )
 
-    seconds_unit = await find_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
-                                                           unitsname="second"), raise_if_none=True)
+    seconds_unit = await find_unit(
+        connection,
+        UnitsCreate(unitstypecv="Time", unitsabbreviation="s", unitsname="second"),
+        raise_if_none=True,
+    )
 
     result_type_and_unit_dict = {
-        'Microscopic abundance': ("Category observation", unit_micr_abundance.unitsid, "Liquid aqueous"),
-        'Macroscopic coverage': ("Measurement", unit_macro_coverage.unitsid, "Vegetation")
+        "Microscopic abundance": (
+            "Category observation",
+            unit_micr_abundance.unitsid,
+            "Liquid aqueous",
+        ),
+        "Macroscopic coverage": (
+            "Measurement",
+            unit_macro_coverage.unitsid,
+            "Vegetation",
+        ),
     }
 
     async with connection.transaction():
@@ -75,11 +109,16 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                 begindatetime=begroing_result.date,
                 begindatetimeutcoffset=0,
                 equipmentids=[],
-                directiveids=[e.directiveid for e in begroing_result.projects]
+                directiveids=[e.directiveid for e in begroing_result.projects],
             )
 
-            processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
-                                              "0", ProcessingLevels)
+            processing_level = await find_row(
+                connection,
+                "processinglevels",
+                "processinglevelcode",
+                "0",
+                ProcessingLevels,
+            )
             abundance_variable = await find_row(connection, "variables", "variablenamecv", "Abundance", Variables)
 
             completed_action = await post_actions(data_action, connection)
@@ -92,15 +131,15 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                     resulttypecv=result_type_and_unit_dict[method.methodname][0],
                     variableid=abundance_variable.variableid,
                     unitsid=result_type_and_unit_dict[method.methodname][1],
-                    taxonomicclassifierid=begroing_result.taxons[result_index]['taxonomicclassifierid'],
+                    taxonomicclassifierid=begroing_result.taxons[result_index]["taxonomicclassifierid"],
                     processinglevelid=processing_level.processinglevelid,
                     valuecount=0,
                     statuscv="Complete",
                     sampledmediumcv=result_type_and_unit_dict[method.methodname][2],
-                    dataqualitycodes=[]
+                    dataqualitycodes=[],
                 )
                 completed_result = await post_results(data_result, connection)
-                if method.methodname == 'Microscopic abundance':
+                if method.methodname == "Microscopic abundance":
                     data_categorical_result = schemas.CategoricalResultsCreate(
                         resultid=completed_result.resultid,
                         qualitycodecv="None",
@@ -110,7 +149,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                     )
                     await post_categorical_results(data_categorical_result, connection)
                 else:
-                    if begroing_result.observations[result_index][method_index][0] == '<':
+                    if begroing_result.observations[result_index][method_index][0] == "<":
                         data_value = begroing_result.observations[result_index][method_index][1:]
                         censor_code = "Less than"
                     else:
@@ -125,7 +164,7 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
                         timeaggregationintervalunitsid=seconds_unit.unitsid,
                         datavalue=data_value,
                         valuedatetime=begroing_result.date,
-                        valuedatetimeutcoffset=0
+                        valuedatetimeutcoffset=0,
                     )
                     await post_measurement_results(data_measurement_result, connection)
         # TODO: assuming that we have only one project. T*his should also be changed in API endpoint
@@ -134,12 +173,19 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
             for result_index in method_observations:
                 taxon = begroing_result.taxons[result_index]
                 value = begroing_result.observations[result_index][method_index]
-                values = BegroingObservationValues(taxon=TaxonomicClassifier(**taxon),
-                                                   method=begroing_result.methods[method_index], value=value)
+                values = BegroingObservationValues(
+                    taxon=TaxonomicClassifier(**taxon),
+                    method=begroing_result.methods[method_index],
+                    value=value,
+                )
                 observations.append(values)
 
-        mapped = BegroingObservations(project=begroing_result.projects[0], date=begroing_result.date,
-                                      station=begroing_result.station, observations=observations)
+        mapped = BegroingObservations(
+            project=begroing_result.projects[0],
+            date=begroing_result.date,
+            station=begroing_result.station,
+            observations=observations,
+        )
 
         if strtobool(os.environ.get("WRITE_TO_AQUAMONITOR", "false")):
             await store_begroing_results(mapped)
@@ -150,9 +196,11 @@ async def post_begroing_result(begroing_result: schemas.BegroingResultCreate,
 
 
 @router.post("/indices", response_model=schemas.BegroingIndices)
-async def post_indices(new_index: schemas.BegroingIndicesCreate,
-                       connection=Depends(api_pool_manager.get_conn),
-                       niva_user: str = Header(None)) -> BegroingIndices:
+async def post_indices(
+    new_index: schemas.BegroingIndicesCreate,
+    connection=Depends(api_pool_manager.get_conn),
+    niva_user: str = Header(None),
+) -> BegroingIndices:
     user = await create_or_get_user(connection, niva_user)
 
     data_action = schemas.ActionsCreate(
@@ -163,20 +211,34 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
         begindatetime=new_index.date,
         begindatetimeutcoffset=0,
         equipmentids=[],
-        directiveids=new_index.project_ids
+        directiveids=new_index.project_ids,
     )
 
     completed_action = await post_actions(data_action, connection)
 
-    processing_level = await find_row(connection, "processinglevels", "processinglevelcode",
-                                      "0", ProcessingLevels)
-    dimensionless_unit = await find_unit(connection,
-                                         UnitsCreate(unitstypecv="Dimensionless", unitsabbreviation="PrsAbs",
-                                                     unitsname="Presence or Absence"), raise_if_none=True)
-    seconds_unit = await find_unit(connection, UnitsCreate(unitstypecv="Time", unitsabbreviation="s",
-                                                           unitsname="second"), raise_if_none=True)
+    processing_level = await find_row(connection, "processinglevels", "processinglevelcode", "0", ProcessingLevels)
+    dimensionless_unit = await find_unit(
+        connection,
+        UnitsCreate(
+            unitstypecv="Dimensionless",
+            unitsabbreviation="PrsAbs",
+            unitsname="Presence or Absence",
+        ),
+        raise_if_none=True,
+    )
+    seconds_unit = await find_unit(
+        connection,
+        UnitsCreate(unitstypecv="Time", unitsabbreviation="s", unitsname="second"),
+        raise_if_none=True,
+    )
     for index_instance in new_index.indices:
-        variable = await find_row(connection, "variables", "variablenamecv", index_instance.indexType, Variables)
+        variable = await find_row(
+            connection,
+            "variables",
+            "variablenamecv",
+            index_instance.indexType,
+            Variables,
+        )
 
         data_result = schemas.ResultsCreate(
             samplingfeatureuuid=new_index.station_uuid,
@@ -189,7 +251,7 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
             valuecount=1,
             statuscv="Complete",
             sampledmediumcv="Organism",
-            dataqualitycodes=[]
+            dataqualitycodes=[],
         )
 
         completed_result = await post_results(data_result, connection)
@@ -203,7 +265,7 @@ async def post_indices(new_index: schemas.BegroingIndicesCreate,
             timeaggregationintervalunitsid=seconds_unit.unitsid,
             datavalue=index_instance.indexValue,
             valuedatetime=new_index.date,
-            valuedatetimeutcoffset=0
+            valuedatetimeutcoffset=0,
         )
 
         await post_measurement_results(data_measurement_result, connection)
