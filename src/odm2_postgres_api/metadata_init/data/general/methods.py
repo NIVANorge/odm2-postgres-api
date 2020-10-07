@@ -11,7 +11,8 @@ def methods(org_id: int) -> List[MethodsCreate]:
             "methodname": "Deploy an Instrument",
             "methoddescription": "A method for deploying instruments",
             "organizationid": org_id,
-        }, {
+        },
+        {
             "methodtypecv": "Derivation",
             "methodcode": "001",
             "methodname": "Derive an adjusted result from a raw result",

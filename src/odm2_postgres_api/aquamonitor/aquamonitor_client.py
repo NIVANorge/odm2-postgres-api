@@ -109,9 +109,8 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
 
     if len(samples) > 1:
         # TODO: what do we do if we get more than 1 sample back? throwing exception for now
-        raise Exception(
-            f"Found {len(samples)} samples in aquamonitor. This is not taken care of, not implemented yet. "
-            f"Please contact cloud@niva.no for help")
+        raise Exception(f"Found {len(samples)} samples in aquamonitor. This is not taken care of, not implemented yet. "
+                        f"Please contact cloud@niva.no for help")
 
     body = BegroingSampleCargoCreate(Station=station, SampleDate=result.date)
     sample = await post_begroing_sample(client, body)
@@ -122,9 +121,10 @@ async def get_or_create_begroing_sample(client, station: StationCargo,
 async def update_begroing_observation(client: AsyncClient,
                                       observation: BegroingObservationCargo) -> BegroingObservationCargo:
     sample_id = observation.Sample.Id
-    res = await client.put(f"/begroing/samples/{sample_id}/observations/{observation.Id}",
-                           data=observation.json(),  # type: ignore
-                           headers={"Content-Type": "application/json"})
+    res = await client.put(
+        f"/begroing/samples/{sample_id}/observations/{observation.Id}",
+        data=observation.json(),  # type: ignore
+        headers={"Content-Type": "application/json"})
     handle_aquamonitor_error(res)
     return res.json()
 
@@ -142,9 +142,10 @@ async def post_begroing_observation(client: AsyncClient, sample: BegroingSampleC
     taxon = await get_taxonomy(client, "Begroingsalger", obs.taxon.taxonomicclassifiername)
 
     body = BegroingObservationCargoCreate(Sample=sample, Method=method, Taxonomy=taxon, Value=obs.value)
-    res = await client.post(f"/begroing/samples/{sample.Id}/observations",
-                            data=body.json(),  # type: ignore
-                            headers={"Content-Type": "application/json"})
+    res = await client.post(
+        f"/begroing/samples/{sample.Id}/observations",
+        data=body.json(),  # type: ignore
+        headers={"Content-Type": "application/json"})
     handle_aquamonitor_error(res)
     result = BegroingObservationCargo(**res.json())
 
@@ -164,8 +165,11 @@ async def post_begroing_observations(client: AsyncClient, result: BegroingObserv
     station: StationCargo = await get_project_stations(client, result.project.directivedescription, station_code)
 
     sample = await get_or_create_begroing_sample(client, station, result)
-    with LogContext(sample_id=sample.Id, station_code=station.Code, station_id=station.Id,
-                    project_name=result.project.directivedescription, date=result.date):
+    with LogContext(sample_id=sample.Id,
+                    station_code=station.Code,
+                    station_id=station.Id,
+                    project_name=result.project.directivedescription,
+                    date=result.date):
         created_observations = await asyncio.gather(
             *[post_begroing_observation(client, sample, o) for o in result.observations])
         observation_ids = [o.Id for o in created_observations]
@@ -183,22 +187,24 @@ async def traced_request(request):
 
 
 async def request_logger(request):
-    logging.info(f"Outgoing request", extra={
-        "url": request.url,
-        "method": request.method,
-        "span_id": request.headers.get("Span-Id"),
-    })
+    logging.info(f"Outgoing request",
+                 extra={
+                     "url": request.url,
+                     "method": request.method,
+                     "span_id": request.headers.get("Span-Id"),
+                 })
 
 
 async def response_logger(response):
     request = response.request
-    logging.info(f"Received response", extra={
-        "url": request.url,
-        "method": request.method,
-        "status": response.status_code,
-        "elapsed_microseconds": response.elapsed.microseconds,
-        "span_id": request.headers.get("Span-Id"),
-    })
+    logging.info(f"Received response",
+                 extra={
+                     "url": request.url,
+                     "method": request.method,
+                     "status": response.status_code,
+                     "elapsed_microseconds": response.elapsed.microseconds,
+                     "span_id": request.headers.get("Span-Id"),
+                 })
 
 
 request_hooks = {
@@ -208,7 +214,13 @@ request_hooks = {
 
 
 class AquamonitorAPIError(Exception):
-    def __init__(self, message: str, url: str, method: str, status_code: int, ) -> None:
+    def __init__(
+        self,
+        message: str,
+        url: str,
+        method: str,
+        status_code: int,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.url = url
@@ -227,5 +239,7 @@ def handle_aquamonitor_error(response):
         message = error.get("Message").replace("\n", "").replace("\r", "") or error
     else:
         message = response.text.replace("\n", "").replace("\r", "")
-    raise AquamonitorAPIError(message=message, url=response.request.url, method=response.request.method,
+    raise AquamonitorAPIError(message=message,
+                              url=response.request.url,
+                              method=response.request.method,
                               status_code=response.status_code)

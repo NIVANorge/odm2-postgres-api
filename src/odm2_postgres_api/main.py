@@ -8,7 +8,6 @@ from nivacloud_logging.log_utils import setup_logging
 from nivacloud_logging.starlette_trace import StarletteTracingMiddleware
 from starlette_prometheus import PrometheusMiddleware, metrics
 
-
 if __name__ == "__main__":
     port = 5000
     if os.environ.get('NIVA_ENVIRONMENT') not in ['dev', 'master']:

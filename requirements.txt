@@ -17,3 +17,4 @@ requests==2.24.0
 gcloud-common-utils==0.2.0
 httpx==0.16.0
 respx==0.13.0
+yapf==0.30.0

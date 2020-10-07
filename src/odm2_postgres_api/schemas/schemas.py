@@ -657,7 +657,8 @@ class MsOutput(BaseModel):
 
 if __name__ == '__main__':
     FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a',
-                         samplingfeaturecode='A valid code', actionid=1)  # matching code and uuid checked by query
+                         samplingfeaturecode='A valid code',
+                         actionid=1)  # matching code and uuid checked by query
     FeatureActionsCreate(samplingfeatureuuid='e4d0985a-1060-4766-8bb8-7d7b34d8b15a', actionid=1)
     FeatureActionsCreate(samplingfeaturecode='A valid code', actionid=1)
     # FeatureActionsCreate(actionid=1)  # Error!

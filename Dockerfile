@@ -13,6 +13,8 @@ RUN pip install -r requirements.txt
 
 COPY . /app/
 RUN pycodestyle --config .pycodestyle src
+
+RUN ["/bin/bash", "-c", "set -o pipefail && yapf --diff --recursive src tests | grep reformatted"]
 RUN mypy src
 RUN pip install .
 RUN pytest

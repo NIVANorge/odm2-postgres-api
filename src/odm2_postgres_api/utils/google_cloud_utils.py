@@ -41,11 +41,13 @@ def generate_csv_from_form(begroing_result: schemas.BegroingResultCreate):
         method = begroing_result.methods[used_method_index].methodname
         value = begroing_result.observations[index][used_method_index]
 
-        data_row = {'Prosjektnavn': '&&'.join([e.directivedescription for e in begroing_result.projects]),
-                    'lok_sta': begroing_result.station.samplingfeaturename.split(',')[0],
-                    'dato': date_string,
-                    'rubin_kode': species['taxonomicclassifiercommonname'].split(',')[0],
-                    'mengderef': '% dekning'}
+        data_row = {
+            'Prosjektnavn': '&&'.join([e.directivedescription for e in begroing_result.projects]),
+            'lok_sta': begroing_result.station.samplingfeaturename.split(',')[0],
+            'dato': date_string,
+            'rubin_kode': species['taxonomicclassifiercommonname'].split(',')[0],
+            'mengderef': '% dekning'
+        }
 
         if method == 'Microscopic abundance':
             data_row['Mengde_tall'] = ''

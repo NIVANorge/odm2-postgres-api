@@ -35,7 +35,10 @@ async def test_post_new_indices(db_conn):
         "project_ids": [project_response.directiveid],
         "station_uuid": created_sampling_feature.samplingfeatureuuid,
         "date": "2020-09-01T00:00:00.000Z",
-        "indices": [{"indexType": "PIT EQR", "indexValue": "11"}]
+        "indices": [{
+            "indexType": "PIT EQR",
+            "indexValue": "11"
+        }]
     }
     response = await post_indices(BegroingIndicesCreate(**index_data), db_conn, USER_HEADER)
     assert response
@@ -50,31 +53,32 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
         **{
             "taxonomicclassifiercommonname": "Achnanthes biasolettiana",
             "taxonomicclassifierdescription": "autor:Grun., autor_ref:None↵ph_opt:None, "
-                                              "ph_ref:None↵rubin_kode:ACHN BIA",
+            "ph_ref:None↵rubin_kode:ACHN BIA",
             "taxonomicclassifiertypecv": "Biology",
             "taxonomicclassifiername": "ACHN BIA",
-        }
-    )
+        })
 
     taxon = await post_taxonomic_classifiers(taxon_create, db_conn)
 
     methods = [
-        Methods(**{
-            "methodid": 3,
-            # TODO: this does not match methods in nivabasen
-            "methodname": "Microscopic abundance",
-            "methoddescription": "A method for observing the abundance of a species in a sample",
-            "methodtypecv": "Observation",
-            "methodcode": "begroing_1"
-        }),
-        Methods(**{
-            "methodcode": "begroing_4",
-            "methoddescription": "A quantitative observation is made assessing the abundance of a species in...",
-            "methodid": 6,
-            "methodlink": None,
-            "methodname": "Macroscopic coverage",
-            "methodtypecv": "Observation",
-        })
+        Methods(
+            **{
+                "methodid": 3,
+                # TODO: this does not match methods in nivabasen
+                "methodname": "Microscopic abundance",
+                "methoddescription": "A method for observing the abundance of a species in a sample",
+                "methodtypecv": "Observation",
+                "methodcode": "begroing_1"
+            }),
+        Methods(
+            **{
+                "methodcode": "begroing_4",
+                "methoddescription": "A quantitative observation is made assessing the abundance of a species in...",
+                "methodid": 6,
+                "methodlink": None,
+                "methodname": "Macroscopic coverage",
+                "methodtypecv": "Observation",
+            })
     ]
 
     observations = [
@@ -87,16 +91,20 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
                                       directivetypecv="Project")
     project = await post_directive(project_create, db_conn)
 
-    station_create = SamplingFeaturesCreate(samplingfeatureuuid=uuid4(),
-                                            samplingfeaturecode="TEST_STATION",  # 'DGL SJU' in begroing
-                                            samplingfeaturetypecv="Site",
-                                            samplingfeaturename="TEST_STATION, Test",
-                                            featuregeometrywkt="POINT (10.791888159215542 59.90455564858938)"
-                                            )
+    station_create = SamplingFeaturesCreate(
+        samplingfeatureuuid=uuid4(),
+        samplingfeaturecode="TEST_STATION",  # 'DGL SJU' in begroing
+        samplingfeaturetypecv="Site",
+        samplingfeaturename="TEST_STATION, Test",
+        featuregeometrywkt="POINT (10.791888159215542 59.90455564858938)")
     station = await post_sampling_features(station_create, db_conn)
 
-    begroing_result = BegroingResultCreate(projects=[project], date=datetime.now(), station=station, taxons=[taxon],
-                                           methods=methods, observations=observations)
+    begroing_result = BegroingResultCreate(projects=[project],
+                                           date=datetime.now(),
+                                           station=station,
+                                           taxons=[taxon],
+                                           methods=methods,
+                                           observations=observations)
 
     await post_begroing_result(begroing_result=begroing_result, connection=db_conn, niva_user=USER_HEADER)
 

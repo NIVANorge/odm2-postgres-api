@@ -32,8 +32,9 @@ async def find_unit(conn: asyncpg.connection, unit: UnitsCreate, raise_if_none=F
     row = await conn.fetchrow(f"SELECT * FROM units WHERE unitstypecv=$1 AND unitsabbreviation=$2", unit.unitstypecv,
                               unit.unitsabbreviation)
     if row is None and raise_if_none:
-        raise HTTPException(status_code=422, detail=f"Unit unitstypecv={unit.unitstypecv} and "
-                                                    f"unitsabbreviation={unit.unitsabbreviation} does not exist")
+        raise HTTPException(status_code=422,
+                            detail=f"Unit unitstypecv={unit.unitstypecv} and "
+                            f"unitsabbreviation={unit.unitsabbreviation} does not exist")
     return Units(**row) if row else None
 
 
@@ -46,20 +47,19 @@ async def find_row(conn: asyncpg.connection, table: str, id_column: str, identif
 
 # TODO: we may want to extend this further by including organization ++
 async def find_person_by_external_id(conn: asyncpg.connection, external_system, ext_id: str) -> PersonExtended:
-    row = await conn.fetchrow("SELECT p.*, a.affiliationid, a.primaryemail, "
-                              "pe.externalidentifiersystemid, eis.externalidentifiersystemname FROM people p "
-                              "inner join affiliations a on p.personid=a.personid "
-                              "inner join personexternalidentifiers pe on p.personid = pe.personid "
-                              "inner join externalidentifiersystems eis on "
-                              "eis.externalidentifiersystemid=pe.externalidentifiersystemid "
-                              "where eis.externalidentifiersystemname = $1 "
-                              "AND LOWER(pe.personexternalidentifier)=LOWER($2)",
-                              external_system, ext_id)
+    row = await conn.fetchrow(
+        "SELECT p.*, a.affiliationid, a.primaryemail, "
+        "pe.externalidentifiersystemid, eis.externalidentifiersystemname FROM people p "
+        "inner join affiliations a on p.personid=a.personid "
+        "inner join personexternalidentifiers pe on p.personid = pe.personid "
+        "inner join externalidentifiersystems eis on "
+        "eis.externalidentifiersystemid=pe.externalidentifiersystemid "
+        "where eis.externalidentifiersystemname = $1 "
+        "AND LOWER(pe.personexternalidentifier)=LOWER($2)", external_system, ext_id)
 
     if row:
         return PersonExtended(**row)
-    raise HTTPException(status_code=404, detail=f"Person with active directory username "
-                                                f"'{ext_id}' not found.")
+    raise HTTPException(status_code=404, detail=f"Person with active directory username " f"'{ext_id}' not found.")
 
 
 async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
@@ -80,8 +80,8 @@ async def create_new_controlled_vocabulary_item(conn: asyncpg.connection,
     return schemas.ControlledVocabulary(**row)
 
 
-async def create_or_parse_annotations(conn: asyncpg.connection,
-                                      annotations: List[Union[schemas.AnnotationsCreate, int]]):
+async def create_or_parse_annotations(conn: asyncpg.connection, annotations: List[Union[schemas.AnnotationsCreate,
+                                                                                        int]]):
     annotation_ids = []
     for annotation in annotations:
         if type(annotation) == schemas.AnnotationsCreate:
@@ -98,9 +98,9 @@ async def insert_taxonomic_classifier(conn: asyncpg.connection, taxon: schemas.T
         taxon_row = await conn.fetchrow(make_sql_query('taxonomicclassifiers', taxon_data), *taxon_data.values())
         logging.info(taxon_row)
         for annotation_id in await create_or_parse_annotations(conn, taxon.annotations):
-            await conn.fetchrow('INSERT INTO TaxonomicClassifiersAnnotations (taxonomicclassifierid, annotationid) '
-                                'Values ($1, $2) returning *',
-                                taxon_row['taxonomicclassifierid'], annotation_id)
+            await conn.fetchrow(
+                'INSERT INTO TaxonomicClassifiersAnnotations (taxonomicclassifierid, annotationid) '
+                'Values ($1, $2) returning *', taxon_row['taxonomicclassifierid'], annotation_id)
     return schemas.TaxonomicClassifier(annotations=taxon.annotations, **taxon_row)
 
 
@@ -122,12 +122,14 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate) -> 
         action_row = await conn.fetchrow(
             "INSERT INTO actions (actiontypecv, methodid, begindatetime, begindatetimeutcoffset,  enddatetime, "
             "enddatetimeutcoffset, actiondescription, actionfilelink) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
-            action.actiontypecv, method_row['methodid'], action.begindatetime, action.begindatetimeutcoffset,
-            action.enddatetime, action.enddatetimeutcoffset, action.actiondescription, action.actionfilelink)
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *", action.actiontypecv, method_row['methodid'],
+            action.begindatetime, action.begindatetimeutcoffset, action.enddatetime, action.enddatetimeutcoffset,
+            action.actiondescription, action.actionfilelink)
 
-        action_by = schemas.ActionsByCreate(actionid=action_row['actionid'], affiliationid=action.affiliationid,
-                                            isactionlead=action.isactionlead, roledescription=action.roledescription)
+        action_by = schemas.ActionsByCreate(actionid=action_row['actionid'],
+                                            affiliationid=action.affiliationid,
+                                            isactionlead=action.isactionlead,
+                                            roledescription=action.roledescription)
         action_by_row = await insert_pydantic_object(conn, 'actionby', action_by, schemas.ActionsBy)
         for equipmentid in action.equipmentids:
             equipment_used_create = schemas.EquipmentUsedCreate(actionid=action_row['actionid'],
@@ -140,8 +142,9 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate) -> 
             await insert_pydantic_object(conn, 'actiondirectives', action_directive_create, schemas.ActionDirective)
 
         for action_id, relation_ship_type in action.relatedactions:
-            related_action_create = schemas.RelatedActionCreate(
-                actionid=action_row['actionid'], relationshiptypecv=relation_ship_type, relatedactionid=action_id)
+            related_action_create = schemas.RelatedActionCreate(actionid=action_row['actionid'],
+                                                                relationshiptypecv=relation_ship_type,
+                                                                relatedactionid=action_id)
             await insert_pydantic_object(conn, 'relatedactions', related_action_create, schemas.RelatedAction)
 
         new_sampling_features = []
@@ -152,8 +155,13 @@ async def do_action(conn: asyncpg.connection, action: schemas.ActionsCreate) -> 
                 samplingfeatureuuid=new_sampling_features[-1].samplingfeatureuuid, actionid=action_row['actionid'])
             await create_feature_action(conn, feature_action)
     # Dict allows overwriting of key while pydantic schema does not, identical action_id exists in both return rows
-    return schemas.Action(equipmentids=action.equipmentids, methodcode=action.methodcode,
-                          sampling_features=new_sampling_features, **{**action_row, **dict(action_by_row)})
+    return schemas.Action(equipmentids=action.equipmentids,
+                          methodcode=action.methodcode,
+                          sampling_features=new_sampling_features,
+                          **{
+                              **action_row,
+                              **dict(action_by_row)
+                          })
 
 
 async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: schemas.SamplingFeaturesCreate):
@@ -170,31 +178,31 @@ async def create_sampling_feature(conn: asyncpg.connection, sampling_feature: sc
             "samplingfeaturename, samplingfeaturedescription, samplingfeaturegeotypecv, featuregeometry, "
             "featuregeometrywkt, elevation_m, elevationdatumcv) "
             "VALUES ($1, $2, $3, $4, $5, $6, "
-            "ST_SetSRID($7::geometry, 4326), $8, $9, $10) returning *",
-            sampling_feature.samplingfeatureuuid, sampling_feature.samplingfeaturetypecv,
-            sampling_feature.samplingfeaturecode, sampling_feature.samplingfeaturename,
-            sampling_feature.samplingfeaturedescription, sampling_feature.samplingfeaturegeotypecv,
-            featuregeometry, sampling_feature.featuregeometrywkt,
-            sampling_feature.elevation_m, sampling_feature.elevationdatumcv
-        )
+            "ST_SetSRID($7::geometry, 4326), $8, $9, $10) returning *", sampling_feature.samplingfeatureuuid,
+            sampling_feature.samplingfeaturetypecv, sampling_feature.samplingfeaturecode,
+            sampling_feature.samplingfeaturename, sampling_feature.samplingfeaturedescription,
+            sampling_feature.samplingfeaturegeotypecv, featuregeometry, sampling_feature.featuregeometrywkt,
+            sampling_feature.elevation_m, sampling_feature.elevationdatumcv)
         for sampling_feature_id, relation_ship_type in sampling_feature.relatedsamplingfeatures:
             related_sampling_feature_create = schemas.RelatedSamplingFeatureCreate(
-                samplingfeatureid=sampling_row['samplingfeatureid'], relationshiptypecv=relation_ship_type,
+                samplingfeatureid=sampling_row['samplingfeatureid'],
+                relationshiptypecv=relation_ship_type,
                 relatedfeatureid=sampling_feature_id,
             )
             await insert_pydantic_object(conn, 'relatedfeatures', related_sampling_feature_create,
                                          schemas.RelatedSamplingFeature)
         for annotation_id in await create_or_parse_annotations(conn, sampling_feature.annotations):
-            await conn.fetchrow('INSERT INTO samplingfeatureannotations (samplingfeatureid, annotationid) '
-                                'Values ($1, $2) returning *', sampling_row['samplingfeatureid'], annotation_id)
+            await conn.fetchrow(
+                'INSERT INTO samplingfeatureannotations (samplingfeatureid, annotationid) '
+                'Values ($1, $2) returning *', sampling_row['samplingfeatureid'], annotation_id)
     return schemas.SamplingFeatures(**sampling_row)
 
 
 async def create_sampling_feature_annotation(conn: asyncpg.connection,
                                              sampling_feature_annotation: schemas.SamplingFeatureAnnotationCreate):
     if sampling_feature_annotation.annotationid is None:
-        annotation_id = await create_or_parse_annotations(conn, [
-            schemas.AnnotationsCreate(**sampling_feature_annotation.dict())])
+        annotation_id = await create_or_parse_annotations(
+            conn, [schemas.AnnotationsCreate(**sampling_feature_annotation.dict())])
         sampling_feature_annotation.annotationid = annotation_id[0]
 
     await conn.fetchrow(
@@ -231,7 +239,8 @@ async def create_feature_action(conn: asyncpg.connection, feature_action: schema
             "ON CONFLICT (samplingfeatureid, actionid) DO UPDATE SET actionid = EXCLUDED.actionid returning *",
             feature_action.samplingfeatureuuid, feature_action.samplingfeaturecode, feature_action.actionid)
         return schemas.FeatureActions(samplingfeatureuuid=feature_action.samplingfeatureuuid,
-                                      samplingfeaturecode=feature_action.samplingfeaturecode, **row)
+                                      samplingfeaturecode=feature_action.samplingfeaturecode,
+                                      **row)
 
 
 async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate):
@@ -244,18 +253,20 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
             "INSERT INTO results (resultuuid, featureactionid, resulttypecv, variableid, unitsid,"
             "taxonomicclassifierid, processinglevelid, resultdatetime, resultdatetimeutcoffset, validdatetime,"
             "validdatetimeutcoffset, statuscv, sampledmediumcv, valuecount) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning *",
-            result.resultuuid, feature_action_row.featureactionid, result.resulttypecv, result.variableid,
-            result.unitsid, result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning *", result.resultuuid,
+            feature_action_row.featureactionid, result.resulttypecv, result.variableid, result.unitsid,
+            result.taxonomicclassifierid, result.processinglevelid, result.resultdatetime,
             result.resultdatetimeutcoffset, result.validdatetime, result.validdatetimeutcoffset, result.statuscv,
             result.sampledmediumcv, result.valuecount)
         for data_quality_code in result.dataqualitycodes:
-            await create_result_data_quality(conn, schemas.ResultsDataQualityCreate(
-                resultid=result_row['resultid'], dataqualitycode=data_quality_code))
+            await create_result_data_quality(
+                conn,
+                schemas.ResultsDataQualityCreate(resultid=result_row['resultid'], dataqualitycode=data_quality_code))
         for annotation_id in await create_or_parse_annotations(conn, result.annotations):
-            await conn.fetchrow('INSERT INTO resultannotations (resultid, annotationid, begindatetime, enddatetime) '
-                                'Values ($1, $2, $3, $4) returning *',
-                                result_row["resultid"], annotation_id, result.resultdatetime, result.validdatetime)
+            await conn.fetchrow(
+                'INSERT INTO resultannotations (resultid, annotationid, begindatetime, enddatetime) '
+                'Values ($1, $2, $3, $4) returning *', result_row["resultid"], annotation_id, result.resultdatetime,
+                result.validdatetime)
     # Dict allows overwriting of key while pydantic schema does not, featureactionid exists in both return rows
     return schemas.Results(dataqualitycodes=result.dataqualitycodes, **{**result_row, **dict(feature_action_row)})
 
@@ -263,8 +274,9 @@ async def create_result(conn: asyncpg.connection, result: schemas.ResultsCreate)
 async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.TrackResultsCreate):
     await shapely_postgres_adapter.set_shapely_adapter(conn)
     async with conn.transaction():
-        row = await conn.fetchrow("SELECT samplingfeatureid FROM featureactions WHERE featureactionid = "
-                                  "(SELECT featureactionid FROM results WHERE resultid = $1)", track_result.resultid)
+        row = await conn.fetchrow(
+            "SELECT samplingfeatureid FROM featureactions WHERE featureactionid = "
+            "(SELECT featureactionid FROM results WHERE resultid = $1)", track_result.resultid)
 
         if row["samplingfeatureid"] != track_result.samplingfeatureid:
             raise ValueError('THIS IS ALLL WROOONGNGNGNGNGNNG')
@@ -278,11 +290,11 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
         if track_result.track_result_locations:
             location_records = ((rec[0], shapely.wkt.loads(f"POINT({rec[1]} {rec[2]})"), rec[3],
                                  track_result.samplingfeatureid) for rec in track_result.track_result_locations)
-            await conn.executemany("INSERT INTO trackresultlocations (valuedatetime, trackpoint, qualitycodecv, "
-                                   "samplingfeatureid) VALUES ($1, ST_SetSRID($2::geometry, 4326), $3, $4) "
-                                   "ON CONFLICT (valuedatetime, samplingfeatureid) DO UPDATE SET "
-                                   "trackpoint = excluded.trackpoint, qualitycodecv = excluded.qualitycodecv",
-                                   location_records)
+            await conn.executemany(
+                "INSERT INTO trackresultlocations (valuedatetime, trackpoint, qualitycodecv, "
+                "samplingfeatureid) VALUES ($1, ST_SetSRID($2::geometry, 4326), $3, $4) "
+                "ON CONFLICT (valuedatetime, samplingfeatureid) DO UPDATE SET "
+                "trackpoint = excluded.trackpoint, qualitycodecv = excluded.qualitycodecv", location_records)
             # result = await conn.copy_records_to_table(table_name='trackresultlocations',
             #                                           records=location_records, schema_name='odm2')
             # logging.info(result)
@@ -290,17 +302,18 @@ async def upsert_track_result(conn: asyncpg.connection, track_result: schemas.Tr
         if track_result.track_result_values:
             value_records = ((rec[0], rec[1], rec[2], track_result.resultid)
                              for rec in track_result.track_result_values)
-            await conn.executemany("INSERT INTO trackresultvalues (valuedatetime, datavalue, qualitycodecv, resultid) "
-                                   "VALUES ($1, $2, $3, $4) ON CONFLICT (valuedatetime, resultid) DO UPDATE SET "
-                                   "datavalue = excluded.datavalue, qualitycodecv = excluded.qualitycodecv",
-                                   value_records)
+            await conn.executemany(
+                "INSERT INTO trackresultvalues (valuedatetime, datavalue, qualitycodecv, resultid) "
+                "VALUES ($1, $2, $3, $4) ON CONFLICT (valuedatetime, resultid) DO UPDATE SET "
+                "datavalue = excluded.datavalue, qualitycodecv = excluded.qualitycodecv", value_records)
             # result = await conn.copy_records_to_table(table_name='trackresultvalues',
             #                                           records=records, schema_name='odm2')
             # logging.info(result)
 
     return schemas.TrackResultsReport(samplingfeatureid=track_result.samplingfeatureid,
                                       inserted_track_result_values=len(track_result.track_result_values),
-                                      inserted_track_result_locations=len(track_result.track_result_locations), **row)
+                                      inserted_track_result_locations=len(track_result.track_result_locations),
+                                      **row)
 
 
 async def upsert_measurement_result(conn: asyncpg.connection, measurement_result: schemas.MeasurementResultsCreate):
@@ -339,11 +352,9 @@ async def find_or_create_sampling_feature(conn, code: str, sf_type: str, wkt: st
     if existing:
         return existing
 
-    new_sf = SamplingFeaturesCreate(
-        samplingfeatureuuid=uuid4(),
-        samplingfeaturetypecv=sf_type,
-        samplingfeaturecode=code,
-        featuregeometrywkt=wkt
-    )
+    new_sf = SamplingFeaturesCreate(samplingfeatureuuid=uuid4(),
+                                    samplingfeaturetypecv=sf_type,
+                                    samplingfeaturecode=code,
+                                    featuregeometrywkt=wkt)
 
     return await create_sampling_feature(conn, sampling_feature=new_sf)

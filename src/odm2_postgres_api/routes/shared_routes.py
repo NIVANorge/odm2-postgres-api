@@ -32,8 +32,8 @@ async def post_equipment_model(equipment_model: schemas.EquipmentModelCreate,
 @router.post("/instrument_output_variable", response_model=schemas.InstrumentOutputVariablesCreate)
 async def post_instrument_output_variable(instrument_output_variable: schemas.InstrumentOutputVariablesCreate,
                                           connection=Depends(api_pool_manager.get_conn)):
-    return await insert_pydantic_object(connection, 'instrumentoutputvariables',
-                                        instrument_output_variable, schemas.InstrumentOutputVariablesCreate)
+    return await insert_pydantic_object(connection, 'instrumentoutputvariables', instrument_output_variable,
+                                        schemas.InstrumentOutputVariablesCreate)
 
 
 @router.post("/equipment", response_model=schemas.Equipment)
@@ -42,8 +42,8 @@ async def post_equipment(equipment: schemas.EquipmentCreate, connection=Depends(
 
 
 @router.post("/directives", response_model=schemas.Directive)
-async def post_directive(directive: schemas.DirectivesCreate,
-                         connection=Depends(api_pool_manager.get_conn)) -> Directive:
+async def post_directive(
+    directive: schemas.DirectivesCreate, connection=Depends(api_pool_manager.get_conn)) -> Directive:
     return await insert_pydantic_object(connection, 'directives', directive, schemas.Directive)
 
 
@@ -58,8 +58,9 @@ async def post_actions(action_create: schemas.ActionsCreate, connection=Depends(
 
 
 @router.post("/sampling_features", response_model=SamplingFeatures)
-async def post_sampling_features(sampling_feature: schemas.SamplingFeaturesCreate,
-                                 connection=Depends(api_pool_manager.get_conn)) -> SamplingFeatures:
+async def post_sampling_features(
+    sampling_feature: schemas.SamplingFeaturesCreate,
+    connection=Depends(api_pool_manager.get_conn)) -> SamplingFeatures:
     return await core_queries.create_sampling_feature(connection, sampling_feature)
 
 
@@ -132,21 +133,33 @@ async def post_categorical_results(categorical_result: schemas.CategoricalResult
 
 
 @router.get("/unit", response_model=schemas.Units)
-async def get_unit(unitstypecv: constr(max_length=255), unitsabbreviation: constr(max_length=50),  # type: ignore
-                   connection=Depends(api_pool_manager.get_conn)):
+async def get_unit(
+        unitstypecv: constr(max_length=255),
+        unitsabbreviation: constr(max_length=50),  # type: ignore
+        connection=Depends(api_pool_manager.get_conn)):
     units_create = schemas.UnitsCreate(unitstypecv=unitstypecv, unitsabbreviation=unitsabbreviation, unitsname="")
     return await core_queries.find_unit(connection, units_create, raise_if_none=True)
 
 
 @router.get("/variable", response_model=schemas.Variables)
-async def get_variable(variablecode: constr(max_length=50),  # type: ignore
-                       connection=Depends(api_pool_manager.get_conn)):
-    return await core_queries.find_row(connection, 'variables', 'variablecode',
-                                       variablecode, schemas.Variables, raise_if_none=True)
+async def get_variable(
+        variablecode: constr(max_length=50),  # type: ignore
+        connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.find_row(connection,
+                                       'variables',
+                                       'variablecode',
+                                       variablecode,
+                                       schemas.Variables,
+                                       raise_if_none=True)
 
 
 @router.get("/processinglevel", response_model=schemas.ProcessingLevels)
-async def get_processinglevel(processinglevelcode: constr(max_length=50),  # type: ignore
-                              connection=Depends(api_pool_manager.get_conn)):
-    return await core_queries.find_row(connection, 'processinglevels', 'processinglevelcode',
-                                       processinglevelcode, schemas.ProcessingLevels, raise_if_none=True)
+async def get_processinglevel(
+        processinglevelcode: constr(max_length=50),  # type: ignore
+        connection=Depends(api_pool_manager.get_conn)):
+    return await core_queries.find_row(connection,
+                                       'processinglevels',
+                                       'processinglevelcode',
+                                       processinglevelcode,
+                                       schemas.ProcessingLevels,
+                                       raise_if_none=True)

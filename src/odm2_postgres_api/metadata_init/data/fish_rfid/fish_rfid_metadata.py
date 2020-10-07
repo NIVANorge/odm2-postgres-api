@@ -12,7 +12,8 @@ def fish_rfid_methods(org_id: int):
             "methodtypecv": "Observation",
             "methodcode": "fish_rfid:register_fish",
             "methodname": "Registering of tagged fishes",
-            "methoddescription": "Fishes are caught, tagged with RFID chips and then released to be tracked by oregon RFID sensors",  # nopep8
+            "methoddescription":
+            "Fishes are caught, tagged with RFID chips and then released to be tracked by oregon RFID sensors",  # nopep8
             "methodlink": "https://github.com/NIVANorge/fish_rfid/blob/master/docs/methods/register_fish.md",
             "organizationid": org_id,
         },

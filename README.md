@@ -36,6 +36,33 @@ odm2-postgres-api_timescale_odm2_1      docker-entrypoint.sh postgres    Up     
 
 odm2_postgres_api initialize some metadata on startup. First time setting up this might take some seconds before all metadata is populated.
 
+## Code formatting
+
+All code in src/tests folders is automatically formatted using [yapf](https://github.com/google/yapf). It is recommended to setup yapf to automatically run on file save.
+
+### Pycharm setup
+
+settings -> file watchers -> create new custom
+
+|   	|   	|
+|---	|---	|
+|   file type	|  python  	|
+|  scope 	| project files  	|
+|  program 	| yapf executable, example: venv/bin/yapf  	|
+|  advanced options 	| uncheck all  	|
+
+### Format all files
+
+```
+yapf --recursive -i src tests
+```
+
+### Validate format
+
+```
+set -o pipefail && yapf --diff --recursive src tests | grep reformatted
+```
+
 ## Controlled vocabularies
 
 ODM2 relies on community-defined vocabularies, further explained at http://vocabulary.odm2.org/. In order to streamline environment setup we have downloaded a local copy of vocabularies at [controlled_vocabularies](./src/odm2_postgres_api/controlled_vocabularies/cv_definitions).

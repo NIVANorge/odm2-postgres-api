@@ -69,7 +69,9 @@ async def test_store_fish_observations(db_conn):
 
     station_codes = set([o.station_code for o in observations])
     for station_code in station_codes:
-        station = await find_or_create_sampling_feature(db_conn, station_code, "Site",
+        station = await find_or_create_sampling_feature(db_conn,
+                                                        station_code,
+                                                        "Site",
                                                         wkt="POINT (10.907013757789976 60.25819134332953)")
 
     response = await post_fish_observation(payload, db_conn, niva_user=user_header()["Niva-User"])

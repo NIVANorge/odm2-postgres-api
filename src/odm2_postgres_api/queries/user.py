@@ -52,10 +52,10 @@ async def create_or_get_user(conn: asyncpg.connection, user_id_header: str) -> S
     TODO: handle name updates, see issue https://github.com/NIVANorge/odm2-postgres-api/issues/44
     """
     user = get_nivaport_user(user_id_header=user_id_header)
-    people_row = await conn.fetchrow("SELECT p.*, a.affiliationid, a.primaryemail from odm2.people p "
-                                     "inner join odm2.affiliations a "
-                                     "on p.personid=a.personid WHERE a.primaryemail = $1",
-                                     user.email)
+    people_row = await conn.fetchrow(
+        "SELECT p.*, a.affiliationid, a.primaryemail from odm2.people p "
+        "inner join odm2.affiliations a "
+        "on p.personid=a.personid WHERE a.primaryemail = $1", user.email)
 
     if not people_row:
         async with conn.transaction():
@@ -71,7 +71,6 @@ async def create_or_get_user(conn: asyncpg.connection, user_id_header: str) -> S
             affiliation = await conn.fetchrow(
                 "INSERT INTO odm2.affiliations (personid, affiliationstartdate, primaryemail) "
                 "VALUES ($1, $2, $3) "
-                "RETURNING *",
-                person["personid"], datetime.utcnow(), user.email)
+                "RETURNING *", person["personid"], datetime.utcnow(), user.email)
             return StoredPerson(**{**person, **affiliation})
     return StoredPerson(**people_row)

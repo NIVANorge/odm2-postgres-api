@@ -7,8 +7,11 @@ from odm2_postgres_api.schemas.schemas import OrganizationsCreate, Organizations
 
 
 async def save_organization(connection, organization: OrganizationsCreate) -> Organizations:
-    existing_org = await find_row(table="organizations", id_column="organizationcode",
-                                  identifier=organization.organizationcode, model=Organizations, conn=connection)
+    existing_org = await find_row(table="organizations",
+                                  id_column="organizationcode",
+                                  identifier=organization.organizationcode,
+                                  model=Organizations,
+                                  conn=connection)
 
     if existing_org:
         return existing_org
@@ -18,8 +21,8 @@ async def save_organization(connection, organization: OrganizationsCreate) -> Or
 async def save_external_identifier_system(connection, system: ExternalIdentifierSystemsCreate):
     table = 'externalidentifiersystems'
 
-    existing = await find_row(connection, table, "externalidentifiersystemname",
-                              system.externalidentifiersystemname, ExternalIdentifierSystems)
+    existing = await find_row(connection, table, "externalidentifiersystemname", system.externalidentifiersystemname,
+                              ExternalIdentifierSystems)
     if existing:
         return existing
     return await insert_pydantic_object(connection, table, system, ExternalIdentifierSystems)
@@ -29,12 +32,18 @@ async def save_person(connection, people_extended: PeopleAffiliationCreate) -> P
     """
     Stores people with their affiliation. If affiliation with primaryemail already exists, the affiliation is returned
     """
-    aff = await find_row(table="affiliations", id_column="primaryemail",
-                         identifier=people_extended.primaryemail, model=Affiliations, conn=connection)
+    aff = await find_row(table="affiliations",
+                         id_column="primaryemail",
+                         identifier=people_extended.primaryemail,
+                         model=Affiliations,
+                         conn=connection)
 
     if aff:
         # TODO: update person?
-        existing_person = await find_row(connection, table="people", id_column="personid", identifier=aff.personid,
+        existing_person = await find_row(connection,
+                                         table="people",
+                                         id_column="personid",
+                                         identifier=aff.personid,
                                          model=People)
         return PeopleAffiliation(**{**aff.dict(), **existing_person.dict()})
 
@@ -47,8 +56,7 @@ async def save_person(connection, people_extended: PeopleAffiliationCreate) -> P
 
 async def post_processing_levels(connection, processing_level: ProcessingLevelsCreate) -> ProcessingLevels:
     existing = await find_row(connection, "processinglevels", "processinglevelcode",
-                              processing_level.processinglevelcode,
-                              ProcessingLevels)
+                              processing_level.processinglevelcode, ProcessingLevels)
 
     if existing:
         return existing

@@ -59,8 +59,7 @@ async def import_users_from_legacy_AD(conn: Connection, ext_identifier_sys_id, u
             if not row:
                 stored_person = await insert_pydantic_object(conn, "odm2.people", people, People)
                 await create_affiliations(conn, stored_person, user),
-                await create_external_identifier(conn, stored_person,
-                                                 ext_identifier_sys_id, user)
+                await create_external_identifier(conn, stored_person, ext_identifier_sys_id, user)
             else:
                 logging.info(f"User already exists in db", extra={"user": user})
                 ad_reference = await conn.fetchrow(
@@ -69,14 +68,18 @@ async def import_users_from_legacy_AD(conn: Connection, ext_identifier_sys_id, u
                 if not ad_reference:
                     person = People(**{**row, **people.dict()})
                     logging.info(f"Storing SamAccountName for existing user without reference",
-                                 extra={"person": person, "sam_account_name": user.SamAccountName})
-                    await create_external_identifier(conn, person,
-                                                     ext_identifier_sys_id, user)
+                                 extra={
+                                     "person": person,
+                                     "sam_account_name": user.SamAccountName
+                                 })
+                    await create_external_identifier(conn, person, ext_identifier_sys_id, user)
 
 
 # TODO: check if affiliation exists for user?
 async def create_affiliations(conn: Connection, person: People, user: User) -> Affiliations:
-    aff = AffiliationsCreate(personid=person.personid, affiliationstartdate=datetime.utcnow(), organizationid=1,
+    aff = AffiliationsCreate(personid=person.personid,
+                             affiliationstartdate=datetime.utcnow(),
+                             organizationid=1,
                              primaryemail=user.UserPrincipalName)
     return await insert_pydantic_object(conn, "odm2.affiliations", aff, Affiliations)
 

@@ -21,8 +21,12 @@ async def register_fish_observations(conn, request: FishObservationRequest,
         # TODO: struggled making set of list of dicts. What is easiest way to ensure uniqueness?
         if fish_sf not in fish_sampling_features:
             fish_sampling_features.append(fish_sf)
-        station_sf = await find_row(conn, "samplingfeatures", "samplingfeaturecode", observation.station_code,
-                                    SamplingFeatures, raise_if_none=True)
+        station_sf = await find_row(conn,
+                                    "samplingfeatures",
+                                    "samplingfeaturecode",
+                                    observation.station_code,
+                                    SamplingFeatures,
+                                    raise_if_none=True)
         if station_sf not in station_sampling_features:
             station_sampling_features.append(station_sf)
 
@@ -33,7 +37,8 @@ async def register_fish_observations(conn, request: FishObservationRequest,
             obs_time = observation.datetime.replace(tzinfo=timezone.utc)
         # TODO: storing action_by as the user object. This is in its current state the user who created the API token
         # we should instead link to equipment used, see https://github.com/NIVANorge/niva-port/issues/226
-        action = ActionsCreate(actiontypecv="Observation", methodcode="fish_rfid:observe_fish",
+        action = ActionsCreate(actiontypecv="Observation",
+                               methodcode="fish_rfid:observe_fish",
                                affiliationid=user.affiliationid,
                                isactionlead=True,
                                begindatetime=obs_time,
@@ -42,15 +47,17 @@ async def register_fish_observations(conn, request: FishObservationRequest,
                                enddatetimeutcoffset=0)
         stored_action = await do_action(conn, action)
 
-        fa_fish = await create_feature_action(conn,
-                                              FeatureActionsCreate(samplingfeatureuuid=fish_sf.samplingfeatureuuid,
-                                                                   actionid=stored_action.actionid))
-        fa_station = await create_feature_action(conn, FeatureActionsCreate(
-            samplingfeatureuuid=station_sf.samplingfeatureuuid,
-            actionid=stored_action.actionid))
+        fa_fish = await create_feature_action(
+            conn, FeatureActionsCreate(samplingfeatureuuid=fish_sf.samplingfeatureuuid,
+                                       actionid=stored_action.actionid))
+        fa_station = await create_feature_action(
+            conn,
+            FeatureActionsCreate(samplingfeatureuuid=station_sf.samplingfeatureuuid, actionid=stored_action.actionid))
         stored_observations.append(
-            FishObservationStored(action=stored_action, fish_sampling_feature=fish_sf.samplingfeatureuuid,
+            FishObservationStored(action=stored_action,
+                                  fish_sampling_feature=fish_sf.samplingfeatureuuid,
                                   station_sampling_feature=station_sf.samplingfeatureuuid))
 
-    return FishObservationResponse(observations=stored_observations, fish_sampling_features=fish_sampling_features,
+    return FishObservationResponse(observations=stored_observations,
+                                   fish_sampling_features=fish_sampling_features,
                                    station_sampling_features=station_sampling_features)

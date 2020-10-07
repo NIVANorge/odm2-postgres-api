@@ -82,8 +82,7 @@ async def postgres_user_on_odm_db(connection_string, db_name: str, schema_name: 
                 if command and '--' not in command and command is not '\n':
                     try:
                         logging.info(await conn.execute(command))
-                    except (asyncpg.exceptions.DuplicateObjectError,
-                            asyncpg.exceptions.DuplicateTableError,
+                    except (asyncpg.exceptions.DuplicateObjectError, asyncpg.exceptions.DuplicateTableError,
                             asyncpg.exceptions.DuplicateColumnError):
                         failed_commands += 1
         logging.info(f'Duplicate commands from ODM2_for_PostgreSQL.sql: {failed_commands}')
@@ -131,12 +130,20 @@ def db_init():
     # Get DB connection from environment
     db_host = os.environ["TIMESCALE_ODM2_SERVICE_HOST"]
     db_port = os.environ["TIMESCALE_ODM2_SERVICE_PORT"]
-    db_users = {'postgres_owner': {'user_name': os.environ["POSTGRES_USER"],
-                                   'password': os.environ["POSTGRES_PASSWORD"]},
-                'odm2_owner': {'user_name': os.environ["ODM2_DB_USER"],
-                               'password': os.environ["ODM2_DB_PASSWORD"]},
-                'read_only_user': {'user_name': os.environ["ODM2_DB_READ_ONLY_USER"],
-                                   'password': os.environ["ODM2_DB_READ_ONLY_PASSWORD"]}}
+    db_users = {
+        'postgres_owner': {
+            'user_name': os.environ["POSTGRES_USER"],
+            'password': os.environ["POSTGRES_PASSWORD"]
+        },
+        'odm2_owner': {
+            'user_name': os.environ["ODM2_DB_USER"],
+            'password': os.environ["ODM2_DB_PASSWORD"]
+        },
+        'read_only_user': {
+            'user_name': os.environ["ODM2_DB_READ_ONLY_USER"],
+            'password': os.environ["ODM2_DB_READ_ONLY_PASSWORD"]
+        }
+    }
 
     db_name = os.environ["ODM2_DB"]
     odm2_schema_name = os.environ["ODM2_SCHEMA_NAME"]

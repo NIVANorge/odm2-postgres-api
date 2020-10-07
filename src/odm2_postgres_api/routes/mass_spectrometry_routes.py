@@ -12,14 +12,14 @@ router = APIRouter()
 
 
 @router.post("/find_result_annotationlink/")
-async def post_result_annotationlink(data: schemas.MsResultAnnotationLinkQuery,
-                                     connection=Depends(api_pool_manager.get_conn)) -> Optional[str]:
+async def post_result_annotationlink(
+    data: schemas.MsResultAnnotationLinkQuery, connection=Depends(api_pool_manager.get_conn)) -> Optional[str]:
     return await find_result_annotationlink(connection, data)
 
 
 @router.get("/get_samplingfeatureid_from_samplingfeaturecode/{samplingfeaturecode}")
-async def samplingfeatureid_from_samplingfeaturecode(samplingfeaturecode: str,
-                                                     connection=Depends(api_pool_manager.get_conn)) -> Optional[int]:
+async def samplingfeatureid_from_samplingfeaturecode(
+    samplingfeaturecode: str, connection=Depends(api_pool_manager.get_conn)) -> Optional[int]:
     return await get_samplingfeatureid_from_samplingfeaturecode(connection, samplingfeaturecode)
 
 
