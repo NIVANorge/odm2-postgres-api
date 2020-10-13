@@ -23,7 +23,7 @@ class StationCargo(BaseModel):
     Type: Dict
     Code: Optional[str] = None
     Name: Optional[str] = None
-    Selected: bool
+    Selected: Optional[bool] = None
 
 
 class ProjectCargoCreate(BaseModel):
@@ -90,7 +90,6 @@ class TaxonomyCodeCargo(BaseModel):
     Code: Optional[str] = None
     Name: Optional[str] = None
     Domain: DomainCargo
-    Taxonomy: TaxonomyCargo
     Autor: Optional[str] = None
     Remark: Optional[str] = None
 
