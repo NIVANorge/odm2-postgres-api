@@ -1,12 +1,14 @@
 import os
 import uuid
 from collections import defaultdict
+from datetime import datetime
 from distutils.util import strtobool
 from typing import List, cast
 
 from fastapi import Depends, Header, APIRouter
 
 from odm2_postgres_api.aquamonitor.aquamonitor_client import store_begroing_results
+from odm2_postgres_api.queries.begroing_queries import find_begroing_results
 from odm2_postgres_api.queries.core_queries import find_row, find_unit
 from odm2_postgres_api.routes.shared_routes import (
     post_actions,
@@ -23,6 +25,7 @@ from odm2_postgres_api.schemas.schemas import (
     BegroingObservationValues,
     TaxonomicClassifier,
     Units,
+    BegroingResult,
 )
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
@@ -46,6 +49,18 @@ INDEX_NAME_TO_VARIABLE_ID = {
 }
 
 router = APIRouter()
+
+
+@router.get("/station/{sampling_feature}/project/{project_id}/date/{date}", response_model=BegroingObservations)
+async def get_begroing_results(
+    sampling_feature_uuid: uuid.UUID,
+    project_id: int,
+    date: datetime,
+    connection=Depends(api_pool_manager.get_conn),
+    niva_user=Header(None),
+):
+    user = await create_or_get_user(connection, niva_user)
+    return await find_begroing_results(connection, project_id, sampling_feature_uuid, date)
 
 
 @router.post("/begroing_result", response_model=schemas.BegroingResult)
@@ -123,13 +138,14 @@ async def post_begroing_result(
 
             completed_action = await post_actions(data_action, connection)
             for result_index in method_observations:
-
                 data_result = schemas.ResultsCreate(
                     samplingfeatureuuid=begroing_result.station.samplingfeatureuuid,
                     actionid=completed_action.actionid,
                     resultuuid=str(uuid.uuid4()),
                     resulttypecv=result_type_and_unit_dict[method.methodname][0],
                     variableid=abundance_variable.variableid,
+                    resultdatetime=begroing_result.date,
+                    resultdatetimeutcoffset=0,
                     unitsid=result_type_and_unit_dict[method.methodname][1],
                     taxonomicclassifierid=begroing_result.taxons[result_index]["taxonomicclassifierid"],
                     processinglevelid=processing_level.processinglevelid,

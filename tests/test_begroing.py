@@ -1,11 +1,10 @@
-import os
 from datetime import datetime
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 
-from odm2_postgres_api.routes.begroing_routes import post_indices, post_begroing_result
+from odm2_postgres_api.routes.begroing_routes import post_indices, post_begroing_result, get_begroing_results
 from odm2_postgres_api.routes.shared_routes import (
     post_directive,
     post_sampling_features,
@@ -52,49 +51,55 @@ async def test_post_new_indices(db_conn):
     # TODO: the endpoint does not really respond with anything worth asserting on
 
 
+def generate_taxon() -> TaxonomicClassifierCreate:
+    # TODO: write something more sophisticated that generates pseudo-taxon?
+    t = {
+        "taxonomicclassifiercommonname": str(uuid4()),
+        "taxonomicclassifierdescription": str(uuid4()),
+        "taxonomicclassifiertypecv": "Biology",
+        "taxonomicclassifiername": str(uuid4()),
+    }
+
+    return TaxonomicClassifierCreate(**t)
+
+
 @patch("odm2_postgres_api.routes.begroing_routes.store_begroing_results", autospec=True)
 @pytest.mark.asyncio
 @pytest.mark.docker
 async def test_post_new_begroing_observations(store_begroing_results, db_conn):
-    taxon_create = TaxonomicClassifierCreate(
+    taxa_create = [generate_taxon() for i in range(0, 3)]
+    taxa = [await post_taxonomic_classifiers(t, db_conn) for t in taxa_create]
+
+    macroscopic_coverage = Methods(
         **{
-            "taxonomicclassifiercommonname": "Achnanthes biasolettiana",
-            "taxonomicclassifierdescription": "autor:Grun., autor_ref:None↵ph_opt:None, "
-            "ph_ref:None↵rubin_kode:ACHN BIA",
-            "taxonomicclassifiertypecv": "Biology",
-            "taxonomicclassifiername": "ACHN BIA",
+            "methodcode": "begroing_4",
+            "methoddescription": "A quantitative observation is made assessing the abundance of a species in...",
+            "methodid": 6,
+            "methodlink": None,
+            "methodname": "Macroscopic coverage",
+            "methodtypecv": "Observation",
         }
     )
-
-    taxon = await post_taxonomic_classifiers(taxon_create, db_conn)
-
+    microscoping_abundance = Methods(
+        **{
+            "methodid": 3,
+            # TODO: this does not match methods in nivabasen
+            "methodname": "Microscopic abundance",
+            "methoddescription": "A method for observing the abundance of a species in a sample",
+            "methodtypecv": "Observation",
+            "methodcode": "begroing_1",
+        }
+    )
     methods = [
-        Methods(
-            **{
-                "methodid": 3,
-                # TODO: this does not match methods in nivabasen
-                "methodname": "Microscopic abundance",
-                "methoddescription": "A method for observing the abundance of a species in a sample",
-                "methodtypecv": "Observation",
-                "methodcode": "begroing_1",
-            }
-        ),
-        Methods(
-            **{
-                "methodcode": "begroing_4",
-                "methoddescription": "A quantitative observation is made assessing the abundance of a species in...",
-                "methodid": 6,
-                "methodlink": None,
-                "methodname": "Macroscopic coverage",
-                "methodtypecv": "Observation",
-            }
-        ),
+        microscoping_abundance,
+        macroscopic_coverage,
     ]
 
+    # TODO: having some trouble with <1, this is not stored as is
     observations = [
         ["x", ""],
+        ["xxx", ""],
         ["", "<1"],
-        ["x", ""],
     ]
 
     project_create = DirectivesCreate(
@@ -112,11 +117,12 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
     )
     station = await post_sampling_features(station_create, db_conn)
 
+    date = datetime.now()
     begroing_result = BegroingResultCreate(
         projects=[project],
-        date=datetime.now(),
+        date=date,
         station=station,
-        taxons=[taxon],
+        taxons=taxa,
         methods=methods,
         observations=observations,
     )
@@ -124,3 +130,28 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
     await post_begroing_result(begroing_result=begroing_result, connection=db_conn, niva_user=USER_HEADER)
 
     assert not store_begroing_results.called
+
+    result = await get_begroing_results(
+        sampling_feature_uuid=station.samplingfeatureuuid,
+        project_id=project.directiveid,
+        date=date,
+        connection=db_conn,
+        niva_user=USER_HEADER,
+    )
+
+    assert result.project == project
+    assert result.station == station
+    # assert result.date == observed_timestamp
+    assert len(result.observations) == len(observations)
+    for i, expected in enumerate(observations):
+        expected_taxon = taxa[i]
+        expected_value = expected[0] or expected[1]
+
+        actual = next(o for o in result.observations if o.taxon.taxonomicclassifierid == taxa[i].taxonomicclassifierid)
+        assert expected_taxon == actual.taxon
+        if expected_value == "<1":
+            assert actual.value == "1.0"
+            assert actual.method.methodcode == macroscopic_coverage.methodcode
+        else:
+            assert expected_value == actual.value
+            assert actual.method.methodcode == microscoping_abundance.methodcode
