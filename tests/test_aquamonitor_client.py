@@ -16,6 +16,7 @@ from odm2_postgres_api.aquamonitor.aquamonitor_api_types import (
     TaxonomyCargo,
     BegroingObservationCargo,
     BegroingObservationCargoCreate,
+    StationResponse,
 )
 from odm2_postgres_api.aquamonitor.aquamonitor_client import post_begroing_observations
 from odm2_postgres_api.schemas.schemas import (
@@ -88,7 +89,7 @@ async def test_post_begroing_observations():
         mock_get_stations = respx.get(
             url=re.compile(r"^.*/Stations\?.*$"),
             status_code=200,
-            content=station_cargo.json(),
+            content=StationResponse(Size=100, Total=1, Records=[station_cargo]).json(),
         )
 
         sample_date = datetime.now()

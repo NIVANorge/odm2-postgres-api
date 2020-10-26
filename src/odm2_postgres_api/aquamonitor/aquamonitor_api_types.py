@@ -10,7 +10,7 @@ Using pydantic BaseModel for runtime validation
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from fastapi import HTTPException
 from pydantic import Field
@@ -24,6 +24,12 @@ class StationCargo(BaseModel):
     Code: Optional[str] = None
     Name: Optional[str] = None
     Selected: Optional[bool] = None
+
+
+class StationResponse(BaseModel):
+    Size: int
+    Total: int
+    Records: List[StationCargo]
 
 
 class ProjectCargoCreate(BaseModel):
