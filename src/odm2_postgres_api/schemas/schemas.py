@@ -589,6 +589,15 @@ class BegroingObservations(BaseModel):
     observations: List[BegroingObservationValues]
 
 
+class BegroingObservation(BaseModel):
+    project: Directive
+    timestamp: dt.datetime
+    station: SamplingFeatures
+    taxon: TaxonomicClassifier
+    method: Methods
+    value: str
+
+
 class BegroingResult(BegroingResultCreate):
     personid: int
 

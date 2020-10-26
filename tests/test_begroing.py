@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -134,20 +134,24 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
     result = await get_begroing_results(
         sampling_feature_uuid=station.samplingfeatureuuid,
         project_id=project.directiveid,
-        date=date,
+        start_time=date,
+        end_time=date,
         connection=db_conn,
         niva_user=USER_HEADER,
     )
 
-    assert result.project == project
-    assert result.station == station
-    # assert result.date == observed_timestamp
-    assert len(result.observations) == len(observations)
+    assert len(result) == len(observations)
+
+    for obs in result:
+        assert obs.project == project
+        assert obs.station == station
+        assert obs.timestamp == date
+
     for i, expected in enumerate(observations):
         expected_taxon = taxa[i]
         expected_value = expected[0] or expected[1]
 
-        actual = next(o for o in result.observations if o.taxon.taxonomicclassifierid == taxa[i].taxonomicclassifierid)
+        actual = next(o for o in result if o.taxon.taxonomicclassifierid == taxa[i].taxonomicclassifierid)
         assert expected_taxon == actual.taxon
         if expected_value == "<1":
             assert actual.value == "1.0"
@@ -155,3 +159,15 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
         else:
             assert expected_value == actual.value
             assert actual.method.methodcode == microscoping_abundance.methodcode
+
+    # should not get any observations when querying for a different time
+    different_time = await get_begroing_results(
+        sampling_feature_uuid=station.samplingfeatureuuid,
+        project_id=project.directiveid,
+        start_time=date - timedelta(hours=2),
+        end_time=date - timedelta(hours=1),
+        connection=db_conn,
+        niva_user=USER_HEADER,
+    )
+
+    assert len(different_time) == 0

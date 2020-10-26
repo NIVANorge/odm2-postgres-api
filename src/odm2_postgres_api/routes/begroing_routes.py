@@ -26,6 +26,7 @@ from odm2_postgres_api.schemas.schemas import (
     TaxonomicClassifier,
     Units,
     BegroingResult,
+    BegroingObservation,
 )
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
@@ -51,16 +52,22 @@ INDEX_NAME_TO_VARIABLE_ID = {
 router = APIRouter()
 
 
-@router.get("/station/{sampling_feature}/project/{project_id}/date/{date}", response_model=BegroingObservations)
+@router.get(
+    "/station/{sampling_feature}/project/{project_id}/start/{start_time}/end/{end_time}",
+    response_model=List[BegroingObservation],
+)
 async def get_begroing_results(
     sampling_feature_uuid: uuid.UUID,
     project_id: int,
-    date: datetime,
+    start_time: datetime,
+    end_time: datetime,
     connection=Depends(api_pool_manager.get_conn),
     niva_user=Header(None),
-):
+) -> List[BegroingObservation]:
     user = await create_or_get_user(connection, niva_user)
-    return await find_begroing_results(connection, project_id, sampling_feature_uuid, date)
+    return await find_begroing_results(
+        connection, project_id, sampling_feature_uuid, start_time=start_time, end_time=end_time
+    )
 
 
 @router.post("/begroing_result", response_model=schemas.BegroingResult)
