@@ -6,6 +6,7 @@ import asyncpg
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.gzip import GZipMiddleware
 from nivacloud_logging.log_utils import setup_logging
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -23,6 +24,7 @@ from odm2_postgres_api.routes import (
 )
 
 app = FastAPI(docs_url="/", title="ODM2 API", version="v1")
+app.add_middleware(GZipMiddleware)
 
 
 @app.exception_handler(RequestValidationError)
