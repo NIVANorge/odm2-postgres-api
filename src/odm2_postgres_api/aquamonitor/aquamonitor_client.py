@@ -81,7 +81,8 @@ async def get_project_stations(client: AsyncClient, project_name: str, station_c
     if res.status_code == 404:
         raise HTTPException(404, f"Did not find station={station_code} in Aquamonitor")
     handle_aquamonitor_error(res)
-    return StationCargo(**res.json())
+    body = res.json()
+    return StationCargo(**body["Records"][0])
 
 
 async def get_project(client: AsyncClient, project: Directive) -> ProjectCargo:
