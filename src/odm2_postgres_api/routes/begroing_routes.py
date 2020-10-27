@@ -6,6 +6,7 @@ from distutils.util import strtobool
 from typing import List, cast
 
 from fastapi import Depends, Header, APIRouter
+from fastapi.responses import PlainTextResponse
 
 from odm2_postgres_api.aquamonitor.aquamonitor_client import store_begroing_results
 from odm2_postgres_api.queries.begroing_queries import find_begroing_results
@@ -33,6 +34,7 @@ from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
 
 from odm2_postgres_api.queries.user import create_or_get_user
 from odm2_postgres_api.schemas import schemas
+from odm2_postgres_api.utils.csv_utils import to_csv
 
 INDEX_NAME_TO_VARIABLE_ID = {
     "PIT": 11,
@@ -53,7 +55,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/station/{sampling_feature}/project/{project_id}/start/{start_time}/end/{end_time}",
+    "/station/{sampling_feature_uuid}/project/{project_id}/start/{start_time}/end/{end_time}",
     response_model=List[BegroingObservation],
 )
 async def get_begroing_results(
@@ -68,6 +70,25 @@ async def get_begroing_results(
     return await find_begroing_results(
         connection, project_id, sampling_feature_uuid, start_time=start_time, end_time=end_time
     )
+
+
+@router.get(
+    "/station/{sampling_feature_uuid}/project/{project_id}/start/{start_time}/end/{end_time}/csv",
+    response_class=PlainTextResponse,
+)
+async def get_begroing_results_csv(
+    sampling_feature_uuid: uuid.UUID,
+    project_id: int,
+    start_time: datetime,
+    end_time: datetime,
+    connection=Depends(api_pool_manager.get_conn),
+) -> str:
+    # user = await create_or_get_user(connection, niva_user)
+    results = await find_begroing_results(
+        connection, project_id, sampling_feature_uuid, start_time=start_time, end_time=end_time
+    )
+
+    return to_csv(results)
 
 
 @router.post("/begroing_result", response_model=schemas.BegroingResult)

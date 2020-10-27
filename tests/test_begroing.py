@@ -1,11 +1,18 @@
+import csv
 from datetime import datetime, timedelta
+from io import StringIO
 from typing import List
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 
-from odm2_postgres_api.routes.begroing_routes import post_indices, post_begroing_result, get_begroing_results
+from odm2_postgres_api.routes.begroing_routes import (
+    post_indices,
+    post_begroing_result,
+    get_begroing_results,
+    get_begroing_results_csv,
+)
 from odm2_postgres_api.routes.shared_routes import (
     post_directive,
     post_sampling_features,
@@ -23,7 +30,13 @@ from odm2_postgres_api.schemas.schemas import (
 )
 from integration_test_fixtures import db_conn, wait_for_db
 from odm2_postgres_api.utils.csv_utils import to_csv
-from testdata_builders import default_project, default_sampling_feature, generate_taxon, default_method
+from testdata_builders import (
+    default_project,
+    default_sampling_feature,
+    generate_taxon_create,
+    default_method,
+    generate_taxon,
+)
 
 USER_HEADER = "eyJpZCI6IDIyMSwgInVpZCI6ICIxZWQyMDBkMy1mMDlhLTQxNjQtOTExMC1hMWYyNGY4OTliYjMiLCAiZGlzcGxheU5hbWUiOiAiXHUwMGM1Z2UgT2xzZW4iLCAiZW1haWwiOiAiZGV2dXNlckBzb21lZW1haWwuY29tIiwgInByb3ZpZGVyIjogIkRldkxvZ2luIiwgImNyZWF0ZVRpbWUiOiAiMjAyMC0wNC0yMFQxMTo0NToyMS4yNDFaIiwgInVwZGF0ZVRpbWUiOiAiMjAyMC0wNC0yMFQxMTo0NToyMS4yNDFaIiwgInJvbGVzIjogWyJhcHBzOmFkbWluIiwgIm5pdmEiXX0="
 
@@ -60,7 +73,7 @@ async def test_post_new_indices(db_conn):
 @pytest.mark.asyncio
 @pytest.mark.docker
 async def test_post_new_begroing_observations(store_begroing_results, db_conn):
-    taxa_create = [generate_taxon() for i in range(0, 3)]
+    taxa_create = [generate_taxon_create() for i in range(0, 3)]
     taxa = [await post_taxonomic_classifiers(t, db_conn) for t in taxa_create]
 
     macroscopic_coverage = Methods(
@@ -147,11 +160,34 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
         actual = next(o for o in result if o.taxon.taxonomicclassifierid == taxa[i].taxonomicclassifierid)
         assert expected_taxon == actual.taxon
         if expected_value == "<1":
-            assert actual.value == "1.0"
+            assert actual.measurement_value == 1.0
+            assert actual.flag == "Less than"
             assert actual.method.methodcode == macroscopic_coverage.methodcode
         else:
-            assert expected_value == actual.value
+            assert expected_value == actual.categorical_value
             assert actual.method.methodcode == microscoping_abundance.methodcode
+
+    result_csv = await get_begroing_results_csv(
+        sampling_feature_uuid=station.samplingfeatureuuid,
+        project_id=project.directiveid,
+        start_time=date,
+        end_time=date,
+        connection=db_conn,
+        # niva_user=USER_HEADER,
+    )
+
+    # Comparing csv result to json result, should be the same
+    reader = csv.DictReader(StringIO(result_csv), delimiter="\t", quoting=csv.QUOTE_ALL)
+    csv_rows = [r for r in reader]
+    for i, row in enumerate(csv_rows):
+        assert result[i].station.samplingfeaturecode == row["lok_sta"]
+        assert result[i].project.directivedescription == row["project_name"]
+        assert result[i].timestamp.isoformat() == row["dato"]
+        # csv has no way to distinguish empty string from null, so none values are "" in the csv
+        if result[i].measurement_value is not None:
+            assert float(row["Mengde_Tall"]) == result[i].measurement_value
+        assert row["Mengde_Tekst"] in [result[i].categorical_value, ""]
+        assert row["Flagg"] in [result[i].flag, ""]
 
     # should not get any observations when querying for a different time
     different_time = await get_begroing_results(
@@ -187,12 +223,13 @@ def test_serialize_begroing_data_as_csv():
             method=method,
             value="xx",
         ),
+        BegroingObservation(
+            project=project,
+            timestamp=datetime.now(),
+            station=station,
+            taxon=generate_taxon(),
+            method=method,
+            flag="Less than",
+            value="1",
+        ),
     ]
-
-    # TODO: if we have conflicting field names this will blow up
-    columns = [
-        "directivedescription",
-        "timestamp",
-    ]
-
-    csv = to_csv([o.dict() for o in data], columns=columns)

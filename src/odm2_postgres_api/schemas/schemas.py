@@ -595,7 +595,11 @@ class BegroingObservation(BaseModel):
     station: SamplingFeatures
     taxon: TaxonomicClassifier
     method: Methods
-    value: str
+    # TODO: require either measurement_value or categorical_value
+    measurement_value: Optional[float]
+    categorical_value: Optional[str]
+    # TODO: Require flag if measurement value?
+    flag: Optional[str]
 
 
 class BegroingResult(BegroingResultCreate):

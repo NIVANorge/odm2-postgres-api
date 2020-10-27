@@ -18,19 +18,21 @@ def default_sampling_feature(overrides: Dict = {}) -> SamplingFeatures:
         "samplingfeaturename": "Station xzy",
         "samplingfeaturedescription": "River station lorem ipsum",
         "samplingfeaturegeotypecv": "Point",
+        "samplingfeaturetypecv": "Site",
         "featuregeometrywkt": "POINT (60.37155049 9.72747998)",
     }
     return SamplingFeatures(**{**defaults, **overrides})
 
 
-def default_project(overrides: Dict) -> Directive:
+def default_project(overrides: Dict = {}) -> Directive:
     defaults = {"directiveid": 1, "directivetypecv": "Project", "directivedescription": "awesome project"}
 
     return Directive(**{**defaults, **overrides})
 
 
-def generate_taxon(overrides: Dict) -> TaxonomicClassifier:
+def generate_taxon(overrides: Dict = {}) -> TaxonomicClassifier:
     t = {
+        "taxonomicclassifierid": 55,
         "taxonomicclassifiercommonname": str(uuid.uuid4()),
         "taxonomicclassifierdescription": str(uuid.uuid4()),
         "taxonomicclassifiertypecv": "Biology",
@@ -38,6 +40,17 @@ def generate_taxon(overrides: Dict) -> TaxonomicClassifier:
     }
 
     return TaxonomicClassifier(**{**t, **overrides})
+
+
+def generate_taxon_create(overrides: Dict = {}) -> TaxonomicClassifierCreate:
+    t = {
+        "taxonomicclassifiercommonname": str(uuid.uuid4()),
+        "taxonomicclassifierdescription": str(uuid.uuid4()),
+        "taxonomicclassifiertypecv": "Biology",
+        "taxonomicclassifiername": str(uuid.uuid4()),
+    }
+
+    return TaxonomicClassifierCreate(**{**t, **overrides})
 
 
 def default_method(overrides: Dict) -> Methods:
