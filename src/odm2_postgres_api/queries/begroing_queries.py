@@ -52,9 +52,9 @@ select crv.datavalue as categorical_value,
        mr.censorcodecv,
        aff.primaryemail
 from results r
-         full outer join categoricalresultvalues crv on crv.resultid = r.resultid
-         full outer join measurementresultvalues mrv on mrv.resultid = r.resultid
-         full outer join measurementresults mr on mr.resultid=r.resultid
+         left join categoricalresultvalues crv on crv.resultid = r.resultid
+         left join measurementresultvalues mrv on mrv.resultid = r.resultid
+         left join measurementresults mr on mr.resultid=r.resultid
          inner join taxonomicclassifiers t on t.taxonomicclassifierid = r.taxonomicclassifierid
          inner join featureactions fa on r.featureactionid = fa.featureactionid
          inner join actions a on fa.actionid = a.actionid

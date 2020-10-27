@@ -101,7 +101,6 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
         macroscopic_coverage,
     ]
 
-    # TODO: having some trouble with <1, this is not stored as is
     observations = [
         ["x", ""],
         ["xxx", ""],
@@ -200,36 +199,3 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
     )
 
     assert len(different_time) == 0
-
-
-def test_serialize_begroing_data_as_csv():
-    project = default_project()
-    station = default_sampling_feature()
-    method = default_method()
-    data: List[BegroingObservation] = [
-        BegroingObservation(
-            project=project,
-            timestamp=datetime.now(),
-            station=station,
-            taxon=generate_taxon(),
-            method=method,
-            value="x",
-        ),
-        BegroingObservation(
-            project=project,
-            timestamp=datetime.now(),
-            station=station,
-            taxon=generate_taxon(),
-            method=method,
-            value="xx",
-        ),
-        BegroingObservation(
-            project=project,
-            timestamp=datetime.now(),
-            station=station,
-            taxon=generate_taxon(),
-            method=method,
-            flag="Less than",
-            value="1",
-        ),
-    ]
