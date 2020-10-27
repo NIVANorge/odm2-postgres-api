@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -17,8 +18,12 @@ from odm2_postgres_api.schemas.schemas import (
     BegroingResultCreate,
     Methods,
     TaxonomicClassifierCreate,
+    BegroingObservation,
+    Directive,
 )
 from integration_test_fixtures import db_conn, wait_for_db
+from odm2_postgres_api.utils.csv_utils import to_csv
+from testdata_builders import default_project, default_sampling_feature, generate_taxon, default_method
 
 USER_HEADER = "eyJpZCI6IDIyMSwgInVpZCI6ICIxZWQyMDBkMy1mMDlhLTQxNjQtOTExMC1hMWYyNGY4OTliYjMiLCAiZGlzcGxheU5hbWUiOiAiXHUwMGM1Z2UgT2xzZW4iLCAiZW1haWwiOiAiZGV2dXNlckBzb21lZW1haWwuY29tIiwgInByb3ZpZGVyIjogIkRldkxvZ2luIiwgImNyZWF0ZVRpbWUiOiAiMjAyMC0wNC0yMFQxMTo0NToyMS4yNDFaIiwgInVwZGF0ZVRpbWUiOiAiMjAyMC0wNC0yMFQxMTo0NToyMS4yNDFaIiwgInJvbGVzIjogWyJhcHBzOmFkbWluIiwgIm5pdmEiXX0="
 
@@ -49,18 +54,6 @@ async def test_post_new_indices(db_conn):
     response = await post_indices(BegroingIndicesCreate(**index_data), db_conn, USER_HEADER)
     assert response
     # TODO: the endpoint does not really respond with anything worth asserting on
-
-
-def generate_taxon() -> TaxonomicClassifierCreate:
-    # TODO: write something more sophisticated that generates pseudo-taxon?
-    t = {
-        "taxonomicclassifiercommonname": str(uuid4()),
-        "taxonomicclassifierdescription": str(uuid4()),
-        "taxonomicclassifiertypecv": "Biology",
-        "taxonomicclassifiername": str(uuid4()),
-    }
-
-    return TaxonomicClassifierCreate(**t)
 
 
 @patch("odm2_postgres_api.routes.begroing_routes.store_begroing_results", autospec=True)
@@ -171,3 +164,35 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
     )
 
     assert len(different_time) == 0
+
+
+def test_serialize_begroing_data_as_csv():
+    project = default_project()
+    station = default_sampling_feature()
+    method = default_method()
+    data: List[BegroingObservation] = [
+        BegroingObservation(
+            project=project,
+            timestamp=datetime.now(),
+            station=station,
+            taxon=generate_taxon(),
+            method=method,
+            value="x",
+        ),
+        BegroingObservation(
+            project=project,
+            timestamp=datetime.now(),
+            station=station,
+            taxon=generate_taxon(),
+            method=method,
+            value="xx",
+        ),
+    ]
+
+    # TODO: if we have conflicting field names this will blow up
+    columns = [
+        "directivedescription",
+        "timestamp",
+    ]
+
+    csv = to_csv([o.dict() for o in data], columns=columns)
