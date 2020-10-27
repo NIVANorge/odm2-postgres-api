@@ -82,8 +82,9 @@ async def get_begroing_results_csv(
     start_time: datetime,
     end_time: datetime,
     connection=Depends(api_pool_manager.get_conn),
+    niva_user: str = Header(None),
 ) -> str:
-    # user = await create_or_get_user(connection, niva_user)
+    user = await create_or_get_user(connection, niva_user)
     results = await find_begroing_results(
         connection, project_id, sampling_feature_uuid, start_time=start_time, end_time=end_time
     )

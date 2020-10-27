@@ -172,7 +172,7 @@ async def test_post_new_begroing_observations(store_begroing_results, db_conn):
         start_time=date,
         end_time=date,
         connection=db_conn,
-        # niva_user=USER_HEADER,
+        niva_user=USER_HEADER,
     )
 
     # Comparing csv result to json result, should be the same
