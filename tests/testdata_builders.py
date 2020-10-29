@@ -53,7 +53,7 @@ def generate_taxon_create(overrides: Dict = {}) -> TaxonomicClassifierCreate:
     return TaxonomicClassifierCreate(**{**t, **overrides})
 
 
-def default_method(overrides: Dict) -> Methods:
+def default_method(overrides: Dict = {}) -> Methods:
     macroscopic_coverage = {
         "methodcode": "begroing_4",
         "methoddescription": "A quantitative observation is made assessing the abundance of a species in...",

@@ -3,7 +3,7 @@ import datetime as dt
 from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
-from pydantic import BaseModel, constr, conlist, validator
+from pydantic import BaseModel, constr, conlist, validator, root_validator
 
 from odm2_postgres_api.controlled_vocabularies.download_cvs import (
     CONTROLLED_VOCABULARY_TABLE_NAMES,
@@ -595,11 +595,27 @@ class BegroingObservation(BaseModel):
     station: SamplingFeatures
     taxon: TaxonomicClassifier
     method: Methods
-    # TODO: require either measurement_value or categorical_value
     measurement_value: Optional[float]
     categorical_value: Optional[str]
-    # TODO: Require flag if measurement value?
     flag: Optional[str]
+
+    @root_validator
+    def validate_measurement_or_categorical_value(cls, values):
+        mv = values.get("measurement_value")
+        cv = values.get("categorical_value")
+        if mv is not None and cv is not None:
+            raise ValueError("Both measurement_value and categorical_value cannot be set at the same time")
+
+        if mv is None and cv is None:
+            raise ValueError("Either measurement_value or categorical_value needs to be defined")
+
+        return values
+
+    @root_validator
+    def validate_flag(cls, values):
+        if values.get("flag") is not None and values.get("measurement_value") is None:
+            raise ValueError("measurement_value needs to be defined when flag is set")
+        return values
 
 
 class BegroingResult(BegroingResultCreate):
