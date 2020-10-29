@@ -32,7 +32,7 @@ from integration_test_fixtures import db_conn, wait_for_db
 from odm2_postgres_api.utils.csv_utils import to_csv
 from testdata_builders import (
     default_project,
-    default_sampling_feature,
+    default_station,
     generate_taxon_create,
     default_method,
     generate_taxon,
