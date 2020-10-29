@@ -41,12 +41,18 @@ async def test_post_new_indices(db_conn):
     created_sampling_feature = await post_sampling_features(SamplingFeaturesCreate(**sf), db_conn)
     assert created_sampling_feature.samplingfeatureid > 0
 
-    index_data = {
-        "project_ids": [project_response.directiveid],
-        "station_uuid": created_sampling_feature.samplingfeatureuuid,
-        "date": "2020-09-01T00:00:00.000Z",
-        "indices": [{"indexType": "PIT EQR", "indexValue": "11"}],
-    }
+    index_data = (
+        {
+            "project_ids": [project_response.directiveid],
+            "station_uuid": created_sampling_feature.samplingfeatureuuid,
+            "date": "2020-09-01T00:00:00.000Z",
+            "indices": {
+                "PIT": {"EQR": 1.1, "nEQR": 1.1},
+                "AIP": {"EQR": 1.1, "nEQR": 1.1},
+                "HBI2": {"EQR": None, "nEQR": 1.1},
+            },
+        },
+    )
     response = await post_indices(BegroingIndicesCreate(**index_data), db_conn, USER_HEADER)
     assert response
     # TODO: the endpoint does not really respond with anything worth asserting on
