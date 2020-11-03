@@ -3,7 +3,6 @@ import datetime as dt
 from typing import Optional, List, Tuple, Dict, Union
 
 import shapely.wkt
-from mypy.suggestions import TypedDict
 from pydantic import BaseModel, constr, conlist, validator
 
 from odm2_postgres_api.controlled_vocabularies.download_cvs import (
@@ -595,6 +594,7 @@ class BegroingResult(BegroingResultCreate):
 
 
 class BasicIndexingUnit(Dict):
+    INDEX: Optional[float]
     EQR: Optional[float]
     nEQR: Optional[float]
 
