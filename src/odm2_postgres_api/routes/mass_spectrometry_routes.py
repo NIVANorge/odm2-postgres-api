@@ -14,6 +14,7 @@ from odm2_postgres_api.queries.mass_spec_select_queries import (
     get_method_annotationjson,
     get_samplingfeature_annotationjson,
     get_samplingfeaturecode_from_result_annotationlink,
+    get_result_annotationlinks_per_replica,
 )
 
 router = APIRouter()
@@ -25,6 +26,14 @@ async def post_result_annotationlink(
     connection=Depends(api_pool_manager.get_conn),
 ) -> Optional[str]:
     return await find_result_annotationlink(connection, data)
+
+
+@router.get("/get_result_annotationlinks_per_replica/{samplingfeaturecode}")
+async def result_annotationlinks_per_replica(
+    samplingfeaturecode: str,
+    connection=Depends(api_pool_manager.get_conn),
+) -> Optional[str]:
+    return await get_result_annotationlinks_per_replica(connection, samplingfeaturecode)
 
 
 @router.get("/get_samplingfeatureid_from_samplingfeaturecode/{samplingfeaturecode}")

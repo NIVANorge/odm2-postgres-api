@@ -43,6 +43,19 @@ async def find_result_annotationlink(
     return link
 
 
+async def get_result_annotationlinks_per_replica(conn: asyncpg.connection, samplingfeaturecode: str) -> Optional[str]:
+    results = await conn.fetch(
+        "select a.annotationlink, a.annotationjson from annotations a "
+        "left join resultannotations ra on a.annotationid = ra.annotationid "
+        "left join results r on r.resultid = ra.resultid "
+        "left join featureactions fa on fa.featureactionid = r.featureactionid "
+        "left join samplingfeatures sf on sf.samplingfeatureid = fa.samplingfeatureid "
+        "where sf.samplingfeaturecode = $1",
+        samplingfeaturecode,
+    )
+    return results
+
+
 async def get_samplingfeatureid_from_samplingfeaturecode(
     conn: asyncpg.connection, samplingfeaturecode: str
 ) -> Optional[int]:
