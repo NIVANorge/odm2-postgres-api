@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from odm2_postgres_api.queries import core_queries
 from odm2_postgres_api.schemas import schemas
@@ -43,7 +43,7 @@ async def find_result_annotationlink(
     return link
 
 
-async def get_result_annotationlinks_per_replica(conn: asyncpg.connection, samplingfeaturecode: str) -> Optional[str]:
+async def get_result_annotationlinks_per_replica(conn: asyncpg.connection, samplingfeaturecode: str) -> Optional[List]:
     results = await conn.fetch(
         "select a.annotationlink, a.annotationjson from annotations a "
         "left join resultannotations ra on a.annotationid = ra.annotationid "

@@ -32,7 +32,7 @@ async def post_result_annotationlink(
 async def result_annotationlinks_per_replica(
     samplingfeaturecode: str,
     connection=Depends(api_pool_manager.get_conn),
-) -> Optional[str]:
+) -> Optional[List]:
     return await get_result_annotationlinks_per_replica(connection, samplingfeaturecode)
 
 
