@@ -42,15 +42,13 @@ async def test_post_new_indices(db_conn):
     assert created_sampling_feature.samplingfeatureid > 0
 
     index_data = {
-        {
-            "project_ids": [project_response.directiveid],
-            "station_uuid": created_sampling_feature.samplingfeatureuuid,
-            "date": "2020-09-01T00:00:00.000Z",
-            "indices": {
-                "PIT": {"INDEX": 1.0, "EQR": 1.1, "nEQR": 1.1},
-                "AIP": {"INDEX": 1.0, "EQR": 1.1, "nEQR": 1.1},
-                "HBI2": {"INDEX": 1.0, "EQR": None, "nEQR": 1.1},
-            },
+        "project_ids": [project_response.directiveid],
+        "station_uuid": created_sampling_feature.samplingfeatureuuid,
+        "date": "2020-09-01T00:00:00.000Z",
+        "indices": {
+            "PIT": {"INDEX": 1.0, "EQR": 1.1, "nEQR": 1.1},
+            "AIP": {"INDEX": 1.0, "EQR": 1.1, "nEQR": 1.1},
+            "HBI2": {"INDEX": 1.0, "EQR": 0.0, "nEQR": 1.1},
         },
     }
 

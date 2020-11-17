@@ -593,7 +593,7 @@ class BegroingResult(BegroingResultCreate):
     personid: int
 
 
-class BasicIndexingUnit(Dict):
+class BasicIndexingUnit(BaseModel):
     INDEX: Optional[float]
     EQR: Optional[float]
     nEQR: Optional[float]
