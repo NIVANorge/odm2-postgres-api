@@ -215,3 +215,11 @@ async def get_processinglevel(
         schemas.ProcessingLevels,
         raise_if_none=True,
     )
+
+
+@router.post("/methods", response_model=schemas.Methods)
+async def post_methods(
+    methods_create: schemas.MethodsCreate,
+    connection=Depends(api_pool_manager.get_conn),
+):
+    return await core_queries.insert_method(connection, methods_create)
