@@ -45,8 +45,13 @@ async def test_post_new_indices(db_conn):
         "project_ids": [project_response.directiveid],
         "station_uuid": created_sampling_feature.samplingfeatureuuid,
         "date": "2020-09-01T00:00:00.000Z",
-        "indices": [{"indexType": "PIT EQR", "indexValue": "11"}],
+        "indices": {
+            "PIT": {"INDEX": 1.0, "EQR": 1.1, "nEQR": 1.1},
+            "AIP": {"INDEX": 1.0, "EQR": 1.1, "nEQR": 1.1},
+            "HBI2": {"INDEX": 1.0, "EQR": 0.0, "nEQR": 1.1},
+        },
     }
+
     response = await post_indices(BegroingIndicesCreate(**index_data), db_conn, USER_HEADER)
     assert response
     # TODO: the endpoint does not really respond with anything worth asserting on

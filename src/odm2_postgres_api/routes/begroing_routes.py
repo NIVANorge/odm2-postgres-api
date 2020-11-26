@@ -23,6 +23,7 @@ from odm2_postgres_api.schemas.schemas import (
     BegroingObservationValues,
     TaxonomicClassifier,
     Units,
+    BasicIndexingUnit,
 )
 
 from odm2_postgres_api.utils.api_pool_manager import api_pool_manager
@@ -197,7 +198,7 @@ async def post_begroing_result(
 
 @router.post("/indices", response_model=schemas.BegroingIndices)
 async def post_indices(
-    new_index: schemas.BegroingIndicesCreate,
+    data: schemas.BegroingIndicesCreate,
     connection=Depends(api_pool_manager.get_conn),
     niva_user: str = Header(None),
 ) -> BegroingIndices:
@@ -208,66 +209,74 @@ async def post_indices(
         isactionlead=True,
         methodcode="begroing_6",  # code begroing_6 = Begroing Index Calculation
         actiontypecv="Derivation",
-        begindatetime=new_index.date,
+        begindatetime=data.date,
         begindatetimeutcoffset=0,
         equipmentids=[],
-        directiveids=new_index.project_ids,
+        directiveids=data.project_ids,
     )
+    async with connection.transaction():
+        completed_action = await post_actions(data_action, connection)
 
-    completed_action = await post_actions(data_action, connection)
-
-    processing_level = await find_row(connection, "processinglevels", "processinglevelcode", "0", ProcessingLevels)
-    dimensionless_unit = await find_unit(
-        connection,
-        UnitsCreate(
-            unitstypecv="Dimensionless",
-            unitsabbreviation="PrsAbs",
-            unitsname="Presence or Absence",
-        ),
-        raise_if_none=True,
-    )
-    seconds_unit = await find_unit(
-        connection,
-        UnitsCreate(unitstypecv="Time", unitsabbreviation="s", unitsname="second"),
-        raise_if_none=True,
-    )
-    for index_instance in new_index.indices:
-        variable = await find_row(
+        processing_level = await find_row(connection, "processinglevels", "processinglevelcode", "0", ProcessingLevels)
+        dimensionless_unit = await find_unit(
             connection,
-            "variables",
-            "variablenamecv",
-            index_instance.indexType,
-            Variables,
+            UnitsCreate(
+                unitstypecv="Dimensionless",
+                unitsabbreviation="PrsAbs",
+                unitsname="Presence or Absence",
+            ),
+            raise_if_none=True,
+        )
+        seconds_unit = await find_unit(
+            connection,
+            UnitsCreate(unitstypecv="Time", unitsabbreviation="s", unitsname="second"),
+            raise_if_none=True,
         )
 
-        data_result = schemas.ResultsCreate(
-            samplingfeatureuuid=new_index.station_uuid,
-            actionid=completed_action.actionid,
-            resultuuid=uuid.uuid4(),
-            resulttypecv="Measurement",
-            variableid=variable.variableid,
-            unitsid=dimensionless_unit.unitsid,
-            processinglevelid=processing_level.processinglevelid,
-            valuecount=1,
-            statuscv="Complete",
-            sampledmediumcv="Organism",
-            dataqualitycodes=[],
-        )
+        for prefix, submitted_values in data.indices.items():
+            for suffix in submitted_values:
+                value = submitted_values.get(suffix)
+                if value is not None:
+                    indexing_type = prefix if suffix == "INDEX" else prefix + " " + suffix
+                    variable = await find_row(
+                        connection,
+                        "variables",
+                        "variablenamecv",
+                        indexing_type,
+                        Variables,
+                    )
 
-        completed_result = await post_results(data_result, connection)
+                    if variable is None:
+                        raise ValueError(f"variable {indexing_type} not found")
 
-        data_measurement_result = schemas.MeasurementResultsCreate(
-            resultid=completed_result.resultid,
-            censorcodecv="Not censored",
-            qualitycodecv="None",
-            aggregationstatisticcv="Unknown",
-            timeaggregationinterval=0,
-            timeaggregationintervalunitsid=seconds_unit.unitsid,
-            datavalue=index_instance.indexValue,
-            valuedatetime=new_index.date,
-            valuedatetimeutcoffset=0,
-        )
+                    data_result = schemas.ResultsCreate(
+                        samplingfeatureuuid=data.station_uuid,
+                        actionid=completed_action.actionid,
+                        resultuuid=uuid.uuid4(),
+                        resulttypecv="Measurement",
+                        variableid=variable.variableid,
+                        unitsid=dimensionless_unit.unitsid,
+                        processinglevelid=processing_level.processinglevelid,
+                        valuecount=1,
+                        statuscv="Complete",
+                        sampledmediumcv="Organism",
+                        dataqualitycodes=[],
+                    )
 
-        await post_measurement_results(data_measurement_result, connection)
+                    completed_result = await post_results(data_result, connection)
 
-    return schemas.BegroingIndices(personid=user.personid, **new_index.dict())
+                    data_measurement_result = schemas.MeasurementResultsCreate(
+                        resultid=completed_result.resultid,
+                        censorcodecv="Not censored",
+                        qualitycodecv="None",
+                        aggregationstatisticcv="Unknown",
+                        timeaggregationinterval=0,
+                        timeaggregationintervalunitsid=seconds_unit.unitsid,
+                        datavalue=value,
+                        valuedatetime=data.date,
+                        valuedatetimeutcoffset=0,
+                    )
+
+                    await post_measurement_results(data_measurement_result, connection)
+
+    return schemas.BegroingIndices(personid=user.personid, **data.dict())

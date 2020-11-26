@@ -593,16 +593,23 @@ class BegroingResult(BegroingResultCreate):
     personid: int
 
 
-class IndicesInfo(BaseModel):
-    indexType: str
-    indexValue: float
+class BasicIndexingUnit(BaseModel):
+    INDEX: Optional[float]
+    EQR: Optional[float]
+    nEQR: Optional[float]
+
+
+class IndexingInfo(Dict):
+    PIT: BasicIndexingUnit
+    AIP: BasicIndexingUnit
+    HBI2: BasicIndexingUnit
 
 
 class BegroingIndicesCreate(BaseModel):
     project_ids: conlist(int, min_items=1)  # type: ignore
     date: dt.datetime
     station_uuid: uuid.UUID
-    indices: List[IndicesInfo]
+    indices: IndexingInfo
 
 
 class BegroingIndices(BegroingIndicesCreate):
