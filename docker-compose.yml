@@ -13,7 +13,7 @@ services:
       - db_init
 
   graphql:
-    image: graphile/postgraphile
+    image: graphile/postgraphile:v4.10.0
     ports:
       - "127.0.0.1:8702:5000"
     restart: always
