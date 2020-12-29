@@ -3,7 +3,7 @@ aiohttp==3.6.2
 fastapi==0.61.1
 pydantic[email]==1.6.1
 typeguard==2.9.1
-uvicorn==0.12.1
+uvicorn==0.13.3
 Shapely==1.7.1
 mypy==0.782
 pycodestyle==2.6.0
