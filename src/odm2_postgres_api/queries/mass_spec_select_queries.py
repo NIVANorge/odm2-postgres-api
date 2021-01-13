@@ -222,47 +222,44 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
     async with conn.transaction():
         samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
         if samplingfeatureid is None:
+            if data.parent_samplingfeatureid is None:
+                relatedsamplingfeatures = []
+            else:
+                relatedsamplingfeatures = [(data.parent_samplingfeatureid, "Was collected at")]
+
             sampling_feature = schemas.SamplingFeaturesCreate(
                 samplingfeatureuuid=uuid.uuid4(),
                 samplingfeaturecode=data.samplingfeaturecode,
                 samplingfeaturetypecv="Specimen",
-                relatedsamplingfeatures=[(data.parent_samplingfeatureid, "Was collected at")],
+                relatedsamplingfeatures=relatedsamplingfeatures,
             )
 
-            ms_sample_data = schemas.ActionsCreate(
-                actiondescription="Collected water sample",
-                actiontypecv="Specimen collection",
-                methodcode="mass_spec:collect_sample",
-                begindatetime=data.collection_time,
-                isactionlead=True,
-                sampling_features=[sampling_feature],
-                affiliationid=1,
-                begindatetimeutcoffset=0,
-            )
+            if data.collection_time is None:
+                ms_sample_data = schemas.ActionsCreate(
+                    actiondescription="Registered water sample",
+                    actiontypecv="Specimen collection",
+                    methodcode="mass_spec:collect_sample",
+                    begindatetime=datetime.now(),
+                    isactionlead=True,
+                    sampling_features=[sampling_feature],
+                    affiliationid=1,
+                    begindatetimeutcoffset=0,
+                )
+            else:
+                ms_sample_data = schemas.ActionsCreate(
+                    actiondescription="Collected water sample",
+                    actiontypecv="Specimen collection",
+                    methodcode="mass_spec:collect_sample",
+                    begindatetime=data.collection_time,
+                    isactionlead=True,
+                    sampling_features=[sampling_feature],
+                    affiliationid=1,
+                    begindatetimeutcoffset=0,
+                )
 
             completed_sample = await core_queries.do_action(conn, ms_sample_data)
             samplingfeatureid = completed_sample.sampling_features[0].samplingfeatureid
 
-    return samplingfeatureid
-
-
-async def register_site(conn: asyncpg.connection, data: schemas.MsCreateSite) -> int:
-    """
-    This function registers site in the sampling feature table.
-    """
-    async with conn.transaction():
-        samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
-        if samplingfeatureid is None:
-            sampling_feature = schemas.SamplingFeaturesCreate(
-                samplingfeatureuuid=uuid.uuid4(),
-                samplingfeaturecode=data.samplingfeaturecode,
-                samplingfeaturetypecv="Site",
-                samplingfeaturedescription=data.description,
-                samplingfeaturename=data.samplingfeaturename,
-            )
-
-            completed_sample = await core_queries.create_sampling_feature(conn, sampling_feature)
-            samplingfeatureid = completed_sample.samplingfeatureid
     return samplingfeatureid
 
 

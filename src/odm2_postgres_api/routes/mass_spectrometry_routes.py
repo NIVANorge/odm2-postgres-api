@@ -5,7 +5,6 @@ from odm2_postgres_api.schemas import schemas
 
 from odm2_postgres_api.queries.mass_spec_select_queries import (
     find_result_annotationlink,
-    register_site,
     register_sample,
     register_replicas,
     register_output,
@@ -79,11 +78,6 @@ async def post_register_replicas(
 @router.post("/register_sample")
 async def post_register_sample(data: schemas.MsCreateSample, connection=Depends(api_pool_manager.get_conn)) -> int:
     return await register_sample(connection, data)
-
-
-@router.post("/register_site")
-async def post_register_site(data: schemas.MsCreateSite, connection=Depends(api_pool_manager.get_conn)) -> int:
-    return await register_site(connection, data)
 
 
 @router.post("/register_output")

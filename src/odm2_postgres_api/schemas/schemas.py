@@ -654,8 +654,8 @@ class MsReplicas(BaseModel):
 
 class MsCreateSample(BaseModel):
     samplingfeaturecode: str
-    parent_samplingfeatureid: int
-    collection_time: dt.datetime
+    parent_samplingfeatureid: Optional[int] = None
+    collection_time: Optional[dt.datetime] = None
 
 
 class MsCreateSite(BaseModel):
