@@ -222,26 +222,17 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
     async with conn.transaction():
         samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
         if samplingfeatureid is None:
-            relatedsamplingfeatures = []
-            if data.parent_samplingfeatureid is not None:
-                relatedsamplingfeatures.append((data.parent_samplingfeatureid, "Was collected at"))
 
             sampling_feature = schemas.SamplingFeaturesCreate(
                 samplingfeatureuuid=uuid.uuid4(),
                 samplingfeaturecode=data.samplingfeaturecode,
                 samplingfeaturetypecv="Specimen",
-                relatedsamplingfeatures=relatedsamplingfeatures,
+                relatedsamplingfeatures=[],
             )
 
-            if data.collection_time is None:
-                variable_fields = {"actiondescription": "Registered water sample", "begindatetime": datetime.utcnow()}
-            else:
-                variable_fields = {
-                    "actiondescription": "Collected water sample",
-                    "begindatetime": data.collection_time,
-                }
             ms_sample_data = schemas.ActionsCreate(
-                **variable_fields,
+                actiondescription="Registered water sample",
+                begindatetime=datetime.utcnow(),
                 actiontypecv="Specimen collection",
                 methodcode="mass_spec:collect_sample",
                 isactionlead=True,
