@@ -222,10 +222,9 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
     async with conn.transaction():
         samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
         if samplingfeatureid is None:
-            if data.parent_samplingfeatureid is None:
-                relatedsamplingfeatures = []
-            else:
-                relatedsamplingfeatures = [(data.parent_samplingfeatureid, "Was collected at")]
+            relatedsamplingfeatures = []
+            if data.parent_samplingfeatureid is not None:
+                relatedsamplingfeatures.append((data.parent_samplingfeatureid, "Was collected at"))
 
             sampling_feature = schemas.SamplingFeaturesCreate(
                 samplingfeatureuuid=uuid.uuid4(),
@@ -235,27 +234,20 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
             )
 
             if data.collection_time is None:
-                ms_sample_data = schemas.ActionsCreate(
-                    actiondescription="Registered water sample",
-                    actiontypecv="Specimen collection",
-                    methodcode="mass_spec:collect_sample",
-                    begindatetime=datetime.now(),
-                    isactionlead=True,
-                    sampling_features=[sampling_feature],
-                    affiliationid=1,
-                    begindatetimeutcoffset=0,
-                )
+                variable_fields = {'actiondescription': "Registered water sample",
+                                   'begindatetime': datetime.utcnow()}
             else:
-                ms_sample_data = schemas.ActionsCreate(
-                    actiondescription="Collected water sample",
-                    actiontypecv="Specimen collection",
-                    methodcode="mass_spec:collect_sample",
-                    begindatetime=data.collection_time,
-                    isactionlead=True,
-                    sampling_features=[sampling_feature],
-                    affiliationid=1,
-                    begindatetimeutcoffset=0,
-                )
+                variable_fields = {'actiondescription': "Collected water sample",
+                                   'begindatetime': data.collection_time}
+            ms_sample_data = schemas.ActionsCreate(
+                **variable_fields,
+                actiontypecv="Specimen collection",
+                methodcode="mass_spec:collect_sample",
+                isactionlead=True,
+                sampling_features=[sampling_feature],
+                affiliationid=1,
+                begindatetimeutcoffset=0,
+            )
 
             completed_sample = await core_queries.do_action(conn, ms_sample_data)
             samplingfeatureid = completed_sample.sampling_features[0].samplingfeatureid
