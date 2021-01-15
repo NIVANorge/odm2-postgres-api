@@ -234,11 +234,12 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
             )
 
             if data.collection_time is None:
-                variable_fields = {'actiondescription': "Registered water sample",
-                                   'begindatetime': datetime.utcnow()}
+                variable_fields = {"actiondescription": "Registered water sample", "begindatetime": datetime.utcnow()}
             else:
-                variable_fields = {'actiondescription': "Collected water sample",
-                                   'begindatetime': data.collection_time}
+                variable_fields = {
+                    "actiondescription": "Collected water sample",
+                    "begindatetime": data.collection_time,
+                }
             ms_sample_data = schemas.ActionsCreate(
                 **variable_fields,
                 actiontypecv="Specimen collection",
