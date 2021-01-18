@@ -17,6 +17,7 @@ from odm2_postgres_api.metadata_init.data.mass_spec.mass_spec_metadata import (
     mass_spec_sampling_features,
     mass_spec_variables,
     mass_spec_controlled_vocabularies,
+    mass_spec_annotations,
 )
 from odm2_postgres_api.metadata_init.data.general.controlled_vocabularies import (
     controlled_vocabularies,
@@ -42,6 +43,7 @@ from odm2_postgres_api.queries.storage import (
     save_variables,
     save_methods,
     save_sampling_features,
+    save_annotations,
 )
 
 
@@ -95,6 +97,9 @@ async def populate_metadata(db_pool):
 
         for v in mass_spec_variables():
             await save_variables(conn, v)
+
+        for a in mass_spec_annotations():
+            await save_annotations(conn, a)
 
         # fish_rfid metadata
         for sf in fish_rfid_sampling_features():

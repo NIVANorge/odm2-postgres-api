@@ -6,6 +6,8 @@ from odm2_postgres_api.queries.core_queries import (
     create_sampling_feature,
 )
 from odm2_postgres_api.schemas.schemas import (
+    Annotations,
+    AnnotationsCreate,
     OrganizationsCreate,
     Organizations,
     ExternalIdentifierSystemsCreate,
@@ -140,3 +142,10 @@ async def save_methods(connection, method: MethodsCreate) -> Methods:
     if existing:
         return existing
     return await core_queries.insert_method(connection, method)
+
+
+async def save_annotations(connection, annotation: AnnotationsCreate) -> Annotations:
+    existing = await find_row(connection, "annotations", "annotationtypecv", annotation.annotationtypecv, Annotations)
+    if existing:
+        return existing
+    return await core_queries.create_or_parse_annotations(connection, [annotation])

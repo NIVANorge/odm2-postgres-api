@@ -6,7 +6,19 @@ from odm2_postgres_api.schemas.schemas import (
     MethodsCreate,
     VariablesCreate,
     ControlledVocabularyCreate,
+    AnnotationsCreate,
 )
+
+
+def mass_spec_annotations() -> List[AnnotationsCreate]:
+    mass_spec_annotations_list = [
+        {
+            "annotationtypecv": "Specimen annotation",
+            "annotationtext": "Mass spectrometry sample",
+        }
+    ]
+
+    return [AnnotationsCreate(**a) for a in mass_spec_annotations_list]
 
 
 def mass_spec_sampling_features() -> List[SamplingFeaturesCreate]:
