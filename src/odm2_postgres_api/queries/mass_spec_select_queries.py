@@ -217,17 +217,22 @@ async def register_replicas(conn: asyncpg.connection, data: schemas.MsCreateRepl
 
 async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample) -> int:
     """
-    This function registers the main sample collected at a given Site in samplingfeature table.
+    This function registers the main sample collected in samplingfeature table.
     """
     async with conn.transaction():
         samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
         if samplingfeatureid is None:
 
+            annotationid = await conn.fetch(
+                "select annotationid from annotations a "
+                "where annotationtext = 'Mass spectrometry sample'"
+            )
+
             sampling_feature = schemas.SamplingFeaturesCreate(
                 samplingfeatureuuid=uuid.uuid4(),
                 samplingfeaturecode=data.samplingfeaturecode,
                 samplingfeaturetypecv="Specimen",
-                relatedsamplingfeatures=[],
+                annotations=[annotationid],
             )
 
             ms_sample_data = schemas.ActionsCreate(
