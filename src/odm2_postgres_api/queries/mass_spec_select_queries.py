@@ -3,6 +3,7 @@ import uuid
 from typing import Optional, List, Dict
 from datetime import datetime
 from odm2_postgres_api.queries import core_queries
+from odm2_postgres_api.queries.core_queries import find_row
 from odm2_postgres_api.schemas import schemas
 import asyncpg
 
@@ -223,9 +224,7 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
         samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
         if samplingfeatureid is None:
 
-            annotationid = await conn.fetch(
-                "select annotationid from annotations a " "where annotationtext = 'Mass spectrometry sample'"
-            )
+            annotationid = await find_row(conn, "annotations", "annotationtext", "Mass spectrometry sample", schemas.Annotations)
 
             sampling_feature = schemas.SamplingFeaturesCreate(
                 samplingfeatureuuid=uuid.uuid4(),
