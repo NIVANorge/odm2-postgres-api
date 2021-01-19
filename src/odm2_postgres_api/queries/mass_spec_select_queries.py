@@ -128,20 +128,22 @@ async def register_replicas(conn: asyncpg.connection, data: schemas.MsCreateRepl
     """
     async with conn.transaction():
         action_time = datetime.now()
+        parameters_annotation = schemas.AnnotationsCreate(
+            annotationjson=data.samplingfeatureannotationjson,
+            annotationdatetime=action_time,
+            annotationtypecv="Specimen annotation",
+            annotationtext="Processing parameters",
+            annotationutcoffset=0,
+        )
+        ms_annotation = await find_row(
+            conn, "annotations", "annotationtext", "Mass spectrometry sample", schemas.Annotations
+        )
         sampling_feature = schemas.SamplingFeaturesCreate(
             samplingfeatureuuid=uuid.uuid4(),
             samplingfeaturecode=data.samplingfeaturecode,
             samplingfeaturetypecv="Specimen",
             relatedsamplingfeatures=[(data.parent_samplingfeatureid, "Is child of")],
-            annotations=[
-                schemas.AnnotationsCreate(
-                    annotationjson=data.samplingfeatureannotationjson,
-                    annotationdatetime=action_time,
-                    annotationtypecv="Specimen annotation",
-                    annotationtext="Processing parameters",
-                    annotationutcoffset=0,
-                )
-            ],
+            annotations=[parameters_annotation.annotationid, ms_annotation.annotationid],
         )
 
         fractionate_sample_data = schemas.ActionsCreate(
