@@ -145,7 +145,7 @@ async def save_methods(connection, method: MethodsCreate) -> Methods:
 
 
 async def save_annotations(connection, annotation: AnnotationsCreate) -> Annotations:
-    existing = await find_row(connection, "annotations", "annotationtypecv", annotation.annotationtypecv, Annotations)
+    existing = await find_row(connection, "annotations", "annotationtext", annotation.annotationtext, Annotations)
     if existing:
         return existing
     return await core_queries.create_or_parse_annotations(connection, [annotation])

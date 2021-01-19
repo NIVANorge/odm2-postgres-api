@@ -224,8 +224,7 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
         if samplingfeatureid is None:
 
             annotationid = await conn.fetch(
-                "select annotationid from annotations a "
-                "where annotationtext = 'Mass spectrometry sample'"
+                "select annotationid from annotations a " "where annotationtext = 'Mass spectrometry sample'"
             )
 
             sampling_feature = schemas.SamplingFeaturesCreate(
