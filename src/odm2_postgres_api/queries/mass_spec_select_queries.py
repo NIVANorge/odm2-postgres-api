@@ -224,13 +224,15 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
         samplingfeatureid = await get_samplingfeatureid_from_samplingfeaturecode(conn, data.samplingfeaturecode)
         if samplingfeatureid is None:
 
-            annotationid = await find_row(conn, "annotations", "annotationtext", "Mass spectrometry sample", schemas.Annotations)
+            annotation = await find_row(
+                conn, "annotations", "annotationtext", "Mass spectrometry sample", schemas.Annotations
+            )
 
             sampling_feature = schemas.SamplingFeaturesCreate(
                 samplingfeatureuuid=uuid.uuid4(),
                 samplingfeaturecode=data.samplingfeaturecode,
                 samplingfeaturetypecv="Specimen",
-                annotations=[annotationid],
+                annotations=[annotation.annotationid],
             )
 
             ms_sample_data = schemas.ActionsCreate(
