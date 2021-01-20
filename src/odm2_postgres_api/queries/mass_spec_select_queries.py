@@ -135,15 +135,16 @@ async def register_replicas(conn: asyncpg.connection, data: schemas.MsCreateRepl
             annotationtext="Processing parameters",
             annotationutcoffset=0,
         )
+
         ms_annotation = await find_row(
-            conn, "annotations", "annotationtext", "Mass spectrometry sample", schemas.Annotations
+            conn, "annotations", "annotationtext", "Non-target mass spectrometry", schemas.Annotations
         )
         sampling_feature = schemas.SamplingFeaturesCreate(
             samplingfeatureuuid=uuid.uuid4(),
             samplingfeaturecode=data.samplingfeaturecode,
             samplingfeaturetypecv="Specimen",
             relatedsamplingfeatures=[(data.parent_samplingfeatureid, "Is child of")],
-            annotations=[parameters_annotation.annotationid, ms_annotation.annotationid],
+            annotations=[parameters_annotation, ms_annotation.annotationid],
         )
 
         fractionate_sample_data = schemas.ActionsCreate(
@@ -227,7 +228,7 @@ async def register_sample(conn: asyncpg.connection, data: schemas.MsCreateSample
         if samplingfeatureid is None:
 
             annotation = await find_row(
-                conn, "annotations", "annotationtext", "Mass spectrometry sample", schemas.Annotations
+                conn, "annotations", "annotationtext", "Non-target mass spectrometry", schemas.Annotations
             )
 
             sampling_feature = schemas.SamplingFeaturesCreate(

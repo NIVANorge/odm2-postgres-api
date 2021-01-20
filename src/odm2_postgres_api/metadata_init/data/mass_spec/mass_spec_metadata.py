@@ -14,7 +14,7 @@ def mass_spec_annotations() -> List[AnnotationsCreate]:
     mass_spec_annotations_list = [
         {
             "annotationtypecv": "Specimen annotation",
-            "annotationtext": "Mass spectrometry sample",
+            "annotationtext": "Non-target mass spectrometry",
         }
     ]
 
