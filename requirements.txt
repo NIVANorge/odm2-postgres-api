@@ -9,7 +9,7 @@ mypy==0.782
 pycodestyle==2.6.0
 starlette-prometheus==0.7.0
 nivacloud-logging==0.8.14
-pytest==6.1.1
+pytest==6.2.2
 pytest-docker-compose==3.2.0
 pytest-asyncio==0.14.0
 python-dotenv==0.14.0
